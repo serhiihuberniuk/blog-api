@@ -16,6 +16,8 @@ type Post struct {
 }
 
 func (p Post) Validate() error {
-	return validation.ValidateStruct(&p)//todo
+	return validation.ValidateStruct(&p,
+		validation.Field(&p.Title, validation.Required, validation.Length(1, 50)),
+		validation.Field(&p.Description, validation.Required))
 
 }

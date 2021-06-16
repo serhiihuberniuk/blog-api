@@ -14,6 +14,7 @@ type Comment struct {
 }
 
 func (c Comment) Validate() error {
-	return validation.ValidateStruct(&c)//todo
+	return validation.ValidateStruct(&c,
+		validation.Field(&c.Content, validation.Required))
 
 }
