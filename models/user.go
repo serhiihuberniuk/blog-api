@@ -1,18 +1,20 @@
 package models
 
 import (
+	"time"
+
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
-	"time"
+	//WARN [runner] Can't run linter goanalysis_metalinter: buildir: failed to load package :
+	//could not load export data: no export data for "github.com/asaskevich/govalidator"
 )
 
 type User struct {
-	Id        string
+	ID        string
 	Name      string
 	Email     string
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	Posts     []Post
 }
 
 func (u User) Validate() error {

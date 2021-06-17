@@ -1,18 +1,18 @@
 package models
 
 import (
-	validation "github.com/go-ozzo/ozzo-validation"
 	"time"
+
+	validation "github.com/go-ozzo/ozzo-validation"
 )
 
 type Post struct {
-	Id          string
+	ID          string
 	Title       string
 	Description string
-	CreatedBy   User
+	CreatedBy   string
 	CreatedAt   time.Time
 	Tags        []string
-	Comments    []Comment
 }
 
 func (p Post) Validate() error {
