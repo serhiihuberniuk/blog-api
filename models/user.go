@@ -1,13 +1,14 @@
 package models
 
 import (
+	"fmt"
 	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
-	//WARN [runner] Can't run linter goanalysis_metalinter: buildir: failed to load package :
-	//could not load export data: no export data for "github.com/asaskevich/govalidator"
 )
+
+const maxLength = 30
 
 type User struct {
 	ID        string
@@ -17,10 +18,14 @@ type User struct {
 	UpdatedAt time.Time
 }
 
-func (u User) Validate() error {
-	return validation.ValidateStruct(&u,
-		validation.Field(&u.Name, validation.Required, validation.Length(1, 30)),
-		validation.Field(&u.Email, validation.Required, validation.Length(1, 30), is.Email),
+func (u *User) Validate() string {
+	err := validation.ValidateStruct(u,
+		validation.Field(&u.Name, validation.Required, validation.Length(1, maxLength)),
+		validation.Field(&u.Email, validation.Required, validation.Length(1, maxLength), is.Email),
 	)
+	if err != nil {
+		return fmt.Sprint(err)
+	}
 
+	return fmt.Sprint(err)
 }

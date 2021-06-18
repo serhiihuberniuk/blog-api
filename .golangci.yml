@@ -213,14 +213,7 @@ linters-settings:
         sizeThreshold: 512
         # whether to check test functions (default true)
         skipTestFuncs: true
-      rangeValCopy:
-        # size in bytes that makes the warning trigger (default 128)
-        sizeThreshold: 32
-        # whether to check test functions (default true)
-        skipTestFuncs: true
 
-        # path to a gorules file for the ruleguard checker
-        rules: ''
 
       underef:
         # whether to skip (*x).method() calls where x is a pointer receiver (default true)
@@ -697,10 +690,10 @@ issues:
   new: false
 
   # Show only new issues created after git revision `REV`
-  new-from-rev: REV
+  new-from-rev: ""
 
   # Show only new issues created in git patch with set file path.
-  new-from-patch: path/to/patch/file
+
 
   # Fix found issues (if it's supported by the linter)
   fix: true

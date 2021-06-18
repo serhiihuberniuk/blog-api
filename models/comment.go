@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation"
@@ -14,8 +15,11 @@ type Comment struct {
 	PostID    string
 }
 
-func (c Comment) Validate() error {
-	return validation.ValidateStruct(&c,
-		validation.Field(&c.Content, validation.Required))
+func (c *Comment) Validate() string {
+	err := validation.ValidateStruct(c, validation.Field(&c.Content, validation.Required))
+	if err != nil {
+		return fmt.Sprint(err)
+	}
 
+	return fmt.Sprint(err)
 }
