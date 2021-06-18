@@ -1,10 +1,10 @@
 package models
 
 import (
-	"fmt"
 	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/pkg/errors"
 )
 
 const maxLengthTitle = 50
@@ -18,13 +18,13 @@ type Post struct {
 	Tags        []string
 }
 
-func (p *Post) Validate() string {
+func (p *Post) Validate() error {
 	err := validation.ValidateStruct(p,
 		validation.Field(&p.Title, validation.Required, validation.Length(1, maxLengthTitle)),
 		validation.Field(&p.Description, validation.Required))
 	if err != nil {
-		return fmt.Sprint(err)
+		return errors.Wrap(errors.Cause(err), "validation failed")
 	}
 
-	return fmt.Sprint(err)
+	return nil
 }

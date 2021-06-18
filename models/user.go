@@ -1,11 +1,11 @@
 package models
 
 import (
-	"fmt"
 	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
+	"github.com/pkg/errors"
 )
 
 const maxLength = 30
@@ -18,14 +18,14 @@ type User struct {
 	UpdatedAt time.Time
 }
 
-func (u *User) Validate() string {
+func (u *User) Validate() error {
 	err := validation.ValidateStruct(u,
 		validation.Field(&u.Name, validation.Required, validation.Length(1, maxLength)),
 		validation.Field(&u.Email, validation.Required, validation.Length(1, maxLength), is.Email),
 	)
 	if err != nil {
-		return fmt.Sprint(err)
+		return errors.Wrap(errors.Cause(err), "validation failed")
 	}
 
-	return fmt.Sprint(err)
+	return nil
 }
