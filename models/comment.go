@@ -1,10 +1,10 @@
 package models
 
 import (
+	"fmt"
 	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation"
-	"github.com/pkg/errors"
 )
 
 type Comment struct {
@@ -18,7 +18,7 @@ type Comment struct {
 func (c *Comment) Validate() error {
 	err := validation.ValidateStruct(c, validation.Field(&c.Content, validation.Required))
 	if err != nil {
-		return errors.Wrap(errors.Cause(err), "validation failed")
+		return fmt.Errorf("%w", err)
 	}
 
 	return nil

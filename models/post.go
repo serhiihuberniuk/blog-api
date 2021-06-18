@@ -1,10 +1,10 @@
 package models
 
 import (
+	"fmt"
 	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation"
-	"github.com/pkg/errors"
 )
 
 const maxLengthTitle = 50
@@ -23,7 +23,7 @@ func (p *Post) Validate() error {
 		validation.Field(&p.Title, validation.Required, validation.Length(1, maxLengthTitle)),
 		validation.Field(&p.Description, validation.Required))
 	if err != nil {
-		return errors.Wrap(errors.Cause(err), "validation failed")
+		return fmt.Errorf("%w", err)
 	}
 
 	return nil
