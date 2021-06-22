@@ -18,7 +18,7 @@ type Comment struct {
 func (c *Comment) Validate() error {
 	err := validation.ValidateStruct(c, validation.Field(&c.Content, validation.Required))
 	if err != nil {
-		return fmt.Errorf("%w", err)
+		return fmt.Errorf("validation failed: %w", err)
 	}
 
 	return nil

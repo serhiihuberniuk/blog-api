@@ -24,7 +24,7 @@ func (u *User) Validate() error {
 		validation.Field(&u.Email, validation.Required, validation.Length(1, maxLength), is.Email),
 	)
 	if err != nil {
-		return fmt.Errorf("%w", err)
+		return fmt.Errorf("validation failed: %w", err)
 	}
 
 	return nil

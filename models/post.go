@@ -23,7 +23,7 @@ func (p *Post) Validate() error {
 		validation.Field(&p.Title, validation.Required, validation.Length(1, maxLengthTitle)),
 		validation.Field(&p.Description, validation.Required))
 	if err != nil {
-		return fmt.Errorf("%w", err)
+		return fmt.Errorf("validation failed: %w", err)
 	}
 
 	return nil
