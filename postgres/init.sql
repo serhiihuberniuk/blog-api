@@ -1,4 +1,24 @@
-CREATE SCHEMA models
-    CREATE TABLE models.user (ID varchar, name varchar, email varchar, createdAt date, updatedAt date)
-    CREATE TABLE models.post (ID varchar, title text, description text, createdBy varchar, createdAt date, tags varchar array)
-    CREATE TABLE models.comment (ID varchar, content text, createdBy varchar, createdAt date, postId varchar);
+CREATE TABLE user (
+    id uuid PRIMARY KEY,
+    name varchar,
+    email varchar,
+    created_at timestamp,
+    updated_at timestamp
+);
+
+CREATE TABLE post (
+    id uuid PRIMARY KEY,
+    title text,
+    description text,
+    created_by varchar REFERENCES user(id),
+    created_at timestamp,
+    tags varchar array
+);
+
+CREATE TABLE comment (
+    id uuid PRIMARY KEY,
+    content text,
+    created_by varchar REFERENCES user (id),
+    created_at timestamp,
+    post_id varchar REFERENCES post (id)
+);
