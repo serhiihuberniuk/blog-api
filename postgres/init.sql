@@ -10,7 +10,7 @@ CREATE TABLE posts (
     id uuid PRIMARY KEY,
     title text,
     description text,
-    created_by varchar REFERENCES users(id),
+    created_by uuid REFERENCES users(id),
     created_at timestamp,
     tags json
 );
@@ -18,7 +18,7 @@ CREATE TABLE posts (
 CREATE TABLE comments (
     id uuid PRIMARY KEY,
     content text,
-    created_by varchar REFERENCES users (id),
+    created_by uuid REFERENCES users (id),
     created_at timestamp,
-    post_id varchar REFERENCES posts (id)
+    post_id uuid REFERENCES posts (id)
 );
