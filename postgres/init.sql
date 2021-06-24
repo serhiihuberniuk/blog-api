@@ -1,4 +1,4 @@
-CREATE TABLE user (
+CREATE TABLE users (
     id uuid PRIMARY KEY,
     name varchar,
     email varchar,
@@ -6,19 +6,19 @@ CREATE TABLE user (
     updated_at timestamp
 );
 
-CREATE TABLE post (
+CREATE TABLE posts (
     id uuid PRIMARY KEY,
     title text,
     description text,
-    created_by varchar REFERENCES user(id),
+    created_by varchar REFERENCES users(id),
     created_at timestamp,
-    tags varchar array
+    tags json
 );
 
-CREATE TABLE comment (
+CREATE TABLE comments (
     id uuid PRIMARY KEY,
     content text,
-    created_by varchar REFERENCES user (id),
+    created_by varchar REFERENCES users (id),
     created_at timestamp,
-    post_id varchar REFERENCES post (id)
+    post_id varchar REFERENCES posts (id)
 );
