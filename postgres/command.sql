@@ -33,13 +33,14 @@ GROUP BY u.name;
 
 
 /*returns 5 months with  the biggest number of posts*/
-SELECT *
+SELECT month, count(month)
 FROM (
-         SELECT to_char(created_at, 'YYYY-MM'), count(id)
-         FROM posts
-         GROUP BY to_char(created_at, 'YYYY-MM')
-         ORDER BY count(id) DESC
-     ) AS "result"
-LIMIT 5;
+         select to_char(created_at, 'YYYY-MM') as "month"
+         from posts
+     ) as "result"
+GROUP BY month
+ORDER BY count(month) DESC
+limit 5;
+
 
 
