@@ -28,6 +28,7 @@ FROM  users u
 GROUP BY u.name
 HAVING COUNT(p.id)>0;
 
+
 SELECT to_char(created_at, 'YYYY-MM'), count(id)
 FROM posts
 GROUP BY to_char(created_at, 'YYYY-MM')
