@@ -27,14 +27,19 @@ LIMIT 5;
 /*returns names of users which have at least 1 comment*/
 SELECT u.name
 FROM  users u
-    LEFT JOIN posts p
+    INNER JOIN posts p
         ON u.id = p.created_by
-GROUP BY u.name
-HAVING COUNT(p.id)>0;
+GROUP BY u.name;
 
 
-SELECT to_char(created_at, 'YYYY-MM'), count(id)
-FROM posts
-GROUP BY to_char(created_at, 'YYYY-MM')
-ORDER BY count(id) DESC
+/*returns 5 months with  the biggest number of posts*/
+SELECT *
+FROM (
+         SELECT to_char(created_at, 'YYYY-MM'), count(id)
+         FROM posts
+         GROUP BY to_char(created_at, 'YYYY-MM')
+         ORDER BY count(id) DESC
+     ) AS "result"
 LIMIT 5;
+
+
