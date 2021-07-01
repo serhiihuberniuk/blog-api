@@ -9,6 +9,17 @@ import (
 
 const maxLengthTitle = 50
 
+const (
+	FilterPostsByTitle     FilterPostsByField = "Title"
+	FilterPostsByCreatedBy FilterPostsByField = "CreatedBy"
+	FilterPostsByTag       FilterPostsByField = "Tag"
+)
+
+const (
+	SortPostsByTitle SortPostsByField = "Title"
+	SortPostsByTags  SortPostsByField = "Tag"
+)
+
 type Post struct {
 	ID          string
 	Title       string
@@ -16,6 +27,34 @@ type Post struct {
 	CreatedBy   string
 	CreatedAt   time.Time
 	Tags        []string
+}
+
+type CreatePostPayload struct {
+	Title       string
+	Description string
+	Tags        []string
+	AuthorID    string
+}
+
+type UpdatePostPayload struct {
+	PostID      string
+	Title       string
+	Description string
+	Tags        []string
+}
+
+type FilterPostsByField string
+
+type FilterPosts struct {
+	Field FilterPostsByField
+	Value string
+}
+
+type SortPostsByField string
+
+type SortPosts struct {
+	SortByField SortPostsByField
+	IsASC       bool
 }
 
 func (p *Post) Validate() error {

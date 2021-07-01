@@ -18,6 +18,17 @@ type User struct {
 	UpdatedAt time.Time
 }
 
+type CreateUserPayload struct {
+	Name  string
+	Email string
+}
+
+type UpdateUserPayload struct {
+	UserID string
+	Name   string
+	Email  string
+}
+
 func (u *User) Validate() error {
 	err := validation.ValidateStruct(u,
 		validation.Field(&u.Name, validation.Required, validation.Length(1, maxLength)),
