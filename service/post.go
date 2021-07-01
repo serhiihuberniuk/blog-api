@@ -9,29 +9,13 @@ import (
 	"github.com/serhiihuberniuk/blog-api/models"
 )
 
-type CreatePostPayload struct {
-	Title       string
-	Description string
-	Tags        []string
-	AuthorId    string
-}
-
-type UpdatePostPayload struct {
-	PostId      string
-	Title       string
-	Description string
-	Tags        []string
-}
-
-func (s *Service) CreatePost(ctx context.Context, payload CreatePostPayload) error {
-	now := time.Now()
-
+func (s *Service) CreatePost(ctx context.Context, payload models.CreatePostPayload) error {
 	post := &models.Post{
 		ID:          uuid.New().String(),
 		Title:       payload.Title,
 		Description: payload.Description,
-		CreatedAt:   now,
-		CreatedBy:   payload.AuthorId,
+		CreatedAt:   time.Now(),
+		CreatedBy:   payload.AuthorID,
 		Tags:        payload.Tags,
 	}
 
@@ -39,11 +23,15 @@ func (s *Service) CreatePost(ctx context.Context, payload CreatePostPayload) err
 		return fmt.Errorf("cannot create post: %w", err)
 	}
 
-	return fmt.Errorf("cannot create post: %w", s.repo.CreatePost(ctx, post))
+	if err := s.repo.CreatePost(ctx, post); err != nil {
+		return fmt.Errorf("cannot create post: %w", err)
+	}
+
+	return nil
 }
 
-func (s *Service) GetPost(ctx context.Context, postId string) (*models.Post, error) {
-	post, err := s.repo.GetPost(ctx, postId)
+func (s *Service) GetPost(ctx context.Context, postID string) (*models.Post, error) {
+	post, err := s.repo.GetPost(ctx, postID)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get post: %w", err)
 	}
@@ -51,27 +39,41 @@ func (s *Service) GetPost(ctx context.Context, postId string) (*models.Post, err
 	return post, nil
 }
 
-func (s *Service) UpdatePost(ctx context.Context, payload UpdatePostPayload) error {
-	post, err := s.GetPost(ctx, payload.PostId)
+func (s *Service) UpdatePost(ctx context.Context, payload models.UpdatePostPayload) error {
+	post, err := s.GetPost(ctx, payload.PostID)
 	if err != nil {
 		return fmt.Errorf("cannot update post: %w", err)
 	}
 
-	*post = models.Post{
-		Title:       payload.Title,
-		Description: payload.Description,
-		Tags:        payload.Tags,
-	}
+	post.Title = payload.Title
+	post.Description = payload.Description
+	post.Tags = payload.Tags
 
 	if err := post.Validate(); err != nil {
 		return fmt.Errorf("cannot update post: %w", err)
 	}
 
-	return fmt.Errorf("cannot update post: %w", s.repo.UpdatePost(ctx, post))
+	if err := s.repo.UpdatePost(ctx, post); err != nil {
+		return fmt.Errorf("cannot update post: %w", err)
+	}
+
+	return nil
 }
 
 func (s *Service) DeletePost(ctx context.Context, post *models.Post) error {
-	return fmt.Errorf("cannot delete post: %w", s.repo.DeletePost(ctx, post))
+	if err := s.repo.DeletePost(ctx, post); err != nil {
+		return fmt.Errorf("cannot delete post: %w", err)
+	}
+
+	return nil
 }
 
-// todo func (s *Service) ListPosts() {
+func (s *Service) ListPosts(ctx context.Context, pagination models.Pagination,
+	filter models.FilterPosts, sort models.SortPosts) (*[]models.Post, error) {
+	posts, err := s.repo.ListPosts(ctx, pagination, filter, sort)
+	if err != nil {
+		return nil, fmt.Errorf("cannot get posts: %w", err)
+	}
+
+	return posts, nil
+}

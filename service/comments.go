@@ -9,36 +9,27 @@ import (
 	"github.com/serhiihuberniuk/blog-api/models"
 )
 
-type CreateCommentPayload struct {
-	Content  string
-	PostId   string
-	AuthorId string
-}
-
-type UpdateCommentPayload struct {
-	CommentId string
-	Content   string
-}
-
-func (s *Service) CreateComment(ctx context.Context, payload CreateCommentPayload) error {
-	now := time.Now()
-
+func (s *Service) CreateComment(ctx context.Context, payload models.CreateCommentPayload) error {
 	comment := &models.Comment{
 		ID:        uuid.New().String(),
 		Content:   payload.Content,
-		CreatedBy: payload.AuthorId,
-		CreatedAt: now,
-		PostID:    payload.PostId,
+		CreatedBy: payload.AuthorID,
+		CreatedAt: time.Now(),
+		PostID:    payload.PostID,
 	}
 	if err := comment.Validate(); err != nil {
 		return fmt.Errorf("cannot create comment: %w", err)
 	}
 
-	return fmt.Errorf("cannot create comment: %w", s.repo.CreateComment(ctx, comment))
+	if err := s.repo.CreateComment(ctx, comment); err != nil {
+		return fmt.Errorf("cannot create comment: %w", err)
+	}
+
+	return nil
 }
 
-func (s *Service) GetComment(ctx context.Context, commentId string) (*models.Comment, error) {
-	comment, err := s.repo.GetComment(ctx, commentId)
+func (s *Service) GetComment(ctx context.Context, commentID string) (*models.Comment, error) {
+	comment, err := s.repo.GetComment(ctx, commentID)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get comment: %w", err)
 	}
@@ -46,25 +37,39 @@ func (s *Service) GetComment(ctx context.Context, commentId string) (*models.Com
 	return comment, nil
 }
 
-func (s *Service) UpdateComment(ctx context.Context, payload UpdateCommentPayload) error {
-	comment, err := s.GetComment(ctx, payload.CommentId)
+func (s *Service) UpdateComment(ctx context.Context, payload models.UpdateCommentPayload) error {
+	comment, err := s.GetComment(ctx, payload.CommentID)
 	if err != nil {
 		return fmt.Errorf("cannot update comment: %w", err)
 	}
 
-	*comment = models.Comment{
-		Content: payload.Content,
-	}
+	comment.Content = payload.Content
 
 	if err := comment.Validate(); err != nil {
 		return fmt.Errorf("cannot update comment: %w", err)
 	}
 
-	return fmt.Errorf("cannot update comment: %w", s.repo.UpdateComment(ctx, comment))
+	if err := s.repo.UpdateComment(ctx, comment); err != nil {
+		return fmt.Errorf("cannot update comment: %w", err)
+	}
+
+	return nil
 }
 
 func (s *Service) DeleteComment(ctx context.Context, comment *models.Comment) error {
-	return fmt.Errorf("cannot delete comment: %w", s.repo.DeleteComment(ctx, comment))
+	if err := s.repo.DeleteComment(ctx, comment); err != nil {
+		return fmt.Errorf("cannot delete comment: %w", err)
+	}
+
+	return nil
 }
 
-// todo func (s *Service) ListComments(){}
+func (s *Service) ListComments(ctx context.Context, pagination models.Pagination,
+	filter models.FilterComments, sort models.SortComments) (*[]models.Comment, error) {
+	comments, err := s.repo.ListComments(ctx, pagination, filter, sort)
+	if err != nil {
+		return nil, fmt.Errorf("cannot get comments: %w", err)
+	}
+
+	return comments, nil
+}
