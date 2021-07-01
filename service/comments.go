@@ -5,50 +5,53 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/serhiihuberniuk/blog-api/models"
-	"time"
 )
 
 type CreateCommentPayload struct {
-	content string
+	Content  string
+	PostId   string
+	AuthorId string
 }
 
 type UpdateCommentPayload struct {
-	content string
+	CommentId string
+	Content   string
 }
 
-func (s *Service) CreateComment(ctx context.Context, payload CreateCommentPayload, comment *models.Comment, user models.User, post models.Post) error {
-	now := time.Now()
-	comment = &models.Comment{
+func (s *Service) CreateComment(ctx context.Context, payload CreateCommentPayload) error {
+	comment := &models.Comment{
 		ID:        uuid.New().String(),
-		Content:   payload.content,
-		CreatedBy: user.ID,
+		Content:   payload.Content,
+		CreatedBy: payload.AuthorId,
 		CreatedAt: now,
-		PostID:    post.ID,
+		PostID:    payload.PostId,
 	}
 	if err := comment.Validate(); err != nil {
 		return fmt.Errorf("cannot create comment: %w", err)
 	}
-	return nil
+	return s.repo.CreateComment(ctx, comment)
 }
 
-func (s *Service) GetComment(ctx context.Context, comment models.Comment) (models.Comment, error) {
-	return s.repo.GetComment(ctx, comment)
+func (s *Service) GetComment(ctx context.Context, commentId string) (*models.Comment, error) {
+	return s.repo.GetComment(ctx, commentId)
 }
 
-func (s *Service) UpdateComment(ctx context.Context, comment *models.Comment, payload UpdateCommentPayload) error {
+func (s *Service) UpdateComment(ctx context.Context, payload UpdateCommentPayload) error {
+	comment, err := s.GetComment(ctx, payload.CommentId)
+	if err != nil {
+		return fmt.Errorf("cannot update comment: %w", err)
+	}
 	comment = &models.Comment{
-		Content: payload.content,
+		Content: payload.Content,
 	}
 	if err := comment.Validate(); err != nil {
 		return fmt.Errorf("cannot update comment: %w", err)
 	}
-	return nil
+	return s.repo.UpdateComment(ctx, comment)
 }
 
-func (s *Service) DeleteComment(ctx context.Context, comment models.Comment) error {
+func (s *Service) DeleteComment(ctx context.Context, comment *models.Comment) error {
 	return s.repo.DeleteComment(ctx, comment)
 }
 
-func (s *Service) ListComments(ctx context.Context, comments ...models.Comment) ([]models.Comment, error) {
-	return s.repo.ListComments(ctx, comments...)
-}
+// todo func (s *Service) ListComments(){}
