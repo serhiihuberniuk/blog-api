@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-
 	"github.com/serhiihuberniuk/blog-api/models"
 )
 
@@ -21,12 +20,12 @@ type repository interface {
 	UpdatePost(ctx context.Context, post *models.Post) error
 	DeletePost(ctx context.Context, post *models.Post) error
 	ListPosts(ctx context.Context, pagination models.Pagination,
-		filter models.FilterPosts, sort models.SortPosts) (*[]models.Post, error)
+		filter models.FilterPosts, sort models.SortPosts) ([]*models.Post, error)
 
 	CreateComment(ctx context.Context, comment *models.Comment) error
 	GetComment(ctx context.Context, commentID string) (*models.Comment, error)
 	UpdateComment(ctx context.Context, comment *models.Comment) error
 	DeleteComment(ctx context.Context, comment *models.Comment) error
 	ListComments(ctx context.Context, pagination models.Pagination,
-		filter models.FilterComments, sort models.SortComments) (*[]models.Comment, error)
+		filter models.FilterComments, sort models.SortComments) ([]*models.Comment, error)
 }
