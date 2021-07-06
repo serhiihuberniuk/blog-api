@@ -4,19 +4,14 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Masterminds/squirrel"
+	"github.com/georgysavva/scany/pgxscan"
 	"github.com/serhiihuberniuk/blog-api/models"
 )
 
 func (r *Repository) CreateUser(ctx context.Context, user *models.User) error {
-	sql, args, err := squirrel.Insert("users").
-		Values(user.ID, user.Name, user.Email, user.CreatedAt, user.UpdatedAt).
-		ToSql()
-	if err != nil {
-		return fmt.Errorf("cannot create user: %w", err)
-	}
+	sql := "INSERT INTO users VALUES ($1, $2, $3, $4, $5)"
 
-	_, err = r.Db.Exec(ctx, sql, args...)
+	_, err := r.Db.Exec(ctx, sql, user.ID, user.Name, user.Email, user.CreatedAt, user.UpdatedAt)
 	if err != nil {
 		return fmt.Errorf("cannot create user: %w", err)
 	}
@@ -27,22 +22,9 @@ func (r *Repository) CreateUser(ctx context.Context, user *models.User) error {
 func (r *Repository) GetUser(ctx context.Context, userID string) (*models.User, error) {
 	var user models.User
 
-	sql, args, err := squirrel.Select("*").
-		From("users").
-		Where("id=$1", userID).
-		ToSql()
-	if err != nil {
-		return nil, fmt.Errorf("cannot get user: %w", err)
-	}
+	sql := "SELECT * FROM users WHERE id=$1"
 
-	err = r.Db.QueryRow(ctx, sql, args...).
-		Scan(
-			&user.ID,
-			&user.Name,
-			&user.Email,
-			&user.CreatedAt,
-			&user.UpdatedAt,
-		)
+	err := pgxscan.Get(ctx, r.Db, &user, sql, userID)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get user: %w", err)
 	}
@@ -51,17 +33,9 @@ func (r *Repository) GetUser(ctx context.Context, userID string) (*models.User, 
 }
 
 func (r *Repository) UpdateUser(ctx context.Context, user *models.User) error {
-	sql, args, err := squirrel.Update("users").
-		Set("name", user.Name).
-		Set("email", user.Email).
-		Set("updated_at", user.UpdatedAt).
-		Where("id=$1", user.ID).
-		ToSql()
-	if err != nil {
-		return fmt.Errorf("cannot update user: %w", err)
-	}
+	sql := "UPDATE users SET name=$1, email=$2, updated_at=$3 WHERE id=$4"
 
-	_, err = r.Db.Exec(ctx, sql, args...)
+	_, err := r.Db.Exec(ctx, sql, user.Name, user.Email, user.UpdatedAt, user.ID)
 	if err != nil {
 		return fmt.Errorf("cannot update user: %w", err)
 	}
@@ -70,14 +44,9 @@ func (r *Repository) UpdateUser(ctx context.Context, user *models.User) error {
 }
 
 func (r *Repository) DeleteUser(ctx context.Context, user *models.User) error {
-	sql, args, err := squirrel.Delete("users").
-		Where("id=$1", user.ID).
-		ToSql()
-	if err != nil {
-		return fmt.Errorf("cannot delete user: %w", err)
-	}
+	sql := "DELETE FROM users WHERE id=$1"
 
-	_, err = r.Db.Exec(ctx, sql, args...)
+	_, err := r.Db.Exec(ctx, sql, user.ID)
 	if err != nil {
 		return fmt.Errorf("cannot delete user: %w", err)
 	}

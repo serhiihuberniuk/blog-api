@@ -1,9 +1,9 @@
 package repository
 
 import (
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 type Repository struct {
-	Db *pgx.Conn
+	Db *pgxpool.Conn
 }

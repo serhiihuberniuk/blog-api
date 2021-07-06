@@ -10,14 +10,9 @@ import (
 )
 
 func (r *Repository) CreateComment(ctx context.Context, comment *models.Comment) error {
-	sql, args, err := squirrel.Insert("comments").
-		Values(comment.ID, comment.Content, comment.CreatedBy, comment.CreatedAt, comment.PostID).
-		ToSql()
-	if err != nil {
-		return fmt.Errorf("cannot create comment, %w", err)
-	}
+	sql := "INSERT INTO comments VALUES ($1, $2, $3, $4, $5)"
 
-	_, err = r.Db.Exec(ctx, sql, args...)
+	_, err := r.Db.Exec(ctx, sql, comment.ID, comment.Content, comment.CreatedBy, comment.CreatedAt, comment.PostID)
 	if err != nil {
 		return fmt.Errorf("cannot create comment, %w", err)
 	}
@@ -28,22 +23,9 @@ func (r *Repository) CreateComment(ctx context.Context, comment *models.Comment)
 func (r *Repository) GetComment(ctx context.Context, commentID string) (*models.Comment, error) {
 	var comment models.Comment
 
-	sql, args, err := squirrel.Select("*").
-		From("comments").
-		Where("id=$1", commentID).
-		ToSql()
-	if err != nil {
-		return nil, fmt.Errorf("cennot get comment, %w", err)
-	}
+	sql := "SELECT * FROM comments WHERE id=$1"
 
-	err = r.Db.QueryRow(ctx, sql, args...).
-		Scan(
-			&comment.ID,
-			&comment.Content,
-			&comment.CreatedBy,
-			&comment.CreatedAt,
-			&comment.PostID,
-		)
+	err := pgxscan.Get(ctx, r.Db, &comment, sql, commentID)
 	if err != nil {
 		return nil, fmt.Errorf("cennot get comment, %w", err)
 	}
@@ -52,15 +34,9 @@ func (r *Repository) GetComment(ctx context.Context, commentID string) (*models.
 }
 
 func (r *Repository) UpdateComment(ctx context.Context, comment *models.Comment) error {
-	sql, args, err := squirrel.Update("comments").
-		Set("content", comment.Content).
-		Where("id=$1", comment.ID).
-		ToSql()
-	if err != nil {
-		return fmt.Errorf("cannot update comment: %w", err)
-	}
+	sql := "UPDATE comments SET content=$1 WHERE id=$1"
 
-	_, err = r.Db.Exec(ctx, sql, args...)
+	_, err := r.Db.Exec(ctx, sql, comment.Content, comment.ID)
 	if err != nil {
 		return fmt.Errorf("cannot update comment: %w", err)
 	}
@@ -69,14 +45,9 @@ func (r *Repository) UpdateComment(ctx context.Context, comment *models.Comment)
 }
 
 func (r *Repository) DeleteComment(ctx context.Context, comment *models.Comment) error {
-	sql, args, err := squirrel.Delete("comments").
-		Where("id=$1", comment.ID).
-		ToSql()
-	if err != nil {
-		return fmt.Errorf("cannot delete comment: %w", err)
-	}
+	sql := "DELETE FROM comments WHERE id=$1"
 
-	_, err = r.Db.Exec(ctx, sql, args...)
+	_, err := r.Db.Exec(ctx, sql, comment.ID)
 	if err != nil {
 		return fmt.Errorf("cannot delete comment: %w", err)
 	}
@@ -86,12 +57,10 @@ func (r *Repository) DeleteComment(ctx context.Context, comment *models.Comment)
 
 func (r *Repository) ListComments(ctx context.Context, pagination models.Pagination,
 	filter models.FilterComments, sort models.SortComments) ([]*models.Comment, error) {
-	var comments []*models.Comment
-
 	query := squirrel.Select("*").
 		From("comments")
-	if pred := fmt.Sprintf("%s=$1", filter.Field); filter.Field != "" {
-		query = query.Where(pred, filter.Value)
+	if filter.Field != "" {
+		query = query.Where(fmt.Sprintf("%s=$1", filter.Field), filter.Value)
 	}
 
 	if sort.Field != "" {
@@ -114,6 +83,8 @@ func (r *Repository) ListComments(ctx context.Context, pagination models.Paginat
 	if err != nil {
 		return nil, fmt.Errorf("cannot get list of commentss: %w", err)
 	}
+
+	var comments []*models.Comment
 
 	err = pgxscan.Select(ctx, r.Db, &comments, sql, args...)
 	if err != nil {
