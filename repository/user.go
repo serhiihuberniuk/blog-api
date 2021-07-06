@@ -9,7 +9,7 @@ import (
 )
 
 func (r *Repository) CreateUser(ctx context.Context, user *models.User) error {
-	sql := "INSERT INTO users VALUES ($1, $2, $3, $4, $5)"
+	const sql = "INSERT INTO users (id, name, email, created_at, updates_at) VALUES ($1, $2, $3, $4, $5)"
 
 	_, err := r.Db.Exec(ctx, sql, user.ID, user.Name, user.Email, user.CreatedAt, user.UpdatedAt)
 	if err != nil {
@@ -20,9 +20,9 @@ func (r *Repository) CreateUser(ctx context.Context, user *models.User) error {
 }
 
 func (r *Repository) GetUser(ctx context.Context, userID string) (*models.User, error) {
-	var user models.User
+	const sql = "SELECT id, name, email, created_at, updated_at FROM users WHERE id=$1"
 
-	sql := "SELECT * FROM users WHERE id=$1"
+	var user models.User
 
 	err := pgxscan.Get(ctx, r.Db, &user, sql, userID)
 	if err != nil {
@@ -33,7 +33,7 @@ func (r *Repository) GetUser(ctx context.Context, userID string) (*models.User, 
 }
 
 func (r *Repository) UpdateUser(ctx context.Context, user *models.User) error {
-	sql := "UPDATE users SET name=$1, email=$2, updated_at=$3 WHERE id=$4"
+	const sql = "UPDATE users SET name=$1, email=$2, updated_at=$3 WHERE id=$4"
 
 	_, err := r.Db.Exec(ctx, sql, user.Name, user.Email, user.UpdatedAt, user.ID)
 	if err != nil {
@@ -44,7 +44,7 @@ func (r *Repository) UpdateUser(ctx context.Context, user *models.User) error {
 }
 
 func (r *Repository) DeleteUser(ctx context.Context, user *models.User) error {
-	sql := "DELETE FROM users WHERE id=$1"
+	const sql = "DELETE FROM users WHERE id=$1"
 
 	_, err := r.Db.Exec(ctx, sql, user.ID)
 	if err != nil {

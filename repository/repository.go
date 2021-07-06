@@ -5,5 +5,5 @@ import (
 )
 
 type Repository struct {
-	Db *pgxpool.Conn
+	Db *pgxpool.Pool
 }

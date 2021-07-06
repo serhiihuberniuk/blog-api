@@ -10,7 +10,7 @@ import (
 )
 
 func (r *Repository) CreatePost(ctx context.Context, post *models.Post) error {
-	sql := "INSERT INTO posts VALUES ($1,$2,$3,$4,$5,$6)"
+	const sql = "INSERT INTO posts (id, title, description, created_by, created_at, tags) VALUES ($1,$2,$3,$4,$5,$6)"
 
 	_, err := r.Db.Exec(ctx, sql, post.ID, post.Title, post.Description, post.CreatedBy, post.CreatedAt, post.Tags)
 	if err != nil {
@@ -21,9 +21,9 @@ func (r *Repository) CreatePost(ctx context.Context, post *models.Post) error {
 }
 
 func (r *Repository) GetPost(ctx context.Context, postID string) (*models.Post, error) {
-	var post models.Post
+	const sql = "SELECT id, title, description, created_by, created_at, tags FROM posts WHERE id=$1"
 
-	sql := "SELECT * FROM posts WHERE id=$1"
+	var post models.Post
 
 	err := pgxscan.Get(ctx, r.Db, &post, sql, postID)
 	if err != nil {
@@ -34,7 +34,7 @@ func (r *Repository) GetPost(ctx context.Context, postID string) (*models.Post, 
 }
 
 func (r *Repository) UpdatePost(ctx context.Context, post *models.Post) error {
-	sql := "UPDATE posts SET title=$1, description=$2, tags=$3 WHERE id=&4"
+	const sql = "UPDATE posts SET title=$1, description=$2, tags=$3 WHERE id=&4"
 
 	_, err := r.Db.Exec(ctx, sql, post.Title, post.Description, post.Tags, post.ID)
 	if err != nil {
@@ -45,7 +45,7 @@ func (r *Repository) UpdatePost(ctx context.Context, post *models.Post) error {
 }
 
 func (r *Repository) DeletePost(ctx context.Context, post *models.Post) error {
-	sql := "DELETE FROM posts WHERE id=$1"
+	const sql = "DELETE FROM posts WHERE id=$1"
 
 	_, err := r.Db.Exec(ctx, sql, post.ID)
 	if err != nil {

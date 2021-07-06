@@ -10,7 +10,7 @@ import (
 )
 
 func (r *Repository) CreateComment(ctx context.Context, comment *models.Comment) error {
-	sql := "INSERT INTO comments VALUES ($1, $2, $3, $4, $5)"
+	const sql = "INSERT INTO comments (id, content, created_by, created_at, post_id) VALUES ($1, $2, $3, $4, $5)"
 
 	_, err := r.Db.Exec(ctx, sql, comment.ID, comment.Content, comment.CreatedBy, comment.CreatedAt, comment.PostID)
 	if err != nil {
@@ -21,9 +21,9 @@ func (r *Repository) CreateComment(ctx context.Context, comment *models.Comment)
 }
 
 func (r *Repository) GetComment(ctx context.Context, commentID string) (*models.Comment, error) {
-	var comment models.Comment
+	const sql = "SELECT id, content, created_by, created_at, post_id FROM comments WHERE id=$1"
 
-	sql := "SELECT * FROM comments WHERE id=$1"
+	var comment models.Comment
 
 	err := pgxscan.Get(ctx, r.Db, &comment, sql, commentID)
 	if err != nil {
@@ -34,7 +34,7 @@ func (r *Repository) GetComment(ctx context.Context, commentID string) (*models.
 }
 
 func (r *Repository) UpdateComment(ctx context.Context, comment *models.Comment) error {
-	sql := "UPDATE comments SET content=$1 WHERE id=$1"
+	const sql = "UPDATE comments SET content=$1 WHERE id=$1"
 
 	_, err := r.Db.Exec(ctx, sql, comment.Content, comment.ID)
 	if err != nil {
@@ -45,7 +45,7 @@ func (r *Repository) UpdateComment(ctx context.Context, comment *models.Comment)
 }
 
 func (r *Repository) DeleteComment(ctx context.Context, comment *models.Comment) error {
-	sql := "DELETE FROM comments WHERE id=$1"
+	const sql = "DELETE FROM comments WHERE id=$1"
 
 	_, err := r.Db.Exec(ctx, sql, comment.ID)
 	if err != nil {
