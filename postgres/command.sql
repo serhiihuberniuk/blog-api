@@ -43,5 +43,3 @@ ORDER BY count(month) DESC
 LIMIT 5;
 
 
-
-
