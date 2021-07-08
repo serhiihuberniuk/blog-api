@@ -12,23 +12,21 @@ type Repository struct {
 	Db *mongo.Database
 }
 
-func NewMongoDb(ctx context.Context, db *mongo.Database) (*mongo.Database, error) {
-	usersCollection := db.Collection("users")
-	if err := createIndexForUsers(ctx, usersCollection); err != nil {
+func NewMongoDb(ctx context.Context, r *Repository) (*mongo.Database, error) {
+
+	if err := createIndexForUsers(ctx, useUsersCollection(r)); err != nil {
 		return nil, fmt.Errorf("cannot create database: %w", err)
 	}
 
-	postsCollection := db.Collection("posts")
-	if err := createIndexesForPosts(ctx, postsCollection); err != nil {
+	if err := createIndexesForPosts(ctx, usePostsCollection(r)); err != nil {
 		return nil, fmt.Errorf("cannot create database: %w", err)
 	}
 
-	commentsCollection := db.Collection("comments")
-	if err := createIndexesForComments(ctx, commentsCollection); err != nil {
+	if err := createIndexesForComments(ctx, useCommentsCollection(r)); err != nil {
 		return nil, fmt.Errorf("cannot create database: %w", err)
 	}
 
-	return db, nil
+	return r.Db, nil
 }
 
 func useUsersCollection(r *Repository) *mongo.Collection {
@@ -54,15 +52,18 @@ func usePostsCollection(r *Repository) *mongo.Collection {
 }
 
 func createIndexesForPosts(ctx context.Context, c *mongo.Collection) error {
-	mod := mongo.IndexModel{
-		Keys: bson.M{
-			"created_by": 1,
-			"created_at": 1,
+	mods := []mongo.IndexModel{
+		{
+			Keys:    bson.M{"created_by": 1},
+			Options: options.Index(),
 		},
-		Options: options.Index(),
+		{
+			Keys:    bson.M{"created_at": 1},
+			Options: options.Index(),
+		},
 	}
 
-	_, err := c.Indexes().CreateOne(ctx, mod)
+	_, err := c.Indexes().CreateMany(ctx, mods)
 	if err != nil {
 		return fmt.Errorf("cannot create index, %w", err)
 	}
@@ -75,15 +76,18 @@ func useCommentsCollection(r *Repository) *mongo.Collection {
 }
 
 func createIndexesForComments(ctx context.Context, c *mongo.Collection) error {
-	mod := mongo.IndexModel{
-		Keys: bson.M{
-			"post_id":    1,
-			"created_by": 1,
+	mods := []mongo.IndexModel{
+		{
+			Keys:    bson.M{"created_by": 1},
+			Options: options.Index(),
 		},
-		Options: options.Index(),
+		{
+			Keys:    bson.M{"post_id": 1},
+			Options: options.Index(),
+		},
 	}
 
-	_, err := c.Indexes().CreateOne(ctx, mod)
+	_, err := c.Indexes().CreateMany(ctx, mods)
 	if err != nil {
 		return fmt.Errorf("cannot create index, %w", err)
 	}
