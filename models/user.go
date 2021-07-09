@@ -11,11 +11,11 @@ import (
 const maxLength = 30
 
 type User struct {
-	ID        string
-	Name      string
-	Email     string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID        string `bson:"_id,omitempty"`
+	Name      string `bson:"name,omitempty"`
+	Email     string `bson:"email,omitempty"`
+	CreatedAt time.Time `bson:"created_at,omitempty"`
+	UpdatedAt time.Time `bson:"updated_at,omitempty"`
 }
 
 type CreateUserPayload struct {

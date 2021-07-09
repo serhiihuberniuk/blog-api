@@ -18,11 +18,11 @@ const (
 )
 
 type Comment struct {
-	ID        string
-	Content   string
-	CreatedBy string
-	CreatedAt time.Time
-	PostID    string
+	ID        string `bson:"_id,omitempty"`
+	Content   string `bson:"content,omitempty"`
+	CreatedBy string `bson:"created_by,omitempty"`
+	CreatedAt time.Time	`bson:"created_at,omitempty"`
+	PostID    string	`bson:"post_id,omitempty"`
 }
 
 type CreateCommentPayload struct {
