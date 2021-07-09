@@ -65,7 +65,7 @@ func (s *Service) DeleteComment(ctx context.Context, comment *models.Comment) er
 }
 
 func (s *Service) ListComments(ctx context.Context, pagination models.Pagination,
-	filter models.FilterComments, sort models.SortComments) (*[]models.Comment, error) {
+	filter models.FilterComments, sort models.SortComments) ([]*models.Comment, error) {
 	comments, err := s.repo.ListComments(ctx, pagination, filter, sort)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get comments: %w", err)

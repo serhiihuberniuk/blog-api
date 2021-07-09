@@ -69,7 +69,7 @@ func (s *Service) DeletePost(ctx context.Context, post *models.Post) error {
 }
 
 func (s *Service) ListPosts(ctx context.Context, pagination models.Pagination,
-	filter models.FilterPosts, sort models.SortPosts) (*[]models.Post, error) {
+	filter models.FilterPosts, sort models.SortPosts) ([]*models.Post, error) {
 	posts, err := s.repo.ListPosts(ctx, pagination, filter, sort)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get posts: %w", err)
