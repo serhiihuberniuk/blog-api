@@ -34,7 +34,7 @@ func (r *Repository) GetPost(ctx context.Context, postID string) (*models.Post, 
 }
 
 func (r *Repository) UpdatePost(ctx context.Context, post *models.Post) error {
-	const sql = "UPDATE posts SET title=$1, description=$2, tags=$3 WHERE id=&4"
+	const sql = "UPDATE posts SET title=$1, description=$2, tags=$3 WHERE id=$4"
 
 	_, err := r.Db.Exec(ctx, sql, post.Title, post.Description, post.Tags, post.ID)
 	if err != nil {
@@ -44,10 +44,10 @@ func (r *Repository) UpdatePost(ctx context.Context, post *models.Post) error {
 	return nil
 }
 
-func (r *Repository) DeletePost(ctx context.Context, post *models.Post) error {
+func (r *Repository) DeletePost(ctx context.Context, postID string) error {
 	const sql = "DELETE FROM posts WHERE id=$1"
 
-	_, err := r.Db.Exec(ctx, sql, post.ID)
+	_, err := r.Db.Exec(ctx, sql, postID)
 	if err != nil {
 		return fmt.Errorf("cannot delete post, %w", err)
 	}

@@ -47,10 +47,10 @@ func (r *Repository) UpdateUser(ctx context.Context, user *models.User) error {
 	return nil
 }
 
-func (r *Repository) DeleteUser(ctx context.Context, user *models.User) error {
+func (r *Repository) DeleteUser(ctx context.Context, userID string) error {
 	usersCollection := useUsersCollection(r)
 
-	if _, err := usersCollection.DeleteOne(ctx, bson.M{"_id": user.ID}); err != nil {
+	if _, err := usersCollection.DeleteOne(ctx, bson.M{"_id": userID}); err != nil {
 		return fmt.Errorf("cannot delete user: %w", err)
 	}
 

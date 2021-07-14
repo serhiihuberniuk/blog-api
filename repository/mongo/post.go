@@ -50,10 +50,10 @@ func (r *Repository) UpdatePost(ctx context.Context, post *models.Post) error {
 	return nil
 }
 
-func (r *Repository) DeletePost(ctx context.Context, post *models.Post) error {
+func (r *Repository) DeletePost(ctx context.Context, postID string) error {
 	postsCollection := usePostsCollection(r)
 
-	if _, err := postsCollection.DeleteOne(ctx, bson.M{"_id": post.ID}); err != nil {
+	if _, err := postsCollection.DeleteOne(ctx, bson.M{"_id": postID}); err != nil {
 		return fmt.Errorf("cannot delete post: %w", err)
 	}
 

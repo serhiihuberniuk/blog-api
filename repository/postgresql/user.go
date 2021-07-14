@@ -9,7 +9,7 @@ import (
 )
 
 func (r *Repository) CreateUser(ctx context.Context, user *models.User) error {
-	const sql = "INSERT INTO users (id, name, email, created_at, updates_at) VALUES ($1, $2, $3, $4, $5)"
+	const sql = "INSERT INTO users (id, name, email, created_at, updated_at) VALUES ($1, $2, $3, $4, $5)"
 
 	_, err := r.Db.Exec(ctx, sql, user.ID, user.Name, user.Email, user.CreatedAt, user.UpdatedAt)
 	if err != nil {
@@ -43,10 +43,10 @@ func (r *Repository) UpdateUser(ctx context.Context, user *models.User) error {
 	return nil
 }
 
-func (r *Repository) DeleteUser(ctx context.Context, user *models.User) error {
+func (r *Repository) DeleteUser(ctx context.Context, userID string) error {
 	const sql = "DELETE FROM users WHERE id=$1"
 
-	_, err := r.Db.Exec(ctx, sql, user.ID)
+	_, err := r.Db.Exec(ctx, sql, userID)
 	if err != nil {
 		return fmt.Errorf("cannot delete user: %w", err)
 	}

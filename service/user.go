@@ -9,7 +9,7 @@ import (
 	"github.com/serhiihuberniuk/blog-api/models"
 )
 
-func (s *Service) CreateUser(ctx context.Context, payload models.CreateUserPayload) error {
+func (s *Service) CreateUser(ctx context.Context, payload models.CreateUserPayload) (string, error) {
 	now := time.Now()
 
 	user := &models.User{
@@ -20,14 +20,14 @@ func (s *Service) CreateUser(ctx context.Context, payload models.CreateUserPaylo
 		UpdatedAt: now,
 	}
 	if err := user.Validate(); err != nil {
-		return fmt.Errorf("cannot create user: %w", err)
+		return "", fmt.Errorf("cannot create user: %w", err)
 	}
 
 	if err := s.repo.CreateUser(ctx, user); err != nil {
-		return fmt.Errorf("cannot create user: %w", err)
+		return "", fmt.Errorf("cannot create user: %w", err)
 	}
 
-	return nil
+	return user.ID, nil
 }
 
 func (s *Service) GetUser(ctx context.Context, userID string) (*models.User, error) {
@@ -60,8 +60,8 @@ func (s *Service) UpdateUser(ctx context.Context, payload models.UpdateUserPaylo
 	return nil
 }
 
-func (s *Service) DeleteUser(ctx context.Context, user *models.User) error {
-	if err := s.repo.DeleteUser(ctx, user); err != nil {
+func (s *Service) DeleteUser(ctx context.Context, userID string) error {
+	if err := s.repo.DeleteUser(ctx, userID); err != nil {
 		return fmt.Errorf("cannot delete user: %w", err)
 	}
 

@@ -9,7 +9,7 @@ import (
 	"github.com/serhiihuberniuk/blog-api/models"
 )
 
-func (s *Service) CreateComment(ctx context.Context, payload models.CreateCommentPayload) error {
+func (s *Service) CreateComment(ctx context.Context, payload models.CreateCommentPayload) (string, error) {
 	comment := &models.Comment{
 		ID:        uuid.New().String(),
 		Content:   payload.Content,
@@ -18,14 +18,14 @@ func (s *Service) CreateComment(ctx context.Context, payload models.CreateCommen
 		PostID:    payload.PostID,
 	}
 	if err := comment.Validate(); err != nil {
-		return fmt.Errorf("cannot create comment: %w", err)
+		return "", fmt.Errorf("cannot create comment: %w", err)
 	}
 
 	if err := s.repo.CreateComment(ctx, comment); err != nil {
-		return fmt.Errorf("cannot create comment: %w", err)
+		return "", fmt.Errorf("cannot create comment: %w", err)
 	}
 
-	return nil
+	return comment.ID, nil
 }
 
 func (s *Service) GetComment(ctx context.Context, commentID string) (*models.Comment, error) {
@@ -56,8 +56,8 @@ func (s *Service) UpdateComment(ctx context.Context, payload models.UpdateCommen
 	return nil
 }
 
-func (s *Service) DeleteComment(ctx context.Context, comment *models.Comment) error {
-	if err := s.repo.DeleteComment(ctx, comment); err != nil {
+func (s *Service) DeleteComment(ctx context.Context, commentID string) error {
+	if err := s.repo.DeleteComment(ctx, commentID); err != nil {
 		return fmt.Errorf("cannot delete comment: %w", err)
 	}
 

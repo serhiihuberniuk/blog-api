@@ -9,7 +9,7 @@ import (
 	"github.com/serhiihuberniuk/blog-api/models"
 )
 
-func (s *Service) CreatePost(ctx context.Context, payload models.CreatePostPayload) error {
+func (s *Service) CreatePost(ctx context.Context, payload models.CreatePostPayload) (string, error) {
 	post := &models.Post{
 		ID:          uuid.New().String(),
 		Title:       payload.Title,
@@ -20,14 +20,14 @@ func (s *Service) CreatePost(ctx context.Context, payload models.CreatePostPaylo
 	}
 
 	if err := post.Validate(); err != nil {
-		return fmt.Errorf("cannot create post: %w", err)
+		return "", fmt.Errorf("cannot create post: %w", err)
 	}
 
 	if err := s.repo.CreatePost(ctx, post); err != nil {
-		return fmt.Errorf("cannot create post: %w", err)
+		return "", fmt.Errorf("cannot create post: %w", err)
 	}
 
-	return nil
+	return post.ID, nil
 }
 
 func (s *Service) GetPost(ctx context.Context, postID string) (*models.Post, error) {
@@ -60,8 +60,8 @@ func (s *Service) UpdatePost(ctx context.Context, payload models.UpdatePostPaylo
 	return nil
 }
 
-func (s *Service) DeletePost(ctx context.Context, post *models.Post) error {
-	if err := s.repo.DeletePost(ctx, post); err != nil {
+func (s *Service) DeletePost(ctx context.Context, postID string) error {
+	if err := s.repo.DeletePost(ctx, postID); err != nil {
 		return fmt.Errorf("cannot delete post: %w", err)
 	}
 
