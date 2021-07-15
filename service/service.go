@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
+
 	"github.com/serhiihuberniuk/blog-api/models"
-	repositoryPkg "github.com/serhiihuberniuk/blog-api/repository/postgresql"
 )
 
 type Service struct {
@@ -31,7 +31,7 @@ type repository interface {
 		filter models.FilterComments, sort models.SortComments) ([]*models.Comment, error)
 }
 
-func NewService(r *repositoryPkg.Repository) *Service {
+func NewService(r repository) *Service {
 	return &Service{
 		repo: r,
 	}

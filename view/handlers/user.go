@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -11,9 +10,8 @@ import (
 
 func (h *Handlers) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var in viewmodels.CreateUserRequest
-	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
-		http.Error(w, "cannot decode data from JSON", http.StatusBadRequest)
 
+	if err := decodeFromJson(w, r, in); err != nil {
 		return
 	}
 
@@ -42,11 +40,7 @@ func (h *Handlers) CreateUser(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: user.UpdatedAt,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-
-	if err = json.NewEncoder(w).Encode(out); err != nil {
-		http.Error(w, "cannot encode data into JSON", http.StatusInternalServerError)
-
+	if err = encodeIntoJson(w, out); err != nil {
 		return
 	}
 }
@@ -61,7 +55,7 @@ func (h *Handlers) GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	responseUser := viewmodels.GetUserResponse{
+	out := viewmodels.GetUserResponse{
 		ID:        user.ID,
 		Name:      user.Name,
 		Email:     user.Email,
@@ -69,11 +63,7 @@ func (h *Handlers) GetUser(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: user.UpdatedAt,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-
-	if err = json.NewEncoder(w).Encode(responseUser); err != nil {
-		http.Error(w, "cannot encode userdata into JSON", http.StatusInternalServerError)
-
+	if err = encodeIntoJson(w, out); err != nil {
 		return
 	}
 }
@@ -81,25 +71,13 @@ func (h *Handlers) GetUser(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	userID := mux.Vars(r)["id"]
 
-	user, err := h.service.GetUser(r.Context(), userID)
-	if err != nil {
-		http.Error(w, "cannot get user", http.StatusNotFound)
+	var in viewmodels.UpdateUserRequest
 
+	if err := decodeFromJson(w, r, in); err != nil {
 		return
 	}
 
-	in := viewmodels.UpdateUserRequest{
-		Name:  user.Name,
-		Email: user.Email,
-	}
-
-	if err = json.NewDecoder(r.Body).Decode(&in); err != nil {
-		http.Error(w, "cannot decode data from JSON", http.StatusBadRequest)
-
-		return
-	}
-
-	err = h.service.UpdateUser(r.Context(), models.UpdateUserPayload{
+	err := h.service.UpdateUser(r.Context(), models.UpdateUserPayload{
 		UserID: userID,
 		Name:   in.Name,
 		Email:  in.Email,
@@ -110,7 +88,7 @@ func (h *Handlers) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err = h.service.GetUser(r.Context(), userID)
+	user, err := h.service.GetUser(r.Context(), userID)
 	if err != nil {
 		http.Error(w, "cannot get updated user", http.StatusNotFound)
 
@@ -125,11 +103,7 @@ func (h *Handlers) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: user.UpdatedAt,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-
-	if err = json.NewEncoder(w).Encode(out); err != nil {
-		http.Error(w, "cannot encode userdata into JSON", http.StatusInternalServerError)
-
+	if err = encodeIntoJson(w, out); err != nil {
 		return
 	}
 }

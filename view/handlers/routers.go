@@ -14,13 +14,13 @@ func (h *Handlers) ApiRouter() *mux.Router {
 	router.HandleFunc("/posts/{id}", h.GetPost).Methods("GET")
 	router.HandleFunc("/posts/{id}", h.UpdatePost).Methods("PUT")
 	router.HandleFunc("/posts/{id}", h.DeletePost).Methods("DELETE")
-	router.UseEncodedPath().HandleFunc("/posts", h.GetListOfPosts).Methods("GET")
+	router.HandleFunc("/posts", h.GetListOfPosts).Methods("GET")
 
 	router.HandleFunc("/comments", h.CreateComment).Methods("POST")
 	router.HandleFunc("/comments/{id}", h.GetComment).Methods("GET")
 	router.HandleFunc("/comments/{id}", h.UpdateComment).Methods("PUT")
 	router.HandleFunc("/comments/{id}", h.DeleteComment).Methods("DELETE")
-	router.UseEncodedPath().HandleFunc("/comments", h.GetListOfComments).Methods("GET")
+	router.HandleFunc("/comments", h.GetListOfComments).Methods("GET")
 
 	return router
 }

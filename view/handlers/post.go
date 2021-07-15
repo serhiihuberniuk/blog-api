@@ -1,9 +1,7 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/serhiihuberniuk/blog-api/models"
@@ -13,9 +11,7 @@ import (
 func (h *Handlers) CreatePost(w http.ResponseWriter, r *http.Request) {
 	var in viewmodels.CreatePostRequest
 
-	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
-		http.Error(w, "cannot decode data from JSON", http.StatusBadRequest)
-
+	if err := decodeFromJson(w, r, in); err != nil {
 		return
 	}
 
@@ -47,11 +43,7 @@ func (h *Handlers) CreatePost(w http.ResponseWriter, r *http.Request) {
 		Tags:        post.Tags,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-
-	if err = json.NewEncoder(w).Encode(out); err != nil {
-		http.Error(w, "cannot encode data into JSON", http.StatusInternalServerError)
-
+	if err = encodeIntoJson(w, out); err != nil {
 		return
 	}
 }
@@ -75,11 +67,7 @@ func (h *Handlers) GetPost(w http.ResponseWriter, r *http.Request) {
 		Tags:        post.Tags,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-
-	if err = json.NewEncoder(w).Encode(out); err != nil {
-		http.Error(w, "cannot encode data into JSON", http.StatusInternalServerError)
-
+	if err = encodeIntoJson(w, out); err != nil {
 		return
 	}
 }
@@ -87,24 +75,13 @@ func (h *Handlers) GetPost(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) UpdatePost(w http.ResponseWriter, r *http.Request) {
 	postID := mux.Vars(r)["id"]
 
-	post, err := h.service.GetPost(r.Context(), postID)
-	if err != nil {
-		http.Error(w, "cannot find user with such ID", http.StatusNotFound)
+	var in viewmodels.UpdatePostRequest
 
+	if err := decodeFromJson(w, r, in); err != nil {
 		return
 	}
 
-	in := viewmodels.UpdatePostRequest{
-		Title:       post.Title,
-		Description: post.Description,
-		Tags:        post.Tags,
-	}
-
-	if err = json.NewDecoder(r.Body).Decode(&in); err != nil {
-		http.Error(w, "cannot decode data from JSON", http.StatusBadRequest)
-	}
-
-	err = h.service.UpdatePost(r.Context(), models.UpdatePostPayload{
+	err := h.service.UpdatePost(r.Context(), models.UpdatePostPayload{
 		PostID:      postID,
 		Title:       in.Title,
 		Description: in.Description,
@@ -116,7 +93,7 @@ func (h *Handlers) UpdatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post, err = h.service.GetPost(r.Context(), postID)
+	post, err := h.service.GetPost(r.Context(), postID)
 	if err != nil {
 		http.Error(w, "cannot get updated post", http.StatusInternalServerError)
 
@@ -132,11 +109,7 @@ func (h *Handlers) UpdatePost(w http.ResponseWriter, r *http.Request) {
 		Tags:        post.Tags,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-
-	if err = json.NewEncoder(w).Encode(out); err != nil {
-		http.Error(w, "cannot encode data into JSON", http.StatusInternalServerError)
-
+	if err = encodeIntoJson(w, out); err != nil {
 		return
 	}
 }
@@ -154,55 +127,24 @@ func (h *Handlers) DeletePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) GetListOfPosts(w http.ResponseWriter, r *http.Request) {
-	vars := r.URL.Query()
-	filterByField := vars.Get("filterByField")
-
-	filterValue := vars.Get("filterValue")
-	if filterValue == "" {
-		filterByField = ""
-	}
-
-	sortByField := vars.Get("sortByField")
-	isAscString := vars.Get("isAsc")
-
-	isAsc := true
-	if isAscString == "false" {
-		isAsc = false
-	}
-
-	limitString := vars.Get("limit")
-
-	limit, err := strconv.Atoi(limitString)
-	if err != nil && limitString != "" {
-		http.Error(w, "cannot convert limit into uint", http.StatusBadRequest)
-
-		return
-	}
-
-	if limit == 0 || limit > maxlimit {
-		limit = maxlimit
-	}
-
-	offsetString := vars.Get("offset")
-
-	offset, err := strconv.Atoi(offsetString)
-	if err != nil && offsetString != "" {
-		http.Error(w, "cannot convert offset into uint", http.StatusBadRequest)
+	queryParams, err := SetQueryParams(r)
+	if err != nil {
+		http.Error(w, "requested parameters is bad", http.StatusBadRequest)
 
 		return
 	}
 
 	posts, err := h.service.ListPosts(r.Context(), models.Pagination{
-		Limit:  uint64(limit),
-		Offset: uint64(offset),
+		Limit:  uint64(queryParams.limit),
+		Offset: uint64(queryParams.offset),
 	},
 		models.FilterPosts{
-			Field: models.FilterPostsByField(filterByField),
-			Value: filterValue,
+			Field: models.FilterPostsByField(queryParams.filterByField),
+			Value: queryParams.filterValue,
 		},
 		models.SortPosts{
-			SortByField: models.SortPostsByField(sortByField),
-			IsASC:       isAsc,
+			SortByField: models.SortPostsByField(queryParams.sortByField),
+			IsASC:       queryParams.isAsc,
 		})
 	if err != nil {
 		http.Error(w, "cannot get posts", http.StatusBadRequest)
@@ -225,11 +167,7 @@ func (h *Handlers) GetListOfPosts(w http.ResponseWriter, r *http.Request) {
 		outs = append(outs, out)
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-
-	if err := json.NewEncoder(w).Encode(outs); err != nil {
-		http.Error(w, "cannot encode data into JSON", http.StatusInternalServerError)
-
+	if err = encodeIntoJson(w, outs); err != nil {
 		return
 	}
 }

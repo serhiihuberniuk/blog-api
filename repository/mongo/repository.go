@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -13,7 +14,6 @@ type Repository struct {
 }
 
 func NewMongoDb(ctx context.Context, r *Repository) (*mongo.Database, error) {
-
 	if err := createIndexForUsers(ctx, useUsersCollection(r)); err != nil {
 		return nil, fmt.Errorf("cannot create database: %w", err)
 	}

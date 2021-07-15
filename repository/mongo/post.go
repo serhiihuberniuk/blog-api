@@ -74,7 +74,7 @@ func (r *Repository) ListPosts(ctx context.Context, pagination models.Pagination
 		opts.SetSort(bson.M{string(sort.SortByField): 1})
 
 		if !sort.IsASC {
-			opts.SetSort(bson.M{string(sort.SortByField): 1})
+			opts.SetSort(bson.M{string(sort.SortByField): -1})
 		}
 	}
 
