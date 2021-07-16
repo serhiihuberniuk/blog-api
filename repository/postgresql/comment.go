@@ -34,7 +34,7 @@ func (r *Repository) GetComment(ctx context.Context, commentID string) (*models.
 }
 
 func (r *Repository) UpdateComment(ctx context.Context, comment *models.Comment) error {
-	const sql = "UPDATE comments SET content=$1 WHERE id=$1"
+	const sql = "UPDATE comments SET content=$1 WHERE id=$2"
 
 	_, err := r.Db.Exec(ctx, sql, comment.Content, comment.ID)
 	if err != nil {
@@ -44,10 +44,10 @@ func (r *Repository) UpdateComment(ctx context.Context, comment *models.Comment)
 	return nil
 }
 
-func (r *Repository) DeleteComment(ctx context.Context, comment *models.Comment) error {
+func (r *Repository) DeleteComment(ctx context.Context, commentID string) error {
 	const sql = "DELETE FROM comments WHERE id=$1"
 
-	_, err := r.Db.Exec(ctx, sql, comment.ID)
+	_, err := r.Db.Exec(ctx, sql, commentID)
 	if err != nil {
 		return fmt.Errorf("cannot delete comment: %w", err)
 	}

@@ -21,12 +21,12 @@ const (
 )
 
 type Post struct {
-	ID          string `bson:"_id,omitempty"`
-	Title       string `bson:"title,omitempty"`
-	Description string `bson:"description,omitempty"`
-	CreatedBy   string	`bson:"created_by,omitempty"`
-	CreatedAt   time.Time	`bson:"created_at,omitempty"`
-	Tags        []string	`bson:"tags,omitempty"`
+	ID          string    `bson:"_id,omitempty"`
+	Title       string    `bson:"title,omitempty"`
+	Description string    `bson:"description,omitempty"`
+	CreatedBy   string    `bson:"created_by,omitempty"`
+	CreatedAt   time.Time `bson:"created_at,omitempty"`
+	Tags        []string  `bson:"tags,omitempty"`
 }
 
 type CreatePostPayload struct {

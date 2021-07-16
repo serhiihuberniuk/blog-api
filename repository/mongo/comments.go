@@ -48,10 +48,10 @@ func (r *Repository) UpdateComment(ctx context.Context, comment *models.Comment)
 	return nil
 }
 
-func (r *Repository) DeleteComment(ctx context.Context, comment *models.Comment) error {
+func (r *Repository) DeleteComment(ctx context.Context, commentID string) error {
 	commentsCollection := useCommentsCollection(r)
 
-	if _, err := commentsCollection.DeleteOne(ctx, bson.M{"_id": comment.ID}); err != nil {
+	if _, err := commentsCollection.DeleteOne(ctx, bson.M{"_id": commentID}); err != nil {
 		return fmt.Errorf("cannot delete comment: %w", err)
 	}
 
