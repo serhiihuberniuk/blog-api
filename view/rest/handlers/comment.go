@@ -1,17 +1,17 @@
 package handlers
 
 import (
+	models2 "github.com/serhiihuberniuk/blog-api/view/rest/models"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/serhiihuberniuk/blog-api/models"
-	viewmodels "github.com/serhiihuberniuk/blog-api/view/models"
 )
 
 func (h *Handlers) CreateComment(w http.ResponseWriter, r *http.Request) {
-	var in viewmodels.CreateCommentRequest
+	var in models2.CreateCommentRequest
 
-	if err := decodeFromJson(w, r, in); err != nil {
+	if !decodeFromJson(w, r, in) {
 		return
 	}
 
@@ -33,7 +33,7 @@ func (h *Handlers) CreateComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out := viewmodels.GetCommentResponse{
+	out := models2.GetCommentResponse{
 		ID:        comment.ID,
 		Content:   comment.Content,
 		CreatedAt: comment.CreatedAt,
@@ -41,7 +41,7 @@ func (h *Handlers) CreateComment(w http.ResponseWriter, r *http.Request) {
 		PostID:    comment.PostID,
 	}
 
-	if err = encodeIntoJson(w, out); err != nil {
+	if !encodeIntoJson(w, out) {
 		return
 	}
 }
@@ -56,7 +56,7 @@ func (h *Handlers) GetComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out := viewmodels.GetCommentResponse{
+	out := models2.GetCommentResponse{
 		ID:        comment.ID,
 		Content:   comment.Content,
 		CreatedAt: comment.CreatedAt,
@@ -64,7 +64,7 @@ func (h *Handlers) GetComment(w http.ResponseWriter, r *http.Request) {
 		PostID:    comment.PostID,
 	}
 
-	if err = encodeIntoJson(w, out); err != nil {
+	if !encodeIntoJson(w, out) {
 		return
 	}
 }
@@ -72,9 +72,9 @@ func (h *Handlers) GetComment(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) UpdateComment(w http.ResponseWriter, r *http.Request) {
 	commentID := mux.Vars(r)["id"]
 
-	var in viewmodels.UpdateCommentRequest
+	var in models2.UpdateCommentRequest
 
-	if err := decodeFromJson(w, r, in); err != nil {
+	if !decodeFromJson(w, r, in) {
 		return
 	}
 
@@ -95,7 +95,7 @@ func (h *Handlers) UpdateComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out := viewmodels.GetCommentResponse{
+	out := models2.GetCommentResponse{
 		ID:        comment.ID,
 		Content:   comment.Content,
 		CreatedAt: comment.CreatedAt,
@@ -103,7 +103,7 @@ func (h *Handlers) UpdateComment(w http.ResponseWriter, r *http.Request) {
 		PostID:    comment.PostID,
 	}
 
-	if err = encodeIntoJson(w, out); err != nil {
+	if !encodeIntoJson(w, out) {
 		return
 	}
 }
@@ -121,7 +121,7 @@ func (h *Handlers) DeleteComment(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) GetListOfComments(w http.ResponseWriter, r *http.Request) {
-	queryParams, err := SetQueryParams(r)
+	queryParams, err := GetQueryParams(r)
 	if err != nil {
 		http.Error(w, "requested parameters is bad", http.StatusBadRequest)
 
@@ -144,10 +144,10 @@ func (h *Handlers) GetListOfComments(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	outs := make([]viewmodels.GetCommentResponse, 0)
+	outs := make([]models2.GetCommentResponse, 0)
 
 	for _, comment := range comments {
-		out := viewmodels.GetCommentResponse{
+		out := models2.GetCommentResponse{
 			ID:        comment.ID,
 			Content:   comment.Content,
 			CreatedAt: comment.CreatedAt,
@@ -158,7 +158,7 @@ func (h *Handlers) GetListOfComments(w http.ResponseWriter, r *http.Request) {
 		outs = append(outs, out)
 	}
 
-	if err = encodeIntoJson(w, outs); err != nil {
+	if !encodeIntoJson(w, outs) {
 		return
 	}
 }

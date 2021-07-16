@@ -21,29 +21,29 @@ type queryParam struct {
 	offset        int
 }
 
-func decodeFromJson(w http.ResponseWriter, r *http.Request, a interface{}) error {
+func decodeFromJson(w http.ResponseWriter, r *http.Request, a interface{}) bool {
 	if err := json.NewDecoder(r.Body).Decode(&a); err != nil {
 		http.Error(w, "cannot decode data from JSON", http.StatusBadRequest)
 
-		return fmt.Errorf("error occurred while decoding from JSON: %w", err)
+		return false
 	}
 
-	return nil
+	return true
 }
 
-func encodeIntoJson(w http.ResponseWriter, a interface{}) error {
+func encodeIntoJson(w http.ResponseWriter, a interface{}) bool {
 	w.Header().Set("Content-Type", "application/json")
 
 	if err := json.NewEncoder(w).Encode(a); err != nil {
 		http.Error(w, "cannot encode data into JSON", http.StatusInternalServerError)
 
-		return fmt.Errorf("error occurred while encoding into JSON: %w", err)
+		return false
 	}
 
-	return nil
+	return true
 }
 
-func SetQueryParams(r *http.Request) (*queryParam, error) {
+func GetQueryParams(r *http.Request) (*queryParam, error) {
 	vars := r.URL.Query()
 
 	var err error

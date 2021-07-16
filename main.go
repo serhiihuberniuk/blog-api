@@ -6,7 +6,7 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	repository "github.com/serhiihuberniuk/blog-api/repository/postgresql"
 	"github.com/serhiihuberniuk/blog-api/service"
-	"github.com/serhiihuberniuk/blog-api/view/handlers"
+	handlers2 "github.com/serhiihuberniuk/blog-api/view/rest/handlers"
 	"log"
 	"net/http"
 	"os"
@@ -16,7 +16,7 @@ import (
 
 const dbUrl = "postgres://serhii:serhii@localhost:5432/api"
 
-func PostgresConnPool(ctx context.Context, dbUrl string) (*pgxpool.Pool, error) {
+func postgresConnPool(ctx context.Context, dbUrl string) (*pgxpool.Pool, error) {
 	pool, err := pgxpool.Connect(ctx, dbUrl)
 	if err != nil {
 		return nil, fmt.Errorf("connection to database failed: %w", err)
@@ -28,7 +28,7 @@ func PostgresConnPool(ctx context.Context, dbUrl string) (*pgxpool.Pool, error) 
 func main() {
 	ctx := context.Background()
 
-	pool, err := PostgresConnPool(ctx, dbUrl)
+	pool, err := postgresConnPool(ctx, dbUrl)
 	if err != nil {
 		log.Fatalf("cannot connect to DB: %v", err)
 	}
@@ -39,16 +39,17 @@ func main() {
 
 	serv := service.NewService(repo)
 
-	handler := handlers.NewHandlers(serv)
+	handler := handlers2.NewHandlers(serv)
 
 	srv := http.Server{
 		Addr:    ":8080",
 		Handler: handler.ApiRouter(),
 	}
 
+	errs := make(chan error)
 	go func() {
 		if err := http.ListenAndServe(srv.Addr, srv.Handler); err != nil {
-			log.Fatalf("error while starting server: %v", err)
+			errs <- err
 		}
 	}()
 
@@ -56,22 +57,20 @@ func main() {
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	killSignal := <-quit
 
-	switch killSignal {
-	case syscall.SIGINT:
-		log.Print("Got SIGINT...")
-	case syscall.SIGTERM:
-		log.Print("Got SIGTERM...")
+	select {
+	case err := <-errs:
+		log.Fatalf("error occured while running HTTP server: %v", err)
+	case <-quit:
 	}
 
 	log.Println("Service is shutting down...")
 
-	if err := srv.Shutdown(ctx); err != nil {
+	pool.Close()
+
+	if err := srv.Shutdown(ctx); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("error while shutting down: %v", err)
 	}
-
-	pool.Close()
 
 	log.Print("Done")
 }

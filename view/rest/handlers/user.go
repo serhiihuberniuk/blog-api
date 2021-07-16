@@ -1,17 +1,17 @@
 package handlers
 
 import (
+	models2 "github.com/serhiihuberniuk/blog-api/view/rest/models"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/serhiihuberniuk/blog-api/models"
-	viewmodels "github.com/serhiihuberniuk/blog-api/view/models"
 )
 
 func (h *Handlers) CreateUser(w http.ResponseWriter, r *http.Request) {
-	var in viewmodels.CreateUserRequest
+	var in models2.CreateUserRequest
 
-	if err := decodeFromJson(w, r, in); err != nil {
+	if !decodeFromJson(w, r, in) {
 		return
 	}
 
@@ -32,7 +32,7 @@ func (h *Handlers) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out := viewmodels.GetUserResponse{
+	out := models2.GetUserResponse{
 		ID:        user.ID,
 		Name:      user.Name,
 		Email:     user.Email,
@@ -40,7 +40,7 @@ func (h *Handlers) CreateUser(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: user.UpdatedAt,
 	}
 
-	if err = encodeIntoJson(w, out); err != nil {
+	if !encodeIntoJson(w, out) {
 		return
 	}
 }
@@ -55,7 +55,7 @@ func (h *Handlers) GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out := viewmodels.GetUserResponse{
+	out := models2.GetUserResponse{
 		ID:        user.ID,
 		Name:      user.Name,
 		Email:     user.Email,
@@ -63,7 +63,7 @@ func (h *Handlers) GetUser(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: user.UpdatedAt,
 	}
 
-	if err = encodeIntoJson(w, out); err != nil {
+	if !encodeIntoJson(w, out) {
 		return
 	}
 }
@@ -71,9 +71,9 @@ func (h *Handlers) GetUser(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	userID := mux.Vars(r)["id"]
 
-	var in viewmodels.UpdateUserRequest
+	var in models2.UpdateUserRequest
 
-	if err := decodeFromJson(w, r, in); err != nil {
+	if !decodeFromJson(w, r, in) {
 		return
 	}
 
@@ -95,7 +95,7 @@ func (h *Handlers) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out := viewmodels.GetUserResponse{
+	out := models2.GetUserResponse{
 		ID:        user.ID,
 		Name:      user.Name,
 		Email:     user.Email,
@@ -103,7 +103,7 @@ func (h *Handlers) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: user.UpdatedAt,
 	}
 
-	if err = encodeIntoJson(w, out); err != nil {
+	if !encodeIntoJson(w, out) {
 		return
 	}
 }

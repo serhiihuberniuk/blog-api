@@ -1,17 +1,17 @@
 package handlers
 
 import (
+	models2 "github.com/serhiihuberniuk/blog-api/view/rest/models"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/serhiihuberniuk/blog-api/models"
-	viewmodels "github.com/serhiihuberniuk/blog-api/view/models"
 )
 
 func (h *Handlers) CreatePost(w http.ResponseWriter, r *http.Request) {
-	var in viewmodels.CreatePostRequest
+	var in models2.CreatePostRequest
 
-	if err := decodeFromJson(w, r, in); err != nil {
+	if !decodeFromJson(w, r, in) {
 		return
 	}
 
@@ -34,7 +34,7 @@ func (h *Handlers) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out := viewmodels.GetPostResponse{
+	out := models2.GetPostResponse{
 		ID:          post.ID,
 		Title:       post.Title,
 		Description: post.Description,
@@ -43,7 +43,7 @@ func (h *Handlers) CreatePost(w http.ResponseWriter, r *http.Request) {
 		Tags:        post.Tags,
 	}
 
-	if err = encodeIntoJson(w, out); err != nil {
+	if !encodeIntoJson(w, out) {
 		return
 	}
 }
@@ -58,7 +58,7 @@ func (h *Handlers) GetPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out := viewmodels.GetPostResponse{
+	out := models2.GetPostResponse{
 		ID:          post.ID,
 		Title:       post.Title,
 		Description: post.Description,
@@ -67,7 +67,7 @@ func (h *Handlers) GetPost(w http.ResponseWriter, r *http.Request) {
 		Tags:        post.Tags,
 	}
 
-	if err = encodeIntoJson(w, out); err != nil {
+	if !encodeIntoJson(w, out) {
 		return
 	}
 }
@@ -75,9 +75,9 @@ func (h *Handlers) GetPost(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) UpdatePost(w http.ResponseWriter, r *http.Request) {
 	postID := mux.Vars(r)["id"]
 
-	var in viewmodels.UpdatePostRequest
+	var in models2.UpdatePostRequest
 
-	if err := decodeFromJson(w, r, in); err != nil {
+	if !decodeFromJson(w, r, in) {
 		return
 	}
 
@@ -100,7 +100,7 @@ func (h *Handlers) UpdatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out := viewmodels.GetPostResponse{
+	out := models2.GetPostResponse{
 		ID:          post.ID,
 		Title:       post.Title,
 		Description: post.Description,
@@ -109,7 +109,7 @@ func (h *Handlers) UpdatePost(w http.ResponseWriter, r *http.Request) {
 		Tags:        post.Tags,
 	}
 
-	if err = encodeIntoJson(w, out); err != nil {
+	if !encodeIntoJson(w, out) {
 		return
 	}
 }
@@ -127,7 +127,7 @@ func (h *Handlers) DeletePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) GetListOfPosts(w http.ResponseWriter, r *http.Request) {
-	queryParams, err := SetQueryParams(r)
+	queryParams, err := GetQueryParams(r)
 	if err != nil {
 		http.Error(w, "requested parameters is bad", http.StatusBadRequest)
 
@@ -152,10 +152,10 @@ func (h *Handlers) GetListOfPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	outs := make([]viewmodels.GetPostResponse, 0)
+	outs := make([]models2.GetPostResponse, 0)
 
 	for _, post := range posts {
-		out := viewmodels.GetPostResponse{
+		out := models2.GetPostResponse{
 			ID:          post.ID,
 			Title:       post.Title,
 			Description: post.Description,
@@ -167,7 +167,7 @@ func (h *Handlers) GetListOfPosts(w http.ResponseWriter, r *http.Request) {
 		outs = append(outs, out)
 	}
 
-	if err = encodeIntoJson(w, outs); err != nil {
+	if !encodeIntoJson(w, outs) {
 		return
 	}
 }
