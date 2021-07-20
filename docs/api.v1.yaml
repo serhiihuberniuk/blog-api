@@ -1,0 +1,573 @@
+openapi: 3.0.2
+info:
+  title: Blog-Api
+  description: Service to share posts and  to comment it
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+    description: main server
+
+paths:
+  /users:
+    post:
+      summary: Creates a user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 30
+                email:
+                  type: string
+                  format: email
+                  maxLength: 30
+              required:
+                - name
+                - email
+      responses:
+        200:
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        400:
+          description: Request body is invalid.
+        404:
+          description: Created user is not found.
+        500:
+          description: Error occured while encoding into JSON.
+
+  /users/{id}:
+    get:
+      summary: Returns user by ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of users to return.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: A user object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        404:
+          description: User with such ID is not found.
+        500:
+          description: Error occured while encoding into JSON.
+
+    put:
+      summary: Updates user's name and email.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 30
+                email:
+                  type: string
+                  format: email
+                  maxLength: 30
+              required:
+                - name
+                - email
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of users to update.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: A user object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        404:
+          description: User with such ID is not found.
+        400:
+          description: Request body is invalid.
+        500:
+          description: Error occured while encoding into JSON.
+
+    delete:
+      summary: Removes user by ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of users to delete.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: User is removed.
+        404:
+          description: User with such ID is not found.
+
+  /posts:
+    post:
+      summary: Creates a post and returns it.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                tags:
+                  type: array
+                  items:
+                    type: string
+                authorId:
+                  type: string
+                  format: uuid
+              required:
+                - title
+                - description
+                - authorId
+
+
+
+      responses:
+        200:
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        400:
+          description: Request body is invalid.
+        404:
+          description: Created post is not found.
+        500:
+          description: Error occured while encoding to JSON.
+    get:
+      summary: Returns list of posts (max 50).
+      parameters:
+        - name: filter-field
+          in: query
+          schema:
+            type: string
+            enum:
+              - title
+              - created_by
+              - tags
+          description: Filter posts by chosen field.
+          required: false
+        - name: filter-value
+          in: query
+          schema:
+            type: string
+          description: Value of chosen field to filter posts.
+          required: false
+        - name: sort-field
+          in: query
+          schema:
+            type: string
+            enum:
+              - title
+              - tags
+              - created_at
+          description: Sort post by chosen field.
+          required: false
+        - name: is-asc
+          in: query
+          schema:
+            type: boolean
+            default: true
+          description: Asc (true) or Desc order of sorting.
+          required: false
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 50
+          description: The number of posts to return.
+          required: false
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: The number of posts to skip.
+          required: false
+      responses:
+        200:
+          description: An array of post objects.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostsList'
+        400:
+          description: Request parameters are invalid.
+        500:
+          description: Error occured while encoding into JSON.
+
+  /posts/{id}:
+    get:
+      summary: Returns post by ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of post to return.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: A post object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        404:
+          description: Post with such ID is not found.
+        500:
+          description: Problem occured while encoding into JSON.
+
+    put:
+      summary: Updates post's title, description and tags.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                tags:
+                  type: array
+                  items:
+                    type: string
+              required:
+                - title
+                - description
+                - tags
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of post to update
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: A post object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        400:
+          description: Request body is invalid.
+        404:
+          description: Post with such ID is not found.
+        500:
+          description: Problem occured while encoding into JSON.
+
+    delete:
+      summary: Removes post by ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID post to delete
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Post is removed.
+        404:
+          description: Post with such ID is not found.
+
+  /comments:
+    post:
+      summary: Creates a comment to post.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                postId:
+                  type: string
+                  format: uuid
+                authorId:
+                  type: string
+                  format: uuid
+              required:
+                - content
+                - postId
+                - authorId
+
+      responses:
+        200:
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        400:
+          description: Request body is invalid.
+        404:
+          description: Created comment is not found.
+        500:
+          description: Problem ocuured while encoding into JSON.
+    get:
+      summary: Returns list of comments (max 50).
+      parameters:
+        - name: filter-field
+          in: query
+          schema:
+            type: string
+            enum:
+              - created_at
+              - created_by
+              - post_id
+          description: Filter comments by chosen field.
+          required: false
+        - name: filter-value
+          in: query
+          schema:
+            type: string
+          description: Value of chosen field to filter comments.
+          required: false
+        - name: sort-field
+          in: query
+          schema:
+            type: string
+            enum:
+              - created_at
+          description: Sort comments by chosen field.
+          required: false
+        - name: is-asc
+          in: query
+          schema:
+            type: boolean
+            default: true
+          description: Asc (true) or Desc order of sorting.
+          required: false
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 50
+          description: The number of comments to return.
+          required: false
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: The number of comments to skip.
+          required: false
+      responses:
+        200:
+          description: An array of comments objects.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentsList'
+        400:
+          description: Request parameters are invalid.
+        500:
+          description: Error occured while encoding into JSON.
+
+  /comments/{id}:
+    get:
+      summary: Returns comments by ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of comment to return.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: A comment object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        404:
+          description: Comment with such ID is not found.
+        500:
+          description: Error occured while encoding into JSON.
+
+    put:
+      summary: Updates comment's content.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+              required:
+                - content
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of comment to update.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: A comment objected.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  content:
+                    type: string
+                required:
+                  - content
+        400:
+          description: Request body is invalid.
+        404:
+          description: Comment with such ID is not found.
+        500:
+          description: Error occured while encoding into JSON.
+
+
+    delete:
+      summary: Removes comment by ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of comment to remove.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Comment is removed.
+        404:
+          description: Comment with such ID is not found.
+
+
+components:
+  schemas:
+    User:
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    Post:
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        createdBy:
+          type: string
+        createdAt:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+
+    PostsList:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+          title:
+            type: string
+          description:
+            type: string
+          createdBy:
+            type: string
+          createdAt:
+            type: string
+          tags:
+            type: array
+            items:
+              type: string
+
+    Comment:
+      properties:
+        id:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+        createdBy:
+          type: string
+        postId:
+          type: string
+
+    CommentsList:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+          content:
+            type: string
+          createdAt:
+            type: string
+          createdBy:
+            type: string
+          postId:
+            type: string

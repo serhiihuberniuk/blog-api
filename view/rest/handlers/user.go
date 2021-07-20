@@ -1,17 +1,19 @@
 package handlers
 
 import (
-	models2 "github.com/serhiihuberniuk/blog-api/view/rest/models"
 	"net/http"
+
+	models2 "github.com/serhiihuberniuk/blog-api/view/rest/models"
 
 	"github.com/gorilla/mux"
 	"github.com/serhiihuberniuk/blog-api/models"
+	models2 "github.com/serhiihuberniuk/blog-api/view/rest/models"
 )
 
 func (h *Handlers) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var in models2.CreateUserRequest
 
-	if !decodeFromJson(w, r, in) {
+	if !decodeFromJson(w, r, &in) {
 		return
 	}
 
@@ -73,7 +75,7 @@ func (h *Handlers) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	var in models2.UpdateUserRequest
 
-	if !decodeFromJson(w, r, in) {
+	if !decodeFromJson(w, r, &in) {
 		return
 	}
 

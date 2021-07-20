@@ -22,7 +22,7 @@ type queryParam struct {
 }
 
 func decodeFromJson(w http.ResponseWriter, r *http.Request, a interface{}) bool {
-	if err := json.NewDecoder(r.Body).Decode(&a); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(a); err != nil {
 		http.Error(w, "cannot decode data from JSON", http.StatusBadRequest)
 
 		return false

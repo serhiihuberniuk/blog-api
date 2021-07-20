@@ -10,6 +10,7 @@ require (
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/jackc/pgx/v4 v4.11.0
+	github.com/rs/cors v1.8.0 // indirect
 	github.com/stretchr/testify v1.7.0 // indirect
 	go.mongodb.org/mongo-driver v1.5.4
 )
