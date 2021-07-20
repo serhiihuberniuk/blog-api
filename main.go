@@ -3,15 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/jackc/pgx/v4/pgxpool"
-	repository "github.com/serhiihuberniuk/blog-api/repository/postgresql"
-	"github.com/serhiihuberniuk/blog-api/service"
-	handlers2 "github.com/serhiihuberniuk/blog-api/view/rest/handlers"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/rs/cors"
+	repository "github.com/serhiihuberniuk/blog-api/repository/postgresql"
+	"github.com/serhiihuberniuk/blog-api/service"
+	"github.com/serhiihuberniuk/blog-api/view/rest/handlers"
 )
 
 const dbUrl = "postgres://serhii:serhii@localhost:5432/api"
@@ -39,7 +41,7 @@ func main() {
 
 	serv := service.NewService(repo)
 
-	handler := handlers2.NewHandlers(serv)
+	handler := handlers.NewHandlers(serv)
 
 	srv := http.Server{
 		Addr:    ":8080",
@@ -47,8 +49,14 @@ func main() {
 	}
 
 	errs := make(chan error)
+
 	go func() {
-		if err := http.ListenAndServe(srv.Addr, srv.Handler); err != nil {
+		c := cors.New(cors.Options{
+			AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
+		})
+		handlerCors := c.Handler(srv.Handler)
+
+		if err := http.ListenAndServe(srv.Addr, handlerCors); err != nil {
 			errs <- err
 		}
 	}()
@@ -60,7 +68,7 @@ func main() {
 
 	select {
 	case err := <-errs:
-		log.Fatalf("error occured while running HTTP server: %v", err)
+		log.Fatalf("error occurred while running HTTP server: %v", err)
 	case <-quit:
 	}
 

@@ -1,17 +1,17 @@
 package handlers
 
 import (
-	models2 "github.com/serhiihuberniuk/blog-api/view/rest/models"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/serhiihuberniuk/blog-api/models"
+	viewmodels "github.com/serhiihuberniuk/blog-api/view/rest/models"
 )
 
 func (h *Handlers) CreatePost(w http.ResponseWriter, r *http.Request) {
-	var in models2.CreatePostRequest
+	var in viewmodels.CreatePostRequest
 
-	if !decodeFromJson(w, r, in) {
+	if !decodeFromJson(w, r, &in) {
 		return
 	}
 
@@ -34,7 +34,7 @@ func (h *Handlers) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out := models2.GetPostResponse{
+	out := viewmodels.GetPostResponse{
 		ID:          post.ID,
 		Title:       post.Title,
 		Description: post.Description,
@@ -58,7 +58,7 @@ func (h *Handlers) GetPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out := models2.GetPostResponse{
+	out := viewmodels.GetPostResponse{
 		ID:          post.ID,
 		Title:       post.Title,
 		Description: post.Description,
@@ -75,9 +75,9 @@ func (h *Handlers) GetPost(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) UpdatePost(w http.ResponseWriter, r *http.Request) {
 	postID := mux.Vars(r)["id"]
 
-	var in models2.UpdatePostRequest
+	var in viewmodels.UpdatePostRequest
 
-	if !decodeFromJson(w, r, in) {
+	if !decodeFromJson(w, r, &in) {
 		return
 	}
 
@@ -100,7 +100,7 @@ func (h *Handlers) UpdatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out := models2.GetPostResponse{
+	out := viewmodels.GetPostResponse{
 		ID:          post.ID,
 		Title:       post.Title,
 		Description: post.Description,
@@ -152,10 +152,10 @@ func (h *Handlers) GetListOfPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	outs := make([]models2.GetPostResponse, 0)
+	outs := make([]viewmodels.GetPostResponse, 0)
 
 	for _, post := range posts {
-		out := models2.GetPostResponse{
+		out := viewmodels.GetPostResponse{
 			ID:          post.ID,
 			Title:       post.Title,
 			Description: post.Description,

@@ -1,17 +1,17 @@
 package handlers
 
 import (
-	models2 "github.com/serhiihuberniuk/blog-api/view/rest/models"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/serhiihuberniuk/blog-api/models"
+	viewmodels "github.com/serhiihuberniuk/blog-api/view/rest/models"
 )
 
 func (h *Handlers) CreateUser(w http.ResponseWriter, r *http.Request) {
-	var in models2.CreateUserRequest
+	var in viewmodels.CreateUserRequest
 
-	if !decodeFromJson(w, r, in) {
+	if !decodeFromJson(w, r, &in) {
 		return
 	}
 
@@ -32,7 +32,7 @@ func (h *Handlers) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out := models2.GetUserResponse{
+	out := viewmodels.GetUserResponse{
 		ID:        user.ID,
 		Name:      user.Name,
 		Email:     user.Email,
@@ -55,7 +55,7 @@ func (h *Handlers) GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out := models2.GetUserResponse{
+	out := viewmodels.GetUserResponse{
 		ID:        user.ID,
 		Name:      user.Name,
 		Email:     user.Email,
@@ -71,9 +71,9 @@ func (h *Handlers) GetUser(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	userID := mux.Vars(r)["id"]
 
-	var in models2.UpdateUserRequest
+	var in viewmodels.UpdateUserRequest
 
-	if !decodeFromJson(w, r, in) {
+	if !decodeFromJson(w, r, &in) {
 		return
 	}
 
@@ -95,7 +95,7 @@ func (h *Handlers) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out := models2.GetUserResponse{
+	out := viewmodels.GetUserResponse{
 		ID:        user.ID,
 		Name:      user.Name,
 		Email:     user.Email,
