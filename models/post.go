@@ -10,14 +10,15 @@ import (
 const maxLengthTitle = 50
 
 const (
-	FilterPostsByTitle     FilterPostsByField = "Title"
-	FilterPostsByCreatedBy FilterPostsByField = "CreatedBy"
-	FilterPostsByTag       FilterPostsByField = "Tag"
+	FilterPostsByTitle     FilterPostsByField = "title"
+	FilterPostsByCreatedBy FilterPostsByField = "created_by"
+	FilterPostsByTags      FilterPostsByField = "tag"
 )
 
 const (
-	SortPostsByTitle SortPostsByField = "Title"
-	SortPostsByTags  SortPostsByField = "Tag"
+	SortPostsByTitle     SortPostsByField = "title"
+	SortPostsByTags      SortPostsByField = "tag"
+	SortPostsByCreatedAt SortPostsByField = "created_at"
 )
 
 type Post struct {

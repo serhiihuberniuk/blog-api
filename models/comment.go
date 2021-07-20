@@ -8,13 +8,13 @@ import (
 )
 
 const (
-	FilterCommentsByAuthor    FilterCommentsByField = "CreatedBy"
-	FilterCommentsByCreatedAt FilterCommentsByField = "CreatedAt"
-	FilterCommentsByPost      FilterCommentsByField = "PostID"
+	FilterCommentsByAuthor    FilterCommentsByField = "created_by"
+	FilterCommentsByCreatedAt FilterCommentsByField = "created_at"
+	FilterCommentsByPost      FilterCommentsByField = "post_id"
 )
 
 const (
-	SortCommentByCreatedAt SortCommentsByField = "CreatedAt"
+	SortCommentByCreatedAt SortCommentsByField = "created_at"
 )
 
 type Comment struct {
