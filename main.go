@@ -3,16 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/rs/cors"
-	repository "github.com/serhiihuberniuk/blog-api/repository/postgresql"
-	"github.com/serhiihuberniuk/blog-api/service"
-	"github.com/serhiihuberniuk/blog-api/view/rest/handlers"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/rs/cors"
+	repository "github.com/serhiihuberniuk/blog-api/repository/postgresql"
+	"github.com/serhiihuberniuk/blog-api/service"
+	"github.com/serhiihuberniuk/blog-api/view/rest/handlers"
 )
 
 const dbUrl = "postgres://serhii:serhii@localhost:5432/api"
@@ -47,14 +48,14 @@ func main() {
 		Handler: handler.ApiRouter(),
 	}
 
-	c := cors.New(cors.Options{
-		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
-	})
-
 	errs := make(chan error)
 
 	go func() {
+		c := cors.New(cors.Options{
+			AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
+		})
 		handlerCors := c.Handler(srv.Handler)
+
 		if err := http.ListenAndServe(srv.Addr, handlerCors); err != nil {
 			errs <- err
 		}

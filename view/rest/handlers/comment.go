@@ -3,15 +3,13 @@ package handlers
 import (
 	"net/http"
 
-	models2 "github.com/serhiihuberniuk/blog-api/view/rest/models"
-
 	"github.com/gorilla/mux"
 	"github.com/serhiihuberniuk/blog-api/models"
-	models2 "github.com/serhiihuberniuk/blog-api/view/rest/models"
+	viewmodels "github.com/serhiihuberniuk/blog-api/view/rest/models"
 )
 
 func (h *Handlers) CreateComment(w http.ResponseWriter, r *http.Request) {
-	var in models2.CreateCommentRequest
+	var in viewmodels.CreateCommentRequest
 
 	if !decodeFromJson(w, r, &in) {
 		return
@@ -35,7 +33,7 @@ func (h *Handlers) CreateComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out := models2.GetCommentResponse{
+	out := viewmodels.GetCommentResponse{
 		ID:        comment.ID,
 		Content:   comment.Content,
 		CreatedAt: comment.CreatedAt,
@@ -58,7 +56,7 @@ func (h *Handlers) GetComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out := models2.GetCommentResponse{
+	out := viewmodels.GetCommentResponse{
 		ID:        comment.ID,
 		Content:   comment.Content,
 		CreatedAt: comment.CreatedAt,
@@ -74,7 +72,7 @@ func (h *Handlers) GetComment(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) UpdateComment(w http.ResponseWriter, r *http.Request) {
 	commentID := mux.Vars(r)["id"]
 
-	var in models2.UpdateCommentRequest
+	var in viewmodels.UpdateCommentRequest
 
 	if !decodeFromJson(w, r, &in) {
 		return
@@ -97,7 +95,7 @@ func (h *Handlers) UpdateComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out := models2.GetCommentResponse{
+	out := viewmodels.GetCommentResponse{
 		ID:        comment.ID,
 		Content:   comment.Content,
 		CreatedAt: comment.CreatedAt,
@@ -146,10 +144,10 @@ func (h *Handlers) GetListOfComments(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	outs := make([]models2.GetCommentResponse, 0)
+	outs := make([]viewmodels.GetCommentResponse, 0)
 
 	for _, comment := range comments {
-		out := models2.GetCommentResponse{
+		out := viewmodels.GetCommentResponse{
 			ID:        comment.ID,
 			Content:   comment.Content,
 			CreatedAt: comment.CreatedAt,
