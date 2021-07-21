@@ -1,0 +1,155 @@
+syntax = "proto3";
+
+package grpc;
+
+option go_package = "grpc/pb";
+
+service BlogApi {
+  rpc CreateUser(CreateUserRequest) returns (GetUserResponse) {}
+  rpc GetUser(GetUserRequest) returns (GetUserResponse) {}
+  rpc UpdateUser(UpdateUserRequest) returns (GetUserResponse) {}
+  rpc DeleteUser(GetUserRequest) returns (DeleteUserResponse) {}
+
+  rpc CreatePost(CreatePostRequest) returns (GetPostResponse) {}
+  rpc GetPost(GetPostRequest) returns (GetPostResponse) {}
+  rpc UpdatePost(UpdatePostRequest) returns (GetPostResponse) {}
+  rpc DeletePost(GetPostRequest) returns (DeletePostResponse) {}
+  rpc GetListOfPosts(GetListOfPostsRequest) returns (GetListOfPostsResponse) {}
+
+  rpc CreateComment(CreateCommentRequest) returns (GetCommentResponse) {}
+  rpc GetComment(GetCommentRequest) returns (GetCommentResponse) {}
+  rpc UpdateComment(UpdateCommentRequest) returns (GetCommentResponse) {}
+  rpc DeleteComment(GetCommentRequest) returns (DeleteCommentResponse) {}
+  rpc GetListOfComments(GetListOfCommentsRequest) returns (GetListOfCommentsResponse) {}
+
+}
+
+message CreateUserRequest {
+  string Name = 1;
+  string Email = 2;
+}
+
+message GetUserRequest {
+  string ID = 1;
+}
+
+message UpdateUserRequest {
+  string Id = 1;
+  string Name = 2;
+  string Email = 3;
+}
+
+message GetUserResponse {
+  string ID = 1;
+  string Name = 2;
+  string Email = 3;
+  string Created_at = 4;
+  string Updated_at = 5;
+}
+
+message DeleteUserResponse {}
+
+message CreatePostRequest {
+  string Title = 1;
+  string Description = 2;
+  string Created_by = 3;
+  repeated string Tags = 4;
+}
+
+message GetPostRequest {
+  string ID =1;
+}
+
+message GetPostResponse {
+  string ID = 1;
+  string Title = 2;
+  string Description = 3;
+  string Created_by = 4;
+  string Created_at = 5;
+  repeated string Tags = 6;
+}
+
+message UpdatePostRequest {
+  string ID = 1;
+  string Title = 2;
+  string Description = 3;
+  repeated string Tags = 4;
+
+}
+
+message DeletePostResponse{}
+
+message Pagination {
+  int32 Limit = 1;
+  int32 Offset = 2;
+}
+
+
+message FilterPosts{
+  string Field = 1;
+  string Value = 2;
+}
+
+message SortPosts{
+  string Field = 1;
+  bool IsAsc = 2;
+}
+
+message GetListOfPostsRequest {
+  Pagination Pagination = 1;
+  FilterPosts FilterPosts = 2;
+  SortPosts SortPosts =3;
+
+}
+
+message GetListOfPostsResponse {
+  repeated GetPostResponse Posts = 1;
+
+}
+
+message CreateCommentRequest {
+  string Content = 1;
+  string Created_by = 2;
+  string Post_ID = 3;
+}
+
+message GetCommentRequest {
+  string ID =1;
+}
+
+message GetCommentResponse {
+  string ID = 1;
+  string Content = 2;
+  string Created_by = 3;
+  string Created_at = 4;
+  string Post_ID = 5;
+}
+
+message UpdateCommentRequest {
+  string ID = 1;
+  string Content = 2;
+}
+
+message DeleteCommentResponse{}
+
+message FilterComments{
+  string Field = 1;
+  string Value = 2;
+}
+
+message SortComments{
+  string Field = 1;
+  bool IsAsc = 2;
+}
+
+message GetListOfCommentsRequest {
+  Pagination Pagination = 1;
+  FilterComments FilterComments = 2;
+  SortComments SortComments =3;
+
+}
+
+message GetListOfCommentsResponse {
+  repeated GetCommentResponse Comments = 1;
+
+}

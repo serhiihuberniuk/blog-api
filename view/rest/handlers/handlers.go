@@ -113,7 +113,7 @@ type Handlers struct {
 	service
 }
 
-func NewHandlers(s service) *Handlers {
+func NewRestHandlers(s service) *Handlers {
 	return &Handlers{
 		service: s,
 	}
