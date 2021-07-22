@@ -52,7 +52,7 @@ func main() {
 		Handler: handler.ApiRouter(),
 	}
 
-	errsHTTP := make(chan error)
+	errs := make(chan error)
 
 	// Rest server
 
@@ -63,7 +63,7 @@ func main() {
 		handlerCors := c.Handler(srv.Handler)
 
 		if err := http.ListenAndServe(srv.Addr, handlerCors); err != nil {
-			errsHTTP <- err
+			errs <- err
 		}
 	}()
 
@@ -75,18 +75,16 @@ func main() {
 	grpcServer := grpc.NewServer()
 	grpcHandler := grpcHandlers.NewGrpcHandlers(serv)
 
-	errsGRPC := make(chan error)
-
 	go func() {
 		lis, err := net.Listen("tcp", address)
 		if err != nil {
-			errsGRPC <- err
+			errs <- err
 		}
 
 		pb.RegisterBlogApiServer(grpcServer, grpcHandler)
 
 		if err := grpcServer.Serve(lis); err != nil {
-			errsGRPC <- err
+			errs <- err
 		}
 	}()
 
@@ -96,10 +94,8 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 	select {
-	case err := <-errsHTTP:
-		log.Fatalf("error occurred while running HTTP server: %v", err)
-	case err := <-errsGRPC:
-		log.Fatalf("error occurred while running gRPC server: %v", err)
+	case err := <-errs:
+		log.Fatalf("error occurred while running server: %v", err)
 	case <-quit:
 	}
 

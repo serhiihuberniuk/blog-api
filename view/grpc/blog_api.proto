@@ -1,155 +1,196 @@
 syntax = "proto3";
-
+import "google/protobuf/timestamp.proto";
 package grpc;
-
 option go_package = "grpc/pb";
-
 service BlogApi {
-  rpc CreateUser(CreateUserRequest) returns (GetUserResponse) {}
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {}
   rpc GetUser(GetUserRequest) returns (GetUserResponse) {}
-  rpc UpdateUser(UpdateUserRequest) returns (GetUserResponse) {}
-  rpc DeleteUser(GetUserRequest) returns (DeleteUserResponse) {}
-
-  rpc CreatePost(CreatePostRequest) returns (GetPostResponse) {}
+  rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {}
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse) {}
+  rpc CreatePost(CreatePostRequest) returns (CreatePostResponse) {}
   rpc GetPost(GetPostRequest) returns (GetPostResponse) {}
-  rpc UpdatePost(UpdatePostRequest) returns (GetPostResponse) {}
-  rpc DeletePost(GetPostRequest) returns (DeletePostResponse) {}
-  rpc GetListOfPosts(GetListOfPostsRequest) returns (GetListOfPostsResponse) {}
-
-  rpc CreateComment(CreateCommentRequest) returns (GetCommentResponse) {}
+  rpc UpdatePost(UpdatePostRequest) returns (UpdatePostResponse) {}
+  rpc DeletePost(DeletePostRequest) returns (DeletePostResponse) {}
+  rpc ListPosts(ListPostsRequest) returns (ListPostsResponse) {}
+  rpc CreateComment(CreateCommentRequest) returns (CreateCommentResponse) {}
   rpc GetComment(GetCommentRequest) returns (GetCommentResponse) {}
-  rpc UpdateComment(UpdateCommentRequest) returns (GetCommentResponse) {}
-  rpc DeleteComment(GetCommentRequest) returns (DeleteCommentResponse) {}
-  rpc GetListOfComments(GetListOfCommentsRequest) returns (GetListOfCommentsResponse) {}
-
+  rpc UpdateComment(UpdateCommentRequest) returns (UpdateCommentResponse) {}
+  rpc DeleteComment(DeleteCommentRequest) returns (DeleteCommentResponse) {}
+  rpc ListComments(ListCommentsRequest) returns (ListCommentsResponse) {}
 }
-
 message CreateUserRequest {
-  string Name = 1;
-  string Email = 2;
+  string name = 1;
+  string email = 2;
 }
-
+message CreateUserResponse {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+}
 message GetUserRequest {
-  string ID = 1;
+  string id = 1;
 }
-
-message UpdateUserRequest {
-  string Id = 1;
-  string Name = 2;
-  string Email = 3;
-}
-
 message GetUserResponse {
-  string ID = 1;
-  string Name = 2;
-  string Email = 3;
-  string Created_at = 4;
-  string Updated_at = 5;
+  string id = 1;
+  string name = 2;
+  string email = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
 }
-
+message UpdateUserRequest {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+}
+message UpdateUserResponse {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+}
+message DeleteUserRequest {
+  string id = 1;
+}
 message DeleteUserResponse {}
-
 message CreatePostRequest {
-  string Title = 1;
-  string Description = 2;
-  string Created_by = 3;
-  repeated string Tags = 4;
+  string title = 1;
+  string description = 2;
+  string created_by = 3;
+  repeated string tags = 4;
 }
-
+message CreatePostResponse {
+  string id = 1;
+  string title = 2;
+  string description = 3;
+  string created_by = 4;
+  google.protobuf.Timestamp created_at = 5;
+  repeated string tags = 6;
+}
 message GetPostRequest {
-  string ID =1;
+  string id = 1;
 }
-
 message GetPostResponse {
-  string ID = 1;
-  string Title = 2;
-  string Description = 3;
-  string Created_by = 4;
-  string Created_at = 5;
-  repeated string Tags = 6;
+  string id = 1;
+  string title = 2;
+  string description = 3;
+  string created_by = 4;
+  google.protobuf.Timestamp created_at = 5;
+  repeated string tags = 6;
 }
-
 message UpdatePostRequest {
-  string ID = 1;
-  string Title = 2;
-  string Description = 3;
-  repeated string Tags = 4;
-
+  string id = 1;
+  string title = 2;
+  string description = 3;
+  repeated string tags = 4;
 }
-
-message DeletePostResponse{}
-
+message UpdatePostResponse {
+  string id = 1;
+  string title = 2;
+  string description = 3;
+  string created_by = 4;
+  google.protobuf.Timestamp created_at = 5;
+  repeated string tags = 6;
+}
+message DeletePostRequest {
+  string id = 1;
+}
+message DeletePostResponse {}
 message Pagination {
-  int32 Limit = 1;
-  int32 Offset = 2;
+  int32 limit = 1;
+  int32 offset = 2;
 }
 
-
-message FilterPosts{
-  string Field = 1;
-  string Value = 2;
+message ListPostsRequest {
+  Pagination pagination = 1;
+  message Filter {
+    enum Field {
+      UNKNOWN_FIELD = 0;
+      CREATED_BY = 1;
+      TITLE = 2;
+      TAGS = 3;
+    }
+    Field field = 1;
+    string value = 2;
+  }
+  message Sort {
+    enum Field {
+      UNKNOWN_FIELD = 0;
+      CREATED_AT = 1;
+      TITLE = 2;
+      TAGS = 3;
+    }
+    Field field = 1;
+    bool is_asc = 2;
+  }
+  Filter filter = 2;
+  Sort sort = 3;
 }
-
-message SortPosts{
-  string Field = 1;
-  bool IsAsc = 2;
+message ListPostsResponse {
+  repeated GetPostResponse posts = 1;
 }
-
-message GetListOfPostsRequest {
-  Pagination Pagination = 1;
-  FilterPosts FilterPosts = 2;
-  SortPosts SortPosts =3;
-
-}
-
-message GetListOfPostsResponse {
-  repeated GetPostResponse Posts = 1;
-
-}
-
 message CreateCommentRequest {
-  string Content = 1;
-  string Created_by = 2;
-  string Post_ID = 3;
+  string content = 1;
+  string created_by = 2;
+  string post_id = 3;
 }
-
+message CreateCommentResponse {
+  string id = 1;
+  string content = 2;
+  string created_by = 3;
+  google.protobuf.Timestamp created_at = 4;
+  string post_id = 5;
+}
 message GetCommentRequest {
-  string ID =1;
+  string id = 1;
 }
-
 message GetCommentResponse {
-  string ID = 1;
-  string Content = 2;
-  string Created_by = 3;
-  string Created_at = 4;
-  string Post_ID = 5;
+  string id = 1;
+  string content = 2;
+  string created_by = 3;
+  google.protobuf.Timestamp created_at = 4;
+  string post_id = 5;
 }
-
 message UpdateCommentRequest {
-  string ID = 1;
-  string Content = 2;
+  string id = 1;
+  string content = 2;
 }
-
-message DeleteCommentResponse{}
-
-message FilterComments{
-  string Field = 1;
-  string Value = 2;
+message UpdateCommentResponse {
+  string id = 1;
+  string content = 2;
+  string created_by = 3;
+  google.protobuf.Timestamp created_at = 4;
+  string post_id = 5;
 }
-
-message SortComments{
-  string Field = 1;
-  bool IsAsc = 2;
+message DeleteCommentRequest {
+  string id = 1;
 }
-
-message GetListOfCommentsRequest {
-  Pagination Pagination = 1;
-  FilterComments FilterComments = 2;
-  SortComments SortComments =3;
-
+message DeleteCommentResponse {}
+message ListCommentsRequest {
+  Pagination pagination = 1;
+  message Filter {
+    enum Field {
+      UNKNOWN_FIELD = 0;
+      POST_ID = 1;
+      CREATED_AT = 2;
+      CREATED_BY = 3;
+    }
+    Field field = 1;
+    string value = 2;
+  }
+  message Sort {
+    enum Field {
+      UNKNOWN_FIELD = 0;
+      CREATED_AT = 1;
+    }
+    Field field = 1;
+    bool is_asc = 2;
+  }
+  Filter filter = 2;
+  Sort sort = 3;
 }
-
-message GetListOfCommentsResponse {
-  repeated GetCommentResponse Comments = 1;
-
+message ListCommentsResponse {
+  repeated GetCommentResponse comments = 1;
 }
