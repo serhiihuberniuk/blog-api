@@ -3,10 +3,10 @@ package grpcHandlers
 import (
 	"context"
 	"fmt"
-	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/serhiihuberniuk/blog-api/models"
 	"github.com/serhiihuberniuk/blog-api/view/grpc/pb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func (h *Handlers) CreateComment(ctx context.Context,
@@ -84,16 +84,42 @@ func (h *Handlers) DeleteComment(ctx context.Context,
 
 func (h *Handlers) ListComments(ctx context.Context,
 	request *pb.ListCommentsRequest) (*pb.ListCommentsResponse, error) {
-	comments, err := h.service.ListComments(ctx, models.Pagination{
-		Limit:  uint64(request.GetPagination().GetLimit()),
-		Offset: uint64(request.GetPagination().GetOffset()),
-	}, models.FilterComments{
-		Field: models.FilterCommentsByField(request.GetFilter().GetField().String()),
-		Value: request.GetFilter().GetValue(),
-	}, models.SortComments{
-		Field: models.SortCommentsByField(request.GetSort().GetField().String()),
-		IsASC: request.GetSort().GetIsAsc(),
-	})
+	pagination := models.Pagination{}
+
+	if request.GetPagination() != nil {
+		limit := request.GetPagination().GetLimit()
+		if limit <= 0 || limit > maxLimit {
+			limit = maxLimit
+		}
+
+		offset := request.GetPagination().GetOffset()
+		if offset < 0 {
+			offset = 0
+		}
+
+		pagination = models.Pagination{
+			Limit:  uint64(limit),
+			Offset: uint64(offset),
+		}
+	}
+
+	filter := models.FilterComments{}
+	if request.GetFilter() != nil {
+		filter = models.FilterComments{
+			Field: models.FilterCommentsByField(request.GetFilter().GetField().String()),
+			Value: request.GetFilter().GetValue(),
+		}
+	}
+
+	sort := models.SortComments{}
+	if request.GetSort() != nil {
+		sort = models.SortComments{
+			Field: models.SortCommentsByField(request.GetSort().GetField().String()),
+			IsASC: request.GetSort().GetIsAsc(),
+		}
+	}
+
+	comments, err := h.service.ListComments(ctx, pagination, filter, sort)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get list of comments, %w", err)
 	}

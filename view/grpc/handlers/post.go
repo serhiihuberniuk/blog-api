@@ -3,10 +3,10 @@ package grpcHandlers
 import (
 	"context"
 	"fmt"
-	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/serhiihuberniuk/blog-api/models"
 	"github.com/serhiihuberniuk/blog-api/view/grpc/pb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func (h *Handlers) CreatePost(ctx context.Context, request *pb.CreatePostRequest) (*pb.CreatePostResponse, error) {
@@ -87,18 +87,42 @@ func (h *Handlers) DeletePost(ctx context.Context, request *pb.DeletePostRequest
 
 func (h *Handlers) ListPosts(ctx context.Context,
 	request *pb.ListPostsRequest) (*pb.ListPostsResponse, error) {
-	posts, err := h.service.ListPosts(ctx, models.Pagination{
-		Limit:  uint64(request.GetPagination().GetLimit()),
-		Offset: uint64(request.GetPagination().GetOffset()),
-	},
-		models.FilterPosts{
+	pagination := models.Pagination{}
+
+	if request.GetPagination() != nil {
+		limit := request.GetPagination().GetLimit()
+		if limit <= 0 || limit > maxLimit {
+			limit = maxLimit
+		}
+
+		offset := request.GetPagination().GetOffset()
+		if offset < 0 {
+			offset = 0
+		}
+
+		pagination = models.Pagination{
+			Limit:  uint64(limit),
+			Offset: uint64(offset),
+		}
+	}
+
+	filter := models.FilterPosts{}
+	if request.GetFilter() != nil {
+		filter = models.FilterPosts{
 			Field: models.FilterPostsByField(request.GetFilter().GetField().String()),
 			Value: request.GetFilter().GetValue(),
-		},
-		models.SortPosts{
+		}
+	}
+
+	sort := models.SortPosts{}
+	if request.GetSort() != nil {
+		sort = models.SortPosts{
 			SortByField: models.SortPostsByField(request.GetSort().GetField().String()),
 			IsASC:       request.GetSort().GetIsAsc(),
-		})
+		}
+	}
+
+	posts, err := h.service.ListPosts(ctx, pagination, filter, sort)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get list of posts: %w", err)
 	}

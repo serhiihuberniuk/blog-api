@@ -1,7 +1,11 @@
 syntax = "proto3";
+
 import "google/protobuf/timestamp.proto";
+
 package grpc;
+
 option go_package = "grpc/pb";
+
 service BlogApi {
   rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {}
   rpc GetUser(GetUserRequest) returns (GetUserResponse) {}
@@ -18,10 +22,12 @@ service BlogApi {
   rpc DeleteComment(DeleteCommentRequest) returns (DeleteCommentResponse) {}
   rpc ListComments(ListCommentsRequest) returns (ListCommentsResponse) {}
 }
+
 message CreateUserRequest {
   string name = 1;
   string email = 2;
 }
+
 message CreateUserResponse {
   string id = 1;
   string name = 2;
@@ -29,9 +35,11 @@ message CreateUserResponse {
   google.protobuf.Timestamp created_at = 4;
   google.protobuf.Timestamp updated_at = 5;
 }
+
 message GetUserRequest {
   string id = 1;
 }
+
 message GetUserResponse {
   string id = 1;
   string name = 2;
@@ -39,11 +47,13 @@ message GetUserResponse {
   google.protobuf.Timestamp created_at = 4;
   google.protobuf.Timestamp updated_at = 5;
 }
+
 message UpdateUserRequest {
   string id = 1;
   string name = 2;
   string email = 3;
 }
+
 message UpdateUserResponse {
   string id = 1;
   string name = 2;
@@ -51,16 +61,20 @@ message UpdateUserResponse {
   google.protobuf.Timestamp created_at = 4;
   google.protobuf.Timestamp updated_at = 5;
 }
+
 message DeleteUserRequest {
   string id = 1;
 }
+
 message DeleteUserResponse {}
+
 message CreatePostRequest {
   string title = 1;
   string description = 2;
   string created_by = 3;
   repeated string tags = 4;
 }
+
 message CreatePostResponse {
   string id = 1;
   string title = 2;
@@ -69,9 +83,11 @@ message CreatePostResponse {
   google.protobuf.Timestamp created_at = 5;
   repeated string tags = 6;
 }
+
 message GetPostRequest {
   string id = 1;
 }
+
 message GetPostResponse {
   string id = 1;
   string title = 2;
@@ -80,12 +96,14 @@ message GetPostResponse {
   google.protobuf.Timestamp created_at = 5;
   repeated string tags = 6;
 }
+
 message UpdatePostRequest {
   string id = 1;
   string title = 2;
   string description = 3;
   repeated string tags = 4;
 }
+
 message UpdatePostResponse {
   string id = 1;
   string title = 2;
@@ -94,10 +112,13 @@ message UpdatePostResponse {
   google.protobuf.Timestamp created_at = 5;
   repeated string tags = 6;
 }
+
 message DeletePostRequest {
   string id = 1;
 }
+
 message DeletePostResponse {}
+
 message Pagination {
   int32 limit = 1;
   int32 offset = 2;
@@ -105,6 +126,9 @@ message Pagination {
 
 message ListPostsRequest {
   Pagination pagination = 1;
+  Filter filter = 2;
+  Sort sort = 3;
+
   message Filter {
     enum Field {
       UNKNOWN_FIELD = 0;
@@ -115,6 +139,7 @@ message ListPostsRequest {
     Field field = 1;
     string value = 2;
   }
+
   message Sort {
     enum Field {
       UNKNOWN_FIELD = 0;
@@ -125,17 +150,18 @@ message ListPostsRequest {
     Field field = 1;
     bool is_asc = 2;
   }
-  Filter filter = 2;
-  Sort sort = 3;
 }
+
 message ListPostsResponse {
   repeated GetPostResponse posts = 1;
 }
+
 message CreateCommentRequest {
   string content = 1;
   string created_by = 2;
   string post_id = 3;
 }
+
 message CreateCommentResponse {
   string id = 1;
   string content = 2;
@@ -143,9 +169,11 @@ message CreateCommentResponse {
   google.protobuf.Timestamp created_at = 4;
   string post_id = 5;
 }
+
 message GetCommentRequest {
   string id = 1;
 }
+
 message GetCommentResponse {
   string id = 1;
   string content = 2;
@@ -153,10 +181,12 @@ message GetCommentResponse {
   google.protobuf.Timestamp created_at = 4;
   string post_id = 5;
 }
+
 message UpdateCommentRequest {
   string id = 1;
   string content = 2;
 }
+
 message UpdateCommentResponse {
   string id = 1;
   string content = 2;
@@ -164,12 +194,18 @@ message UpdateCommentResponse {
   google.protobuf.Timestamp created_at = 4;
   string post_id = 5;
 }
+
 message DeleteCommentRequest {
   string id = 1;
 }
+
 message DeleteCommentResponse {}
+
 message ListCommentsRequest {
   Pagination pagination = 1;
+  Filter filter = 2;
+  Sort sort = 3;
+
   message Filter {
     enum Field {
       UNKNOWN_FIELD = 0;
@@ -180,6 +216,7 @@ message ListCommentsRequest {
     Field field = 1;
     string value = 2;
   }
+
   message Sort {
     enum Field {
       UNKNOWN_FIELD = 0;
@@ -188,9 +225,8 @@ message ListCommentsRequest {
     Field field = 1;
     bool is_asc = 2;
   }
-  Filter filter = 2;
-  Sort sort = 3;
 }
+
 message ListCommentsResponse {
   repeated GetCommentResponse comments = 1;
 }

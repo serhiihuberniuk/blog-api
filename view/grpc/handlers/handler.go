@@ -6,6 +6,8 @@ import (
 	"github.com/serhiihuberniuk/blog-api/models"
 )
 
+const maxLimit = 50
+
 type Handlers struct {
 	service
 }

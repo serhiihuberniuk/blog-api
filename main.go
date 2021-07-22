@@ -79,6 +79,8 @@ func main() {
 		lis, err := net.Listen("tcp", address)
 		if err != nil {
 			errs <- err
+
+			return
 		}
 
 		pb.RegisterBlogApiServer(grpcServer, grpcHandler)
