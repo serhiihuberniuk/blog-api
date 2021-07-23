@@ -59,16 +59,21 @@ func (r *Repository) ListPosts(ctx context.Context, pagination models.Pagination
 	filter models.FilterPosts, sort models.SortPosts) ([]*models.Post, error) {
 	query := squirrel.Select("*").
 		From("posts")
-	if filter.Field != "" {
+	if filter.Field != "" && filter.Field != models.FilterPostsByTags {
 		query = query.Where(fmt.Sprintf("%s=$1", filter.Field), filter.Value)
 	}
 
+	if filter.Field == models.FilterPostsByTags {
+		query = query.Where(fmt.Sprintf("%s::jsonb ? $1", filter.Field), filter.Value)
+	}
+
 	if sort.SortByField != "" {
-		if !sort.IsASC {
+		switch sort.IsASC {
+		case true:
+			query = query.OrderBy(string(sort.SortByField))
+		case false:
 			query = query.OrderBy(string(sort.SortByField) + " DESC")
 		}
-
-		query = query.OrderBy(string(sort.SortByField))
 	}
 
 	if pagination.Offset != 0 {

@@ -121,7 +121,25 @@ func (h *Handlers) DeleteComment(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) GetListOfComments(w http.ResponseWriter, r *http.Request) {
-	queryParams, err := GetQueryParams(r)
+	allowedFilterFields := map[string]models.FilterCommentsByField{
+		string(models.FilterCommentsByPost):      models.FilterCommentsByPost,
+		string(models.FilterCommentsByCreatedAt): models.FilterCommentsByCreatedAt,
+		string(models.FilterCommentsByAuthor):    models.FilterCommentsByAuthor,
+	}
+
+	allowedSortFields := map[string]models.SortCommentsByField{
+		string(models.SortCommentByCreatedAt): models.SortCommentByCreatedAt,
+	}
+
+	queryParams, err := GetQueryParams(r, func(s string) bool {
+		_, ok := allowedFilterFields[s]
+
+		return ok
+	}, func(s string) bool {
+		_, ok := allowedSortFields[s]
+
+		return ok
+	})
 	if err != nil {
 		http.Error(w, "requested parameters is bad", http.StatusBadRequest)
 

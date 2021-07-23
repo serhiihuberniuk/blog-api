@@ -12,12 +12,11 @@ const maxLengthTitle = 50
 const (
 	FilterPostsByTitle     FilterPostsByField = "title"
 	FilterPostsByCreatedBy FilterPostsByField = "created_by"
-	FilterPostsByTags      FilterPostsByField = "tag"
+	FilterPostsByTags      FilterPostsByField = "tags"
 )
 
 const (
 	SortPostsByTitle     SortPostsByField = "title"
-	SortPostsByTags      SortPostsByField = "tag"
 	SortPostsByCreatedAt SortPostsByField = "created_at"
 )
 

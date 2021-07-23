@@ -87,37 +87,35 @@ func (h *Handlers) DeletePost(ctx context.Context, request *pb.DeletePostRequest
 
 func (h *Handlers) ListPosts(ctx context.Context,
 	request *pb.ListPostsRequest) (*pb.ListPostsResponse, error) {
-	pagination := models.Pagination{}
-
-	if request.GetPagination() != nil {
-		limit := request.GetPagination().GetLimit()
-		if limit <= 0 || limit > maxLimit {
-			limit = maxLimit
-		}
-
-		offset := request.GetPagination().GetOffset()
-		if offset < 0 {
-			offset = 0
-		}
-
-		pagination = models.Pagination{
-			Limit:  uint64(limit),
-			Offset: uint64(offset),
-		}
-	}
+	pagination := getPaginationParam(request.GetPagination())
 
 	filter := models.FilterPosts{}
+
 	if request.GetFilter() != nil {
+		allowedFilterFields := map[pb.ListPostsRequest_Filter_Field]models.FilterPostsByField{
+			pb.ListPostsRequest_Filter_UNKNOWN_FIELD: "",
+			pb.ListPostsRequest_Filter_CREATED_BY:    models.FilterPostsByCreatedBy,
+			pb.ListPostsRequest_Filter_TITLE:         models.FilterPostsByTitle,
+			pb.ListPostsRequest_Filter_TAGS:          models.FilterPostsByTags,
+		}
+
 		filter = models.FilterPosts{
-			Field: models.FilterPostsByField(request.GetFilter().GetField().String()),
-			Value: request.GetFilter().GetValue(),
+			Field: allowedFilterFields[request.GetFilter().GetField()],
+			Value: request.GetFilter().Value,
 		}
 	}
 
 	sort := models.SortPosts{}
+
 	if request.GetSort() != nil {
+		allowedSortFields := map[pb.ListPostsRequest_Sort_Field]models.SortPostsByField{
+			pb.ListPostsRequest_Sort_UNKNOWN_FIELD: "",
+			pb.ListPostsRequest_Sort_CREATED_AT:    models.SortPostsByCreatedAt,
+			pb.ListPostsRequest_Sort_TITLE:         models.SortPostsByTitle,
+		}
+
 		sort = models.SortPosts{
-			SortByField: models.SortPostsByField(request.GetSort().GetField().String()),
+			SortByField: allowedSortFields[request.GetSort().GetField()],
 			IsASC:       request.GetSort().GetIsAsc(),
 		}
 	}

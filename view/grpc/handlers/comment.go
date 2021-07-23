@@ -84,37 +84,33 @@ func (h *Handlers) DeleteComment(ctx context.Context,
 
 func (h *Handlers) ListComments(ctx context.Context,
 	request *pb.ListCommentsRequest) (*pb.ListCommentsResponse, error) {
-	pagination := models.Pagination{}
-
-	if request.GetPagination() != nil {
-		limit := request.GetPagination().GetLimit()
-		if limit <= 0 || limit > maxLimit {
-			limit = maxLimit
-		}
-
-		offset := request.GetPagination().GetOffset()
-		if offset < 0 {
-			offset = 0
-		}
-
-		pagination = models.Pagination{
-			Limit:  uint64(limit),
-			Offset: uint64(offset),
-		}
-	}
+	pagination := getPaginationParam(request.GetPagination())
 
 	filter := models.FilterComments{}
+
 	if request.GetFilter() != nil {
+		allowedFilterFields := map[pb.ListCommentsRequest_Filter_Field]models.FilterCommentsByField{
+			pb.ListCommentsRequest_Filter_UNKNOWN_FIELD: "",
+			pb.ListCommentsRequest_Filter_POST_ID:       models.FilterCommentsByPost,
+			pb.ListCommentsRequest_Filter_CREATED_AT:    models.FilterCommentsByCreatedAt,
+			pb.ListCommentsRequest_Filter_CREATED_BY:    models.FilterCommentsByAuthor,
+		}
+
 		filter = models.FilterComments{
-			Field: models.FilterCommentsByField(request.GetFilter().GetField().String()),
+			Field: allowedFilterFields[request.GetFilter().GetField()],
 			Value: request.GetFilter().GetValue(),
 		}
 	}
 
 	sort := models.SortComments{}
+
 	if request.GetSort() != nil {
+		allowedSortFields := map[pb.ListCommentsRequest_Sort_Field]models.SortCommentsByField{
+			pb.ListCommentsRequest_Sort_UNKNOWN_FIELD: "",
+			pb.ListCommentsRequest_Sort_CREATED_AT:    models.SortCommentByCreatedAt,
+		}
 		sort = models.SortComments{
-			Field: models.SortCommentsByField(request.GetSort().GetField().String()),
+			Field: allowedSortFields[request.GetSort().GetField()],
 			IsASC: request.GetSort().GetIsAsc(),
 		}
 	}

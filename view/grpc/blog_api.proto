@@ -145,7 +145,6 @@ message ListPostsRequest {
       UNKNOWN_FIELD = 0;
       CREATED_AT = 1;
       TITLE = 2;
-      TAGS = 3;
     }
     Field field = 1;
     bool is_asc = 2;

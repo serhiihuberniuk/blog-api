@@ -43,26 +43,25 @@ func encodeIntoJson(w http.ResponseWriter, a interface{}) bool {
 	return true
 }
 
-func GetQueryParams(r *http.Request) (*queryParam, error) {
+func GetQueryParams(r *http.Request, allowFilterFn func(string) bool,
+	allowSortFn func(string) bool) (*queryParam, error) {
 	vars := r.URL.Query()
 
 	var err error
 
-	queryParams := queryParam{
-		filterByField: vars.Get("filter-field"),
-		filterValue:   vars.Get("filter-value"),
-		sortByField:   vars.Get("sort-field"),
-		isAsc:         true,
-		limit:         maxLimit,
-		offset:        0,
+	queryParams := queryParam{}
+
+	if v := vars.Get("filter-field"); v != "" && allowFilterFn(v) {
+		queryParams.filterByField = v
+		queryParams.filterValue = vars.Get("filter-value")
 	}
 
-	if queryParams.filterValue == "" {
-		queryParams.filterByField = ""
+	if v := vars.Get("sort-field"); v != "" && allowSortFn(v) {
+		queryParams.sortByField = v
 	}
 
-	if vars.Get("is-asc") == "false" {
-		queryParams.isAsc = false
+	if vars.Get("is-asc") != "false" {
+		queryParams.isAsc = true
 	}
 
 	queryParams.limit, err = strconv.Atoi(vars.Get("limit"))
@@ -74,10 +73,8 @@ func GetQueryParams(r *http.Request) (*queryParam, error) {
 		queryParams.limit = maxLimit
 	}
 
-	offsetString := vars.Get("offset")
-
-	queryParams.offset, err = strconv.Atoi(offsetString)
-	if err != nil && offsetString != "" {
+	queryParams.offset, err = strconv.Atoi(vars.Get("offset"))
+	if err != nil && vars.Get("offset") != "" {
 		return nil, fmt.Errorf("cannot convert offset into int: %w", err)
 	}
 

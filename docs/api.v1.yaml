@@ -189,7 +189,6 @@ paths:
             type: string
             enum:
               - title
-              - tags
               - created_at
           description: Sort post by chosen field.
           required: false

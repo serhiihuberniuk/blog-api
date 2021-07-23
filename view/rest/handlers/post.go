@@ -127,7 +127,25 @@ func (h *Handlers) DeletePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) GetListOfPosts(w http.ResponseWriter, r *http.Request) {
-	queryParams, err := GetQueryParams(r)
+	allowedFilterFields := map[string]models.FilterPostsByField{
+		string(models.FilterPostsByCreatedBy): models.FilterPostsByCreatedBy,
+		string(models.FilterPostsByTitle):     models.FilterPostsByTitle,
+		string(models.FilterPostsByTags):      models.FilterPostsByTags,
+	}
+	allowedSortFields := map[string]models.SortPostsByField{
+		string(models.SortPostsByCreatedAt): models.SortPostsByCreatedAt,
+		string(models.SortPostsByTitle):     models.SortPostsByTitle,
+	}
+
+	queryParams, err := GetQueryParams(r, func(s string) bool {
+		_, ok := allowedFilterFields[s]
+
+		return ok
+	}, func(s string) bool {
+		_, ok := allowedSortFields[s]
+
+		return ok
+	})
 	if err != nil {
 		http.Error(w, "requested parameters is bad", http.StatusBadRequest)
 

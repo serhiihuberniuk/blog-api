@@ -4,9 +4,33 @@ import (
 	"context"
 
 	"github.com/serhiihuberniuk/blog-api/models"
+	"github.com/serhiihuberniuk/blog-api/view/grpc/pb"
 )
 
 const maxLimit = 50
+
+func getPaginationParam(p *pb.Pagination) models.Pagination {
+	pagination := models.Pagination{}
+
+	if p != nil {
+		limit := p.GetLimit()
+		if limit <= 0 || limit > maxLimit {
+			limit = maxLimit
+		}
+
+		offset := p.GetOffset()
+		if offset < 0 {
+			offset = 0
+		}
+
+		pagination = models.Pagination{
+			Limit:  uint64(limit),
+			Offset: uint64(offset),
+		}
+	}
+
+	return pagination
+}
 
 type Handlers struct {
 	service
