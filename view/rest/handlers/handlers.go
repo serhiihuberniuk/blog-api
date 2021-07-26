@@ -43,8 +43,7 @@ func encodeIntoJson(w http.ResponseWriter, a interface{}) bool {
 	return true
 }
 
-func GetQueryParams(r *http.Request, allowFilterFn func(string) bool,
-	allowSortFn func(string) bool) (*queryParam, error) {
+func GetQueryParams(r *http.Request, allowFilterFn, allowSortFn func(string) bool) (*queryParam, error) {
 	vars := r.URL.Query()
 
 	var err error
@@ -73,9 +72,12 @@ func GetQueryParams(r *http.Request, allowFilterFn func(string) bool,
 		queryParams.limit = maxLimit
 	}
 
-	queryParams.offset, err = strconv.Atoi(vars.Get("offset"))
-	if err != nil && vars.Get("offset") != "" {
-		return nil, fmt.Errorf("cannot convert offset into int: %w", err)
+	queryParams.offset = 0
+	if vars.Get("offset") != "" {
+		queryParams.offset, err = strconv.Atoi(vars.Get("offset"))
+		if err != nil && vars.Get("offset") != "" {
+			return nil, fmt.Errorf("cannot convert offset into int: %w", err)
+		}
 	}
 
 	if queryParams.offset < 0 {

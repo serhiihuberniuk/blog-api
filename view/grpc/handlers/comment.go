@@ -9,6 +9,19 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+var (
+	allowedFilterCommentsFields = map[pb.ListCommentsRequest_Filter_Field]models.FilterCommentsByField{
+		pb.ListCommentsRequest_Filter_UNKNOWN_FIELD: "",
+		pb.ListCommentsRequest_Filter_POST_ID:       models.FilterCommentsByPost,
+		pb.ListCommentsRequest_Filter_CREATED_AT:    models.FilterCommentsByCreatedAt,
+		pb.ListCommentsRequest_Filter_CREATED_BY:    models.FilterCommentsByAuthor,
+	}
+	allowedSortCommentsFields = map[pb.ListCommentsRequest_Sort_Field]models.SortCommentsByField{
+		pb.ListCommentsRequest_Sort_UNKNOWN_FIELD: "",
+		pb.ListCommentsRequest_Sort_CREATED_AT:    models.SortCommentByCreatedAt,
+	}
+)
+
 func (h *Handlers) CreateComment(ctx context.Context,
 	request *pb.CreateCommentRequest) (*pb.CreateCommentResponse, error) {
 	commentID, err := h.service.CreateComment(ctx, models.CreateCommentPayload{
@@ -89,15 +102,9 @@ func (h *Handlers) ListComments(ctx context.Context,
 	filter := models.FilterComments{}
 
 	if request.GetFilter() != nil {
-		allowedFilterFields := map[pb.ListCommentsRequest_Filter_Field]models.FilterCommentsByField{
-			pb.ListCommentsRequest_Filter_UNKNOWN_FIELD: "",
-			pb.ListCommentsRequest_Filter_POST_ID:       models.FilterCommentsByPost,
-			pb.ListCommentsRequest_Filter_CREATED_AT:    models.FilterCommentsByCreatedAt,
-			pb.ListCommentsRequest_Filter_CREATED_BY:    models.FilterCommentsByAuthor,
-		}
 
 		filter = models.FilterComments{
-			Field: allowedFilterFields[request.GetFilter().GetField()],
+			Field: allowedFilterCommentsFields[request.GetFilter().GetField()],
 			Value: request.GetFilter().GetValue(),
 		}
 	}
@@ -105,12 +112,8 @@ func (h *Handlers) ListComments(ctx context.Context,
 	sort := models.SortComments{}
 
 	if request.GetSort() != nil {
-		allowedSortFields := map[pb.ListCommentsRequest_Sort_Field]models.SortCommentsByField{
-			pb.ListCommentsRequest_Sort_UNKNOWN_FIELD: "",
-			pb.ListCommentsRequest_Sort_CREATED_AT:    models.SortCommentByCreatedAt,
-		}
 		sort = models.SortComments{
-			Field: allowedSortFields[request.GetSort().GetField()],
+			Field: allowedSortCommentsFields[request.GetSort().GetField()],
 			IsASC: request.GetSort().GetIsAsc(),
 		}
 	}

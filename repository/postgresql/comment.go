@@ -66,9 +66,9 @@ func (r *Repository) ListComments(ctx context.Context, pagination models.Paginat
 	if sort.Field != "" {
 		if !sort.IsASC {
 			query = query.OrderBy(string(sort.Field) + " DESC")
+		} else {
+			query = query.OrderBy(string(sort.Field))
 		}
-
-		query = query.OrderBy(string(sort.Field))
 	}
 
 	if pagination.Offset != 0 {

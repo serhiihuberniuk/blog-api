@@ -9,6 +9,21 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+var (
+	allowedFilterPostsFields = map[pb.ListPostsRequest_Filter_Field]models.FilterPostsByField{
+		pb.ListPostsRequest_Filter_UNKNOWN_FIELD: "",
+		pb.ListPostsRequest_Filter_CREATED_BY:    models.FilterPostsByCreatedBy,
+		pb.ListPostsRequest_Filter_TITLE:         models.FilterPostsByTitle,
+		pb.ListPostsRequest_Filter_TAGS:          models.FilterPostsByTags,
+	}
+
+	allowedSortPostsFields = map[pb.ListPostsRequest_Sort_Field]models.SortPostsByField{
+		pb.ListPostsRequest_Sort_UNKNOWN_FIELD: "",
+		pb.ListPostsRequest_Sort_CREATED_AT:    models.SortPostsByCreatedAt,
+		pb.ListPostsRequest_Sort_TITLE:         models.SortPostsByTitle,
+	}
+)
+
 func (h *Handlers) CreatePost(ctx context.Context, request *pb.CreatePostRequest) (*pb.CreatePostResponse, error) {
 	postID, err := h.service.CreatePost(ctx, models.CreatePostPayload{
 		Title:       request.GetTitle(),
@@ -92,15 +107,8 @@ func (h *Handlers) ListPosts(ctx context.Context,
 	filter := models.FilterPosts{}
 
 	if request.GetFilter() != nil {
-		allowedFilterFields := map[pb.ListPostsRequest_Filter_Field]models.FilterPostsByField{
-			pb.ListPostsRequest_Filter_UNKNOWN_FIELD: "",
-			pb.ListPostsRequest_Filter_CREATED_BY:    models.FilterPostsByCreatedBy,
-			pb.ListPostsRequest_Filter_TITLE:         models.FilterPostsByTitle,
-			pb.ListPostsRequest_Filter_TAGS:          models.FilterPostsByTags,
-		}
-
 		filter = models.FilterPosts{
-			Field: allowedFilterFields[request.GetFilter().GetField()],
+			Field: allowedFilterPostsFields[request.GetFilter().GetField()],
 			Value: request.GetFilter().Value,
 		}
 	}
@@ -108,14 +116,8 @@ func (h *Handlers) ListPosts(ctx context.Context,
 	sort := models.SortPosts{}
 
 	if request.GetSort() != nil {
-		allowedSortFields := map[pb.ListPostsRequest_Sort_Field]models.SortPostsByField{
-			pb.ListPostsRequest_Sort_UNKNOWN_FIELD: "",
-			pb.ListPostsRequest_Sort_CREATED_AT:    models.SortPostsByCreatedAt,
-			pb.ListPostsRequest_Sort_TITLE:         models.SortPostsByTitle,
-		}
-
 		sort = models.SortPosts{
-			SortByField: allowedSortFields[request.GetSort().GetField()],
+			SortByField: allowedSortPostsFields[request.GetSort().GetField()],
 			IsASC:       request.GetSort().GetIsAsc(),
 		}
 	}
