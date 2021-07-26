@@ -8,6 +8,18 @@ import (
 	viewmodels "github.com/serhiihuberniuk/blog-api/view/rest/models"
 )
 
+var (
+	allowedFilterPostsFields = map[string]models.FilterPostsByField{
+		string(models.FilterPostsByCreatedBy): models.FilterPostsByCreatedBy,
+		string(models.FilterPostsByTitle):     models.FilterPostsByTitle,
+		string(models.FilterPostsByTags):      models.FilterPostsByTags,
+	}
+	allowedSortPostsFields = map[string]models.SortPostsByField{
+		string(models.SortPostsByCreatedAt): models.SortPostsByCreatedAt,
+		string(models.SortPostsByTitle):     models.SortPostsByTitle,
+	}
+)
+
 func (h *Handlers) CreatePost(w http.ResponseWriter, r *http.Request) {
 	var in viewmodels.CreatePostRequest
 
@@ -127,7 +139,15 @@ func (h *Handlers) DeletePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) GetListOfPosts(w http.ResponseWriter, r *http.Request) {
-	queryParams, err := GetQueryParams(r)
+	queryParams, err := GetQueryParams(r, func(s string) bool {
+		_, ok := allowedFilterPostsFields[s]
+
+		return ok
+	}, func(s string) bool {
+		_, ok := allowedSortPostsFields[s]
+
+		return ok
+	})
 	if err != nil {
 		http.Error(w, "requested parameters is bad", http.StatusBadRequest)
 

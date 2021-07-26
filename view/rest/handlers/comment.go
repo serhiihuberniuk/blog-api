@@ -8,6 +8,18 @@ import (
 	viewmodels "github.com/serhiihuberniuk/blog-api/view/rest/models"
 )
 
+var (
+	allowedFilterCommentsFields = map[string]models.FilterCommentsByField{
+		string(models.FilterCommentsByPost):      models.FilterCommentsByPost,
+		string(models.FilterCommentsByCreatedAt): models.FilterCommentsByCreatedAt,
+		string(models.FilterCommentsByAuthor):    models.FilterCommentsByAuthor,
+	}
+
+	allowedSortCommentsFields = map[string]models.SortCommentsByField{
+		string(models.SortCommentByCreatedAt): models.SortCommentByCreatedAt,
+	}
+)
+
 func (h *Handlers) CreateComment(w http.ResponseWriter, r *http.Request) {
 	var in viewmodels.CreateCommentRequest
 
@@ -121,7 +133,15 @@ func (h *Handlers) DeleteComment(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) GetListOfComments(w http.ResponseWriter, r *http.Request) {
-	queryParams, err := GetQueryParams(r)
+	queryParams, err := GetQueryParams(r, func(s string) bool {
+		_, ok := allowedFilterCommentsFields[s]
+
+		return ok
+	}, func(s string) bool {
+		_, ok := allowedSortCommentsFields[s]
+
+		return ok
+	})
 	if err != nil {
 		http.Error(w, "requested parameters is bad", http.StatusBadRequest)
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -13,7 +14,10 @@ import (
 	"github.com/rs/cors"
 	repository "github.com/serhiihuberniuk/blog-api/repository/postgresql"
 	"github.com/serhiihuberniuk/blog-api/service"
+	grpcHandlers "github.com/serhiihuberniuk/blog-api/view/grpc/handlers"
+	"github.com/serhiihuberniuk/blog-api/view/grpc/pb"
 	"github.com/serhiihuberniuk/blog-api/view/rest/handlers"
+	"google.golang.org/grpc"
 )
 
 const dbUrl = "postgres://serhii:serhii@localhost:5432/api"
@@ -41,7 +45,7 @@ func main() {
 
 	serv := service.NewService(repo)
 
-	handler := handlers.NewHandlers(serv)
+	handler := handlers.NewRestHandlers(serv)
 
 	srv := http.Server{
 		Addr:    ":8080",
@@ -49,6 +53,8 @@ func main() {
 	}
 
 	errs := make(chan error)
+
+	// Rest server
 
 	go func() {
 		c := cors.New(cors.Options{
@@ -61,14 +67,37 @@ func main() {
 		}
 	}()
 
-	log.Println("server is listening")
+	log.Println(" Rest server is listening on ", srv.Addr)
+
+	// gRPC server
+
+	address := ":8081"
+	grpcServer := grpc.NewServer()
+	grpcHandler := grpcHandlers.NewGrpcHandlers(serv)
+
+	go func() {
+		lis, err := net.Listen("tcp", address)
+		if err != nil {
+			errs <- err
+
+			return
+		}
+
+		pb.RegisterBlogApiServer(grpcServer, grpcHandler)
+
+		if err := grpcServer.Serve(lis); err != nil {
+			errs <- err
+		}
+	}()
+
+	log.Println("gRPC server is listening on ", address)
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 	select {
 	case err := <-errs:
-		log.Fatalf("error occurred while running HTTP server: %v", err)
+		log.Fatalf("error occurred while running server: %v", err)
 	case <-quit:
 	}
 
@@ -79,6 +108,8 @@ func main() {
 	if err := srv.Shutdown(ctx); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("error while shutting down: %v", err)
 	}
+
+	grpcServer.GracefulStop()
 
 	log.Print("Done")
 }

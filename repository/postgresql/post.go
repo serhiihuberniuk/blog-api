@@ -60,15 +60,19 @@ func (r *Repository) ListPosts(ctx context.Context, pagination models.Pagination
 	query := squirrel.Select("*").
 		From("posts")
 	if filter.Field != "" {
-		query = query.Where(fmt.Sprintf("%s=$1", filter.Field), filter.Value)
+		if filter.Field == models.FilterPostsByTags {
+			query = query.Where(fmt.Sprintf("%s::jsonb ? $1", filter.Field), filter.Value)
+		} else {
+			query = query.Where(fmt.Sprintf("%s=$1", filter.Field), filter.Value)
+		}
 	}
 
 	if sort.SortByField != "" {
 		if !sort.IsASC {
 			query = query.OrderBy(string(sort.SortByField) + " DESC")
+		} else {
+			query = query.OrderBy(string(sort.SortByField))
 		}
-
-		query = query.OrderBy(string(sort.SortByField))
 	}
 
 	if pagination.Offset != 0 {
