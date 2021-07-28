@@ -10,10 +10,14 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/rs/cors"
 	repository "github.com/serhiihuberniuk/blog-api/repository/postgresql"
 	"github.com/serhiihuberniuk/blog-api/service"
+	"github.com/serhiihuberniuk/blog-api/view/graph"
+	"github.com/serhiihuberniuk/blog-api/view/graph/generated"
 	grpcHandlers "github.com/serhiihuberniuk/blog-api/view/grpc/handlers"
 	"github.com/serhiihuberniuk/blog-api/view/grpc/pb"
 	"github.com/serhiihuberniuk/blog-api/view/rest/handlers"
@@ -45,11 +49,11 @@ func main() {
 
 	serv := service.NewService(repo)
 
-	handler := handlers.NewRestHandlers(serv)
+	handlerRest := handlers.NewRestHandlers(serv)
 
-	srv := http.Server{
+	restServer := http.Server{
 		Addr:    ":8080",
-		Handler: handler.ApiRouter(),
+		Handler: handlerRest.ApiRouter(),
 	}
 
 	errs := make(chan error)
@@ -60,14 +64,14 @@ func main() {
 		c := cors.New(cors.Options{
 			AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
 		})
-		handlerCors := c.Handler(srv.Handler)
+		handlerCors := c.Handler(restServer.Handler)
 
-		if err := http.ListenAndServe(srv.Addr, handlerCors); err != nil {
+		if err := http.ListenAndServe(restServer.Addr, handlerCors); err != nil {
 			errs <- err
 		}
 	}()
 
-	log.Println(" Rest server is listening on ", srv.Addr)
+	log.Println(" Rest server is listening on ", restServer.Addr)
 
 	// gRPC server
 
@@ -92,6 +96,26 @@ func main() {
 
 	log.Println("gRPC server is listening on ", address)
 
+	// GraphQl server
+	resolver := graph.NewResolver(serv)
+	srvGraphQl := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: resolver}))
+
+	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
+	http.Handle("/query", srvGraphQl)
+
+	graphqlServer := http.Server{
+		Addr:    ":8082",
+		Handler: srvGraphQl,
+	}
+
+	go func() {
+		if err := http.ListenAndServe(graphqlServer.Addr, nil); err != nil {
+			errs <- err
+		}
+	}()
+
+	log.Printf("GraphQl server is listening on: %s with GraphQl playground", graphqlServer.Addr)
+
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
@@ -105,7 +129,11 @@ func main() {
 
 	pool.Close()
 
-	if err := srv.Shutdown(ctx); err != nil && err != http.ErrServerClosed {
+	if err := restServer.Shutdown(ctx); err != nil && err != http.ErrServerClosed {
+		log.Fatalf("error while shutting down: %v", err)
+	}
+
+	if err := graphqlServer.Shutdown(ctx); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("error while shutting down: %v", err)
 	}
 
