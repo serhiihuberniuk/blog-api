@@ -10,7 +10,7 @@ type Post {
   id: ID!
   title: String!
   description: String!
-  createdBy: User
+  createdBy: User!
   createdAt: String!
   tags: [String!]!
 }
@@ -18,14 +18,14 @@ type Post {
 type Comment {
   id: ID!
   content: String!
-  createdBy: User
+  createdBy: User!
   createdAt: String!
-  post: Post
+  post: Post!
 }
 
 input PaginationInput {
-  limit: Int
-  offset: Int
+  limit: Int!
+  offset: Int!
 }
 
 enum FilterPostsField{
@@ -70,11 +70,11 @@ input SortCommentsInput{
 }
 
 type Query {
-  getUser(id: ID!): User
-  getPost(id: ID!): Post
-  getComment(id: ID!): Comment
-  listPosts(paginationInput: PaginationInput, filterPostsInput: FilterPostInput, sortPostsInput: SortPostsInput): [Post]
-  listComments(paginationInput: PaginationInput, filterCommentsInput: FilterCommentsInput, sortCommentsInput: SortCommentsInput): [Comment]
+  getUser(id: ID!): User!
+  getPost(id: ID!): Post!
+  getComment(id: ID!): Comment!
+  listPosts(paginationInput: PaginationInput, filterPostsInput: FilterPostInput, sortPostsInput: SortPostsInput): [Post!]!
+  listComments(paginationInput: PaginationInput, filterCommentsInput: FilterCommentsInput, sortCommentsInput: SortCommentsInput): [Comment!]!
 }
 
 input CreateUserInput {
@@ -111,15 +111,15 @@ input UpdateCommentInput {
 }
 
 type Mutation {
-  createUser(input: CreateUserInput): User
-  updateUser(id: ID!, input: UpdateUserInput): User
+  createUser(input: CreateUserInput!): User!
+  updateUser(id: ID!, input: UpdateUserInput!): User!
   deleteUser(id: ID!): Boolean!
 
-  createPost(input: CreatePostInput): Post
-  updatePost(id: ID!, input: UpdatePostInput): Post
+  createPost(input: CreatePostInput!): Post!
+  updatePost(id: ID!, input: UpdatePostInput!): Post!
   deletePost(id: ID!): Boolean!
 
-  createComment(input: CreateCommentInput ): Comment
-  updateComment(id: ID!, input: UpdateCommentInput): Comment
+  createComment(input: CreateCommentInput! ): Comment!
+  updateComment(id: ID!, input: UpdateCommentInput!): Comment!
   deleteComment(id: ID!): Boolean!
 }

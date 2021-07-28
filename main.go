@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/serhiihuberniuk/blog-api/view/graphqls/graph"
+	"github.com/serhiihuberniuk/blog-api/view/graphqls/graph/generated"
 	"log"
 	"net"
 	"net/http"
@@ -16,8 +18,6 @@ import (
 	"github.com/rs/cors"
 	repository "github.com/serhiihuberniuk/blog-api/repository/postgresql"
 	"github.com/serhiihuberniuk/blog-api/service"
-	"github.com/serhiihuberniuk/blog-api/view/graph"
-	"github.com/serhiihuberniuk/blog-api/view/graph/generated"
 	grpcHandlers "github.com/serhiihuberniuk/blog-api/view/grpc/handlers"
 	"github.com/serhiihuberniuk/blog-api/view/grpc/pb"
 	"github.com/serhiihuberniuk/blog-api/view/rest/handlers"

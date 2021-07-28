@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/serhiihuberniuk/blog-api/models"
-	"github.com/serhiihuberniuk/blog-api/view/graph/model"
+	"github.com/serhiihuberniuk/blog-api/view/graphqls/graph/model"
 )
 
 // This file will not be regenerated automatically.
@@ -46,16 +46,13 @@ func getPaginationParams(paginationInput *model.PaginationInput) models.Paginati
 	}
 
 	if paginationInput != nil {
-		if paginationInput.Limit != nil {
-			pagination.Limit = uint64(*paginationInput.Limit)
+		pagination = models.Pagination{
+			Limit:  uint64(paginationInput.Limit),
+			Offset: uint64(paginationInput.Offset),
 		}
 
 		if pagination.Limit > maxLimit {
 			pagination.Limit = maxLimit
-		}
-
-		if paginationInput.Offset != nil {
-			pagination.Offset = uint64(*paginationInput.Offset)
 		}
 	}
 

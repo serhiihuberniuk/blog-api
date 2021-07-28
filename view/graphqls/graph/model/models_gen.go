@@ -45,8 +45,8 @@ type FilterPostInput struct {
 }
 
 type PaginationInput struct {
-	Limit  *int `json:"limit"`
-	Offset *int `json:"offset"`
+	Limit  int `json:"limit"`
+	Offset int `json:"offset"`
 }
 
 type Post struct {

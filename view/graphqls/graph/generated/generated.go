@@ -8,10 +8,11 @@ import (
 	"errors"
 	"strconv"
 	"sync"
+	"sync/atomic"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	"github.com/serhiihuberniuk/blog-api/view/graph/model"
+	"github.com/serhiihuberniuk/blog-api/view/graphqls/graph/model"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -51,15 +52,15 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateComment func(childComplexity int, input *model.CreateCommentInput) int
-		CreatePost    func(childComplexity int, input *model.CreatePostInput) int
-		CreateUser    func(childComplexity int, input *model.CreateUserInput) int
+		CreateComment func(childComplexity int, input model.CreateCommentInput) int
+		CreatePost    func(childComplexity int, input model.CreatePostInput) int
+		CreateUser    func(childComplexity int, input model.CreateUserInput) int
 		DeleteComment func(childComplexity int, id string) int
 		DeletePost    func(childComplexity int, id string) int
 		DeleteUser    func(childComplexity int, id string) int
-		UpdateComment func(childComplexity int, id string, input *model.UpdateCommentInput) int
-		UpdatePost    func(childComplexity int, id string, input *model.UpdatePostInput) int
-		UpdateUser    func(childComplexity int, id string, input *model.UpdateUserInput) int
+		UpdateComment func(childComplexity int, id string, input model.UpdateCommentInput) int
+		UpdatePost    func(childComplexity int, id string, input model.UpdatePostInput) int
+		UpdateUser    func(childComplexity int, id string, input model.UpdateUserInput) int
 	}
 
 	Post struct {
@@ -89,14 +90,14 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	CreateUser(ctx context.Context, input *model.CreateUserInput) (*model.User, error)
-	UpdateUser(ctx context.Context, id string, input *model.UpdateUserInput) (*model.User, error)
+	CreateUser(ctx context.Context, input model.CreateUserInput) (*model.User, error)
+	UpdateUser(ctx context.Context, id string, input model.UpdateUserInput) (*model.User, error)
 	DeleteUser(ctx context.Context, id string) (bool, error)
-	CreatePost(ctx context.Context, input *model.CreatePostInput) (*model.Post, error)
-	UpdatePost(ctx context.Context, id string, input *model.UpdatePostInput) (*model.Post, error)
+	CreatePost(ctx context.Context, input model.CreatePostInput) (*model.Post, error)
+	UpdatePost(ctx context.Context, id string, input model.UpdatePostInput) (*model.Post, error)
 	DeletePost(ctx context.Context, id string) (bool, error)
-	CreateComment(ctx context.Context, input *model.CreateCommentInput) (*model.Comment, error)
-	UpdateComment(ctx context.Context, id string, input *model.UpdateCommentInput) (*model.Comment, error)
+	CreateComment(ctx context.Context, input model.CreateCommentInput) (*model.Comment, error)
+	UpdateComment(ctx context.Context, id string, input model.UpdateCommentInput) (*model.Comment, error)
 	DeleteComment(ctx context.Context, id string) (bool, error)
 }
 type QueryResolver interface {
@@ -167,7 +168,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateComment(childComplexity, args["input"].(*model.CreateCommentInput)), true
+		return e.complexity.Mutation.CreateComment(childComplexity, args["input"].(model.CreateCommentInput)), true
 
 	case "Mutation.createPost":
 		if e.complexity.Mutation.CreatePost == nil {
@@ -179,7 +180,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreatePost(childComplexity, args["input"].(*model.CreatePostInput)), true
+		return e.complexity.Mutation.CreatePost(childComplexity, args["input"].(model.CreatePostInput)), true
 
 	case "Mutation.createUser":
 		if e.complexity.Mutation.CreateUser == nil {
@@ -191,7 +192,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateUser(childComplexity, args["input"].(*model.CreateUserInput)), true
+		return e.complexity.Mutation.CreateUser(childComplexity, args["input"].(model.CreateUserInput)), true
 
 	case "Mutation.deleteComment":
 		if e.complexity.Mutation.DeleteComment == nil {
@@ -239,7 +240,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateComment(childComplexity, args["id"].(string), args["input"].(*model.UpdateCommentInput)), true
+		return e.complexity.Mutation.UpdateComment(childComplexity, args["id"].(string), args["input"].(model.UpdateCommentInput)), true
 
 	case "Mutation.updatePost":
 		if e.complexity.Mutation.UpdatePost == nil {
@@ -251,7 +252,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdatePost(childComplexity, args["id"].(string), args["input"].(*model.UpdatePostInput)), true
+		return e.complexity.Mutation.UpdatePost(childComplexity, args["id"].(string), args["input"].(model.UpdatePostInput)), true
 
 	case "Mutation.updateUser":
 		if e.complexity.Mutation.UpdateUser == nil {
@@ -263,7 +264,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateUser(childComplexity, args["id"].(string), args["input"].(*model.UpdateUserInput)), true
+		return e.complexity.Mutation.UpdateUser(childComplexity, args["id"].(string), args["input"].(model.UpdateUserInput)), true
 
 	case "Post.createdAt":
 		if e.complexity.Post.CreatedAt == nil {
@@ -478,7 +479,7 @@ type Post {
   id: ID!
   title: String!
   description: String!
-  createdBy: User
+  createdBy: User!
   createdAt: String!
   tags: [String!]!
 }
@@ -486,14 +487,14 @@ type Post {
 type Comment {
   id: ID!
   content: String!
-  createdBy: User
+  createdBy: User!
   createdAt: String!
-  post: Post
+  post: Post!
 }
 
 input PaginationInput {
-  limit: Int
-  offset: Int
+  limit: Int!
+  offset: Int!
 }
 
 enum FilterPostsField{
@@ -538,11 +539,11 @@ input SortCommentsInput{
 }
 
 type Query {
-  getUser(id: ID!): User
-  getPost(id: ID!): Post
-  getComment(id: ID!): Comment
-  listPosts(paginationInput: PaginationInput, filterPostsInput: FilterPostInput, sortPostsInput: SortPostsInput): [Post]
-  listComments(paginationInput: PaginationInput, filterCommentsInput: FilterCommentsInput, sortCommentsInput: SortCommentsInput): [Comment]
+  getUser(id: ID!): User!
+  getPost(id: ID!): Post!
+  getComment(id: ID!): Comment!
+  listPosts(paginationInput: PaginationInput, filterPostsInput: FilterPostInput, sortPostsInput: SortPostsInput): [Post!]!
+  listComments(paginationInput: PaginationInput, filterCommentsInput: FilterCommentsInput, sortCommentsInput: SortCommentsInput): [Comment!]!
 }
 
 input CreateUserInput {
@@ -579,16 +580,16 @@ input UpdateCommentInput {
 }
 
 type Mutation {
-  createUser(input: CreateUserInput): User
-  updateUser(id: ID!, input: UpdateUserInput): User
+  createUser(input: CreateUserInput!): User!
+  updateUser(id: ID!, input: UpdateUserInput!): User!
   deleteUser(id: ID!): Boolean!
 
-  createPost(input: CreatePostInput): Post
-  updatePost(id: ID!, input: UpdatePostInput): Post
+  createPost(input: CreatePostInput!): Post!
+  updatePost(id: ID!, input: UpdatePostInput!): Post!
   deletePost(id: ID!): Boolean!
 
-  createComment(input: CreateCommentInput ): Comment
-  updateComment(id: ID!, input: UpdateCommentInput): Comment
+  createComment(input: CreateCommentInput! ): Comment!
+  updateComment(id: ID!, input: UpdateCommentInput!): Comment!
   deleteComment(id: ID!): Boolean!
 }`, BuiltIn: false},
 }
@@ -601,10 +602,10 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 func (ec *executionContext) field_Mutation_createComment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *model.CreateCommentInput
+	var arg0 model.CreateCommentInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOCreateCommentInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐCreateCommentInput(ctx, tmp)
+		arg0, err = ec.unmarshalNCreateCommentInput2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐCreateCommentInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -616,10 +617,10 @@ func (ec *executionContext) field_Mutation_createComment_args(ctx context.Contex
 func (ec *executionContext) field_Mutation_createPost_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *model.CreatePostInput
+	var arg0 model.CreatePostInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOCreatePostInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐCreatePostInput(ctx, tmp)
+		arg0, err = ec.unmarshalNCreatePostInput2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐCreatePostInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -631,10 +632,10 @@ func (ec *executionContext) field_Mutation_createPost_args(ctx context.Context, 
 func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *model.CreateUserInput
+	var arg0 model.CreateUserInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOCreateUserInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐCreateUserInput(ctx, tmp)
+		arg0, err = ec.unmarshalNCreateUserInput2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐCreateUserInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -700,10 +701,10 @@ func (ec *executionContext) field_Mutation_updateComment_args(ctx context.Contex
 		}
 	}
 	args["id"] = arg0
-	var arg1 *model.UpdateCommentInput
+	var arg1 model.UpdateCommentInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg1, err = ec.unmarshalOUpdateCommentInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐUpdateCommentInput(ctx, tmp)
+		arg1, err = ec.unmarshalNUpdateCommentInput2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐUpdateCommentInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -724,10 +725,10 @@ func (ec *executionContext) field_Mutation_updatePost_args(ctx context.Context, 
 		}
 	}
 	args["id"] = arg0
-	var arg1 *model.UpdatePostInput
+	var arg1 model.UpdatePostInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg1, err = ec.unmarshalOUpdatePostInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐUpdatePostInput(ctx, tmp)
+		arg1, err = ec.unmarshalNUpdatePostInput2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐUpdatePostInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -748,10 +749,10 @@ func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, 
 		}
 	}
 	args["id"] = arg0
-	var arg1 *model.UpdateUserInput
+	var arg1 model.UpdateUserInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg1, err = ec.unmarshalOUpdateUserInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐUpdateUserInput(ctx, tmp)
+		arg1, err = ec.unmarshalNUpdateUserInput2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐUpdateUserInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -826,7 +827,7 @@ func (ec *executionContext) field_Query_listComments_args(ctx context.Context, r
 	var arg0 *model.PaginationInput
 	if tmp, ok := rawArgs["paginationInput"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paginationInput"))
-		arg0, err = ec.unmarshalOPaginationInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐPaginationInput(ctx, tmp)
+		arg0, err = ec.unmarshalOPaginationInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐPaginationInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -835,7 +836,7 @@ func (ec *executionContext) field_Query_listComments_args(ctx context.Context, r
 	var arg1 *model.FilterCommentsInput
 	if tmp, ok := rawArgs["filterCommentsInput"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filterCommentsInput"))
-		arg1, err = ec.unmarshalOFilterCommentsInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐFilterCommentsInput(ctx, tmp)
+		arg1, err = ec.unmarshalOFilterCommentsInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐFilterCommentsInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -844,7 +845,7 @@ func (ec *executionContext) field_Query_listComments_args(ctx context.Context, r
 	var arg2 *model.SortCommentsInput
 	if tmp, ok := rawArgs["sortCommentsInput"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sortCommentsInput"))
-		arg2, err = ec.unmarshalOSortCommentsInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐSortCommentsInput(ctx, tmp)
+		arg2, err = ec.unmarshalOSortCommentsInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐSortCommentsInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -859,7 +860,7 @@ func (ec *executionContext) field_Query_listPosts_args(ctx context.Context, rawA
 	var arg0 *model.PaginationInput
 	if tmp, ok := rawArgs["paginationInput"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("paginationInput"))
-		arg0, err = ec.unmarshalOPaginationInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐPaginationInput(ctx, tmp)
+		arg0, err = ec.unmarshalOPaginationInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐPaginationInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -868,7 +869,7 @@ func (ec *executionContext) field_Query_listPosts_args(ctx context.Context, rawA
 	var arg1 *model.FilterPostInput
 	if tmp, ok := rawArgs["filterPostsInput"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filterPostsInput"))
-		arg1, err = ec.unmarshalOFilterPostInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐFilterPostInput(ctx, tmp)
+		arg1, err = ec.unmarshalOFilterPostInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐFilterPostInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -877,7 +878,7 @@ func (ec *executionContext) field_Query_listPosts_args(ctx context.Context, rawA
 	var arg2 *model.SortPostsInput
 	if tmp, ok := rawArgs["sortPostsInput"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sortPostsInput"))
-		arg2, err = ec.unmarshalOSortPostsInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐSortPostsInput(ctx, tmp)
+		arg2, err = ec.unmarshalOSortPostsInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐSortPostsInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1019,11 +1020,14 @@ func (ec *executionContext) _Comment_createdBy(ctx context.Context, field graphq
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Comment_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Comment) (ret graphql.Marshaler) {
@@ -1086,11 +1090,14 @@ func (ec *executionContext) _Comment_post(ctx context.Context, field graphql.Col
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.Post)
 	fc.Result = res
-	return ec.marshalOPost2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐPost(ctx, field.Selections, res)
+	return ec.marshalNPost2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐPost(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1118,18 +1125,21 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateUser(rctx, args["input"].(*model.CreateUserInput))
+		return ec.resolvers.Mutation().CreateUser(rctx, args["input"].(model.CreateUserInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1157,18 +1167,21 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateUser(rctx, args["id"].(string), args["input"].(*model.UpdateUserInput))
+		return ec.resolvers.Mutation().UpdateUser(rctx, args["id"].(string), args["input"].(model.UpdateUserInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_deleteUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1238,18 +1251,21 @@ func (ec *executionContext) _Mutation_createPost(ctx context.Context, field grap
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreatePost(rctx, args["input"].(*model.CreatePostInput))
+		return ec.resolvers.Mutation().CreatePost(rctx, args["input"].(model.CreatePostInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.Post)
 	fc.Result = res
-	return ec.marshalOPost2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐPost(ctx, field.Selections, res)
+	return ec.marshalNPost2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐPost(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_updatePost(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1277,18 +1293,21 @@ func (ec *executionContext) _Mutation_updatePost(ctx context.Context, field grap
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdatePost(rctx, args["id"].(string), args["input"].(*model.UpdatePostInput))
+		return ec.resolvers.Mutation().UpdatePost(rctx, args["id"].(string), args["input"].(model.UpdatePostInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.Post)
 	fc.Result = res
-	return ec.marshalOPost2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐPost(ctx, field.Selections, res)
+	return ec.marshalNPost2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐPost(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_deletePost(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1358,18 +1377,21 @@ func (ec *executionContext) _Mutation_createComment(ctx context.Context, field g
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateComment(rctx, args["input"].(*model.CreateCommentInput))
+		return ec.resolvers.Mutation().CreateComment(rctx, args["input"].(model.CreateCommentInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.Comment)
 	fc.Result = res
-	return ec.marshalOComment2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐComment(ctx, field.Selections, res)
+	return ec.marshalNComment2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐComment(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_updateComment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1397,18 +1419,21 @@ func (ec *executionContext) _Mutation_updateComment(ctx context.Context, field g
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateComment(rctx, args["id"].(string), args["input"].(*model.UpdateCommentInput))
+		return ec.resolvers.Mutation().UpdateComment(rctx, args["id"].(string), args["input"].(model.UpdateCommentInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.Comment)
 	fc.Result = res
-	return ec.marshalOComment2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐComment(ctx, field.Selections, res)
+	return ec.marshalNComment2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐComment(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_deleteComment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1583,11 +1608,14 @@ func (ec *executionContext) _Post_createdBy(ctx context.Context, field graphql.C
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Post_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Post) (ret graphql.Marshaler) {
@@ -1692,11 +1720,14 @@ func (ec *executionContext) _Query_getUser(ctx context.Context, field graphql.Co
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_getPost(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1731,11 +1762,14 @@ func (ec *executionContext) _Query_getPost(ctx context.Context, field graphql.Co
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.Post)
 	fc.Result = res
-	return ec.marshalOPost2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐPost(ctx, field.Selections, res)
+	return ec.marshalNPost2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐPost(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_getComment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1770,11 +1804,14 @@ func (ec *executionContext) _Query_getComment(ctx context.Context, field graphql
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.Comment)
 	fc.Result = res
-	return ec.marshalOComment2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐComment(ctx, field.Selections, res)
+	return ec.marshalNComment2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐComment(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_listPosts(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1809,11 +1846,14 @@ func (ec *executionContext) _Query_listPosts(ctx context.Context, field graphql.
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.([]*model.Post)
 	fc.Result = res
-	return ec.marshalOPost2ᚕᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐPost(ctx, field.Selections, res)
+	return ec.marshalNPost2ᚕᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐPostᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_listComments(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1848,11 +1888,14 @@ func (ec *executionContext) _Query_listComments(ctx context.Context, field graph
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.([]*model.Comment)
 	fc.Result = res
-	return ec.marshalOComment2ᚕᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐComment(ctx, field.Selections, res)
+	return ec.marshalNComment2ᚕᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐCommentᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3306,7 +3349,7 @@ func (ec *executionContext) unmarshalInputFilterCommentsInput(ctx context.Contex
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
-			it.Field, err = ec.unmarshalNFilterCommentsField2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐFilterCommentsField(ctx, v)
+			it.Field, err = ec.unmarshalNFilterCommentsField2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐFilterCommentsField(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3334,7 +3377,7 @@ func (ec *executionContext) unmarshalInputFilterPostInput(ctx context.Context, o
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
-			it.Field, err = ec.unmarshalNFilterPostsField2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐFilterPostsField(ctx, v)
+			it.Field, err = ec.unmarshalNFilterPostsField2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐFilterPostsField(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3362,7 +3405,7 @@ func (ec *executionContext) unmarshalInputPaginationInput(ctx context.Context, o
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
-			it.Limit, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			it.Limit, err = ec.unmarshalNInt2int(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3370,7 +3413,7 @@ func (ec *executionContext) unmarshalInputPaginationInput(ctx context.Context, o
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
-			it.Offset, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			it.Offset, err = ec.unmarshalNInt2int(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3390,7 +3433,7 @@ func (ec *executionContext) unmarshalInputSortCommentsInput(ctx context.Context,
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
-			it.Field, err = ec.unmarshalNSortCommentsField2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐSortCommentsField(ctx, v)
+			it.Field, err = ec.unmarshalNSortCommentsField2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐSortCommentsField(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3418,7 +3461,7 @@ func (ec *executionContext) unmarshalInputSortPostsInput(ctx context.Context, ob
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
-			it.Field, err = ec.unmarshalNSortPostsField2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐSortPostsField(ctx, v)
+			it.Field, err = ec.unmarshalNSortPostsField2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐSortPostsField(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3551,6 +3594,9 @@ func (ec *executionContext) _Comment(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "createdBy":
 			out.Values[i] = ec._Comment_createdBy(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "createdAt":
 			out.Values[i] = ec._Comment_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -3558,6 +3604,9 @@ func (ec *executionContext) _Comment(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "post":
 			out.Values[i] = ec._Comment_post(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3586,8 +3635,14 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = graphql.MarshalString("Mutation")
 		case "createUser":
 			out.Values[i] = ec._Mutation_createUser(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "updateUser":
 			out.Values[i] = ec._Mutation_updateUser(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "deleteUser":
 			out.Values[i] = ec._Mutation_deleteUser(ctx, field)
 			if out.Values[i] == graphql.Null {
@@ -3595,8 +3650,14 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "createPost":
 			out.Values[i] = ec._Mutation_createPost(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "updatePost":
 			out.Values[i] = ec._Mutation_updatePost(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "deletePost":
 			out.Values[i] = ec._Mutation_deletePost(ctx, field)
 			if out.Values[i] == graphql.Null {
@@ -3604,8 +3665,14 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "createComment":
 			out.Values[i] = ec._Mutation_createComment(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "updateComment":
 			out.Values[i] = ec._Mutation_updateComment(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "deleteComment":
 			out.Values[i] = ec._Mutation_deleteComment(ctx, field)
 			if out.Values[i] == graphql.Null {
@@ -3650,6 +3717,9 @@ func (ec *executionContext) _Post(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "createdBy":
 			out.Values[i] = ec._Post_createdBy(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "createdAt":
 			out.Values[i] = ec._Post_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -3695,6 +3765,9 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_getUser(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			})
 		case "getPost":
@@ -3706,6 +3779,9 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_getPost(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			})
 		case "getComment":
@@ -3717,6 +3793,9 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_getComment(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			})
 		case "listPosts":
@@ -3728,6 +3807,9 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_listPosts(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			})
 		case "listComments":
@@ -3739,6 +3821,9 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_listComments(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			})
 		case "__type":
@@ -4063,23 +4148,89 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) unmarshalNFilterCommentsField2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐFilterCommentsField(ctx context.Context, v interface{}) (model.FilterCommentsField, error) {
+func (ec *executionContext) marshalNComment2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐComment(ctx context.Context, sel ast.SelectionSet, v model.Comment) graphql.Marshaler {
+	return ec._Comment(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNComment2ᚕᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐCommentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Comment) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNComment2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐComment(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNComment2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐComment(ctx context.Context, sel ast.SelectionSet, v *model.Comment) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Comment(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNCreateCommentInput2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐCreateCommentInput(ctx context.Context, v interface{}) (model.CreateCommentInput, error) {
+	res, err := ec.unmarshalInputCreateCommentInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNCreatePostInput2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐCreatePostInput(ctx context.Context, v interface{}) (model.CreatePostInput, error) {
+	res, err := ec.unmarshalInputCreatePostInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNCreateUserInput2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐCreateUserInput(ctx context.Context, v interface{}) (model.CreateUserInput, error) {
+	res, err := ec.unmarshalInputCreateUserInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNFilterCommentsField2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐFilterCommentsField(ctx context.Context, v interface{}) (model.FilterCommentsField, error) {
 	var res model.FilterCommentsField
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNFilterCommentsField2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐFilterCommentsField(ctx context.Context, sel ast.SelectionSet, v model.FilterCommentsField) graphql.Marshaler {
+func (ec *executionContext) marshalNFilterCommentsField2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐFilterCommentsField(ctx context.Context, sel ast.SelectionSet, v model.FilterCommentsField) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalNFilterPostsField2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐFilterPostsField(ctx context.Context, v interface{}) (model.FilterPostsField, error) {
+func (ec *executionContext) unmarshalNFilterPostsField2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐFilterPostsField(ctx context.Context, v interface{}) (model.FilterPostsField, error) {
 	var res model.FilterPostsField
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNFilterPostsField2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐFilterPostsField(ctx context.Context, sel ast.SelectionSet, v model.FilterPostsField) graphql.Marshaler {
+func (ec *executionContext) marshalNFilterPostsField2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐFilterPostsField(ctx context.Context, sel ast.SelectionSet, v model.FilterPostsField) graphql.Marshaler {
 	return v
 }
 
@@ -4098,23 +4249,89 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
-func (ec *executionContext) unmarshalNSortCommentsField2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐSortCommentsField(ctx context.Context, v interface{}) (model.SortCommentsField, error) {
+func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
+	res, err := graphql.UnmarshalInt(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	res := graphql.MarshalInt(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) marshalNPost2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐPost(ctx context.Context, sel ast.SelectionSet, v model.Post) graphql.Marshaler {
+	return ec._Post(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPost2ᚕᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐPostᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Post) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNPost2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐPost(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNPost2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐPost(ctx context.Context, sel ast.SelectionSet, v *model.Post) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Post(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNSortCommentsField2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐSortCommentsField(ctx context.Context, v interface{}) (model.SortCommentsField, error) {
 	var res model.SortCommentsField
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNSortCommentsField2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐSortCommentsField(ctx context.Context, sel ast.SelectionSet, v model.SortCommentsField) graphql.Marshaler {
+func (ec *executionContext) marshalNSortCommentsField2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐSortCommentsField(ctx context.Context, sel ast.SelectionSet, v model.SortCommentsField) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalNSortPostsField2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐSortPostsField(ctx context.Context, v interface{}) (model.SortPostsField, error) {
+func (ec *executionContext) unmarshalNSortPostsField2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐSortPostsField(ctx context.Context, v interface{}) (model.SortPostsField, error) {
 	var res model.SortPostsField
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNSortPostsField2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐSortPostsField(ctx context.Context, sel ast.SelectionSet, v model.SortPostsField) graphql.Marshaler {
+func (ec *executionContext) marshalNSortPostsField2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐSortPostsField(ctx context.Context, sel ast.SelectionSet, v model.SortPostsField) graphql.Marshaler {
 	return v
 }
 
@@ -4161,6 +4378,35 @@ func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel
 	}
 
 	return ret
+}
+
+func (ec *executionContext) unmarshalNUpdateCommentInput2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐUpdateCommentInput(ctx context.Context, v interface{}) (model.UpdateCommentInput, error) {
+	res, err := ec.unmarshalInputUpdateCommentInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdatePostInput2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐUpdatePostInput(ctx context.Context, v interface{}) (model.UpdatePostInput, error) {
+	res, err := ec.unmarshalInputUpdatePostInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdateUserInput2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐUpdateUserInput(ctx context.Context, v interface{}) (model.UpdateUserInput, error) {
+	res, err := ec.unmarshalInputUpdateUserInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUser2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v model.User) graphql.Marshaler {
+	return ec._User(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNUser2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v *model.User) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._User(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
@@ -4416,78 +4662,7 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return graphql.MarshalBoolean(*v)
 }
 
-func (ec *executionContext) marshalOComment2ᚕᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐComment(ctx context.Context, sel ast.SelectionSet, v []*model.Comment) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalOComment2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐComment(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
-}
-
-func (ec *executionContext) marshalOComment2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐComment(ctx context.Context, sel ast.SelectionSet, v *model.Comment) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._Comment(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalOCreateCommentInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐCreateCommentInput(ctx context.Context, v interface{}) (*model.CreateCommentInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputCreateCommentInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalOCreatePostInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐCreatePostInput(ctx context.Context, v interface{}) (*model.CreatePostInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputCreatePostInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalOCreateUserInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐCreateUserInput(ctx context.Context, v interface{}) (*model.CreateUserInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputCreateUserInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalOFilterCommentsInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐFilterCommentsInput(ctx context.Context, v interface{}) (*model.FilterCommentsInput, error) {
+func (ec *executionContext) unmarshalOFilterCommentsInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐFilterCommentsInput(ctx context.Context, v interface{}) (*model.FilterCommentsInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -4495,7 +4670,7 @@ func (ec *executionContext) unmarshalOFilterCommentsInput2ᚖgithubᚗcomᚋserh
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOFilterPostInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐFilterPostInput(ctx context.Context, v interface{}) (*model.FilterPostInput, error) {
+func (ec *executionContext) unmarshalOFilterPostInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐFilterPostInput(ctx context.Context, v interface{}) (*model.FilterPostInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -4503,22 +4678,7 @@ func (ec *executionContext) unmarshalOFilterPostInput2ᚖgithubᚗcomᚋserhiihu
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := graphql.UnmarshalInt(v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return graphql.MarshalInt(*v)
-}
-
-func (ec *executionContext) unmarshalOPaginationInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐPaginationInput(ctx context.Context, v interface{}) (*model.PaginationInput, error) {
+func (ec *executionContext) unmarshalOPaginationInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐPaginationInput(ctx context.Context, v interface{}) (*model.PaginationInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -4526,54 +4686,7 @@ func (ec *executionContext) unmarshalOPaginationInput2ᚖgithubᚗcomᚋserhiihu
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOPost2ᚕᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐPost(ctx context.Context, sel ast.SelectionSet, v []*model.Post) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalOPost2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐPost(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
-}
-
-func (ec *executionContext) marshalOPost2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐPost(ctx context.Context, sel ast.SelectionSet, v *model.Post) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._Post(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalOSortCommentsInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐSortCommentsInput(ctx context.Context, v interface{}) (*model.SortCommentsInput, error) {
+func (ec *executionContext) unmarshalOSortCommentsInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐSortCommentsInput(ctx context.Context, v interface{}) (*model.SortCommentsInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -4581,7 +4694,7 @@ func (ec *executionContext) unmarshalOSortCommentsInput2ᚖgithubᚗcomᚋserhii
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOSortPostsInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐSortPostsInput(ctx context.Context, v interface{}) (*model.SortPostsInput, error) {
+func (ec *executionContext) unmarshalOSortPostsInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlsᚋgraphᚋmodelᚐSortPostsInput(ctx context.Context, v interface{}) (*model.SortPostsInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -4611,37 +4724,6 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 		return graphql.Null
 	}
 	return graphql.MarshalString(*v)
-}
-
-func (ec *executionContext) unmarshalOUpdateCommentInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐUpdateCommentInput(ctx context.Context, v interface{}) (*model.UpdateCommentInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputUpdateCommentInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalOUpdatePostInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐUpdatePostInput(ctx context.Context, v interface{}) (*model.UpdatePostInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputUpdatePostInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalOUpdateUserInput2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐUpdateUserInput(ctx context.Context, v interface{}) (*model.UpdateUserInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputUpdateUserInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOUser2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v *model.User) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._User(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {

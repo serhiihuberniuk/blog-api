@@ -8,11 +8,11 @@ import (
 	"fmt"
 
 	"github.com/serhiihuberniuk/blog-api/models"
-	"github.com/serhiihuberniuk/blog-api/view/graph/generated"
-	"github.com/serhiihuberniuk/blog-api/view/graph/model"
+	"github.com/serhiihuberniuk/blog-api/view/graphqls/graph/generated"
+	"github.com/serhiihuberniuk/blog-api/view/graphqls/graph/model"
 )
 
-func (r *mutationResolver) CreateUser(ctx context.Context, input *model.CreateUserInput) (*model.User, error) {
+func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUserInput) (*model.User, error) {
 	userId, err := r.service.CreateUser(ctx, models.CreateUserPayload{
 		Name:  input.Name,
 		Email: input.Email,
@@ -30,7 +30,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input *model.CreateUs
 }
 
 func (r *mutationResolver) UpdateUser(ctx context.Context, id string,
-	input *model.UpdateUserInput) (*model.User, error) {
+	input model.UpdateUserInput) (*model.User, error) {
 	err := r.service.UpdateUser(ctx, models.UpdateUserPayload{
 		UserID: id,
 		Name:   input.Name,
@@ -56,7 +56,7 @@ func (r *mutationResolver) DeleteUser(ctx context.Context, id string) (bool, err
 	return true, nil
 }
 
-func (r *mutationResolver) CreatePost(ctx context.Context, input *model.CreatePostInput) (*model.Post, error) {
+func (r *mutationResolver) CreatePost(ctx context.Context, input model.CreatePostInput) (*model.Post, error) {
 	postId, err := r.service.CreatePost(ctx, models.CreatePostPayload{
 		Title:       input.Title,
 		Description: input.Description,
@@ -76,7 +76,7 @@ func (r *mutationResolver) CreatePost(ctx context.Context, input *model.CreatePo
 }
 
 func (r *mutationResolver) UpdatePost(ctx context.Context, id string,
-	input *model.UpdatePostInput) (*model.Post, error) {
+	input model.UpdatePostInput) (*model.Post, error) {
 	err := r.service.UpdatePost(ctx, models.UpdatePostPayload{
 		PostID:      id,
 		Title:       input.Title,
@@ -103,7 +103,7 @@ func (r *mutationResolver) DeletePost(ctx context.Context, id string) (bool, err
 	return true, nil
 }
 
-func (r *mutationResolver) CreateComment(ctx context.Context, input *model.CreateCommentInput) (*model.Comment, error) {
+func (r *mutationResolver) CreateComment(ctx context.Context, input model.CreateCommentInput) (*model.Comment, error) {
 	commentID, err := r.service.CreateComment(ctx, models.CreateCommentPayload{
 		Content:  input.Content,
 		PostID:   input.PostID,
@@ -122,7 +122,7 @@ func (r *mutationResolver) CreateComment(ctx context.Context, input *model.Creat
 }
 
 func (r *mutationResolver) UpdateComment(ctx context.Context, id string,
-	input *model.UpdateCommentInput) (*model.Comment, error) {
+	input model.UpdateCommentInput) (*model.Comment, error) {
 	err := r.service.UpdateComment(ctx, models.UpdateCommentPayload{
 		CommentID: id,
 		Content:   input.Content,
