@@ -12,8 +12,10 @@ type Comment struct {
 	ID        string `json:"id"`
 	Content   string `json:"content"`
 	CreatedBy *User  `json:"createdBy"`
+	AuthorID  string `json:"authorID"`
 	CreatedAt string `json:"createdAt"`
 	Post      *Post  `json:"post"`
+	PostID    string `json:"postID"`
 }
 
 type CreateCommentInput struct {
@@ -54,18 +56,19 @@ type Post struct {
 	Title       string   `json:"title"`
 	Description string   `json:"description"`
 	CreatedBy   *User    `json:"createdBy"`
+	AuthorID    string   `json:"authorID"`
 	CreatedAt   string   `json:"createdAt"`
 	Tags        []string `json:"tags"`
 }
 
 type SortCommentsInput struct {
 	Field SortCommentsField `json:"field"`
-	IsAsc *bool             `json:"isAsc"`
+	IsAsc bool              `json:"isAsc"`
 }
 
 type SortPostsInput struct {
 	Field SortPostsField `json:"field"`
-	IsAsc *bool          `json:"isAsc"`
+	IsAsc bool           `json:"isAsc"`
 }
 
 type UpdateCommentInput struct {

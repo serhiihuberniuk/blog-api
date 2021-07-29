@@ -1,3 +1,6 @@
+directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION
+  | FIELD_DEFINITION
+
 type User {
   id: ID!
   name : String!
@@ -10,7 +13,8 @@ type Post {
   id: ID!
   title: String!
   description: String!
-  createdBy: User!
+  createdBy: User! @goField(forceResolver: true)
+  authorID: ID!
   createdAt: String!
   tags: [String!]!
 }
@@ -18,9 +22,11 @@ type Post {
 type Comment {
   id: ID!
   content: String!
-  createdBy: User!
+  createdBy: User! @goField(forceResolver: true)
+  authorID: ID!
   createdAt: String!
-  post: Post!
+  post: Post! @goField(forceResolver: true)
+  postID: ID!
 }
 
 input PaginationInput {
@@ -57,7 +63,7 @@ enum SortPostsField{
 
 input SortPostsInput {
   field: SortPostsField!
-  isAsc: Boolean
+  isAsc: Boolean!
 }
 
 enum SortCommentsField{
@@ -66,7 +72,7 @@ enum SortCommentsField{
 
 input SortCommentsInput{
   field: SortCommentsField!
-  isAsc: Boolean
+  isAsc: Boolean!
 }
 
 type Query {

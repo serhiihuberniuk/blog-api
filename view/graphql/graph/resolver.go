@@ -2,10 +2,9 @@ package graph
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/serhiihuberniuk/blog-api/models"
-	"github.com/serhiihuberniuk/blog-api/view/graphqls/graph/model"
+	"github.com/serhiihuberniuk/blog-api/view/graphql/graph/model"
 )
 
 // This file will not be regenerated automatically.
@@ -57,67 +56,6 @@ func getPaginationParams(paginationInput *model.PaginationInput) models.Paginati
 	}
 
 	return pagination
-}
-
-func getUser(ctx context.Context, r *Resolver, id string) (*model.User, error) {
-	user, err := r.service.GetUser(ctx, id)
-	if err != nil {
-		return nil, fmt.Errorf("cannot get user: %w", err)
-	}
-
-	return &model.User{
-		ID:        user.ID,
-		Name:      user.Name,
-		Email:     user.Email,
-		CreatedAt: user.CreatedAt.String(),
-		UpdatedAt: user.UpdatedAt.String(),
-	}, nil
-}
-
-func getPost(ctx context.Context, r *Resolver, id string) (*model.Post, error) {
-	post, err := r.service.GetPost(ctx, id)
-	if err != nil {
-		return nil, fmt.Errorf("cannot get post: %w", err)
-	}
-
-	postAuthor, err := getUser(ctx, r, post.CreatedBy)
-	if err != nil {
-		return nil, fmt.Errorf("cannot get author of post: %w", err)
-	}
-
-	return &model.Post{
-		ID:          post.ID,
-		Title:       post.Title,
-		Description: post.Description,
-		CreatedBy:   postAuthor,
-		CreatedAt:   post.CreatedAt.String(),
-		Tags:        post.Tags,
-	}, nil
-}
-
-func getComment(ctx context.Context, r *Resolver, id string) (*model.Comment, error) {
-	comment, err := r.service.GetComment(ctx, id)
-	if err != nil {
-		return nil, fmt.Errorf("cannot get comment, %w", err)
-	}
-
-	author, err := getUser(ctx, r, comment.CreatedBy)
-	if err != nil {
-		return nil, fmt.Errorf("cannot get author of comment: %w", err)
-	}
-
-	post, err := getPost(ctx, r, comment.PostID)
-	if err != nil {
-		return nil, fmt.Errorf("cannot get parent post: %w", err)
-	}
-
-	return &model.Comment{
-		ID:        comment.ID,
-		Content:   comment.Content,
-		CreatedBy: author,
-		CreatedAt: comment.CreatedAt.String(),
-		Post:      post,
-	}, nil
 }
 
 type service interface {

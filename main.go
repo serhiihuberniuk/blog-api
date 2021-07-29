@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/serhiihuberniuk/blog-api/view/graphqls/graph"
-	"github.com/serhiihuberniuk/blog-api/view/graphqls/graph/generated"
+	"github.com/serhiihuberniuk/blog-api/view/graphql/graph"
+	"github.com/serhiihuberniuk/blog-api/view/graphql/graph/generated"
 	"log"
 	"net"
 	"net/http"
