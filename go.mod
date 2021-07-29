@@ -13,7 +13,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/jackc/pgx/v4 v4.11.0
 	github.com/rs/cors v1.8.0
-	github.com/stretchr/testify v1.7.0 // indirect
+	github.com/spf13/viper v1.8.1
 	github.com/vektah/gqlparser/v2 v2.1.0
 	go.mongodb.org/mongo-driver v1.5.4
 	golang.org/x/net v0.0.0-20210716203947-853a461950ff // indirect
