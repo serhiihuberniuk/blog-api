@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/serhiihuberniuk/blog-api/configs"
 	"github.com/serhiihuberniuk/blog-api/view/graphql/graph"
 	"github.com/serhiihuberniuk/blog-api/view/graphql/graph/generated"
 	"log"
@@ -24,7 +25,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-const dbUrl = "postgres://serhii:serhii@localhost:5432/api"
+//const dbUrl = "postgres://serhii:serhii@localhost:5432/api"
 
 func postgresConnPool(ctx context.Context, dbUrl string) (*pgxpool.Pool, error) {
 	pool, err := pgxpool.Connect(ctx, dbUrl)
@@ -38,7 +39,12 @@ func postgresConnPool(ctx context.Context, dbUrl string) (*pgxpool.Pool, error) 
 func main() {
 	ctx := context.Background()
 
-	pool, err := postgresConnPool(ctx, dbUrl)
+	config, err := configs.LoadConfig()
+	if err != nil {
+		log.Fatalf("error occured while initialisation configs: %v", err)
+	}
+
+	pool, err := postgresConnPool(ctx, config.PostgresUrl)
 	if err != nil {
 		log.Fatalf("cannot connect to DB: %v", err)
 	}
@@ -52,7 +58,7 @@ func main() {
 	handlerRest := handlers.NewRestHandlers(serv)
 
 	restServer := http.Server{
-		Addr:    ":8080",
+		Addr:    ":" + config.HttpPort,
 		Handler: handlerRest.ApiRouter(),
 	}
 
@@ -75,7 +81,7 @@ func main() {
 
 	// gRPC server
 
-	address := ":8081"
+	address := ":" + config.GrpcPort
 	grpcServer := grpc.NewServer()
 	grpcHandler := grpcHandlers.NewGrpcHandlers(serv)
 
@@ -104,7 +110,7 @@ func main() {
 	http.Handle("/query", srvGraphQl)
 
 	graphqlServer := http.Server{
-		Addr:    ":8082",
+		Addr:    ":" + config.GraphqlPort,
 		Handler: srvGraphQl,
 	}
 

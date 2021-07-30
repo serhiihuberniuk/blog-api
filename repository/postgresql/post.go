@@ -59,6 +59,7 @@ func (r *Repository) ListPosts(ctx context.Context, pagination models.Pagination
 	filter models.FilterPosts, sort models.SortPosts) ([]*models.Post, error) {
 	query := squirrel.Select("*").
 		From("posts")
+
 	if filter.Field != "" {
 		if filter.Field == models.FilterPostsByTags {
 			query = query.Where(fmt.Sprintf("%s::jsonb ? $1", filter.Field), filter.Value)

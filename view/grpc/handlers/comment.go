@@ -102,7 +102,6 @@ func (h *Handlers) ListComments(ctx context.Context,
 	filter := models.FilterComments{}
 
 	if request.GetFilter() != nil {
-
 		filter = models.FilterComments{
 			Field: allowedFilterCommentsFields[request.GetFilter().GetField()],
 			Value: request.GetFilter().GetValue(),
