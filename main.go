@@ -39,7 +39,7 @@ func postgresConnPool(ctx context.Context, dbUrl string) (*pgxpool.Pool, error) 
 func main() {
 	ctx := context.Background()
 
-	config, err := configs.LoadConfig("configs")
+	config, err := configs.LoadConfig()
 	if err != nil {
 		log.Fatalf("error occured while initialisation configs: %v", err)
 	}
@@ -58,7 +58,7 @@ func main() {
 	handlerRest := handlers.NewRestHandlers(serv)
 
 	restServer := http.Server{
-		Addr:    config.HttpPort,
+		Addr:    ":" + config.HttpPort,
 		Handler: handlerRest.ApiRouter(),
 	}
 
@@ -81,7 +81,7 @@ func main() {
 
 	// gRPC server
 
-	address := config.GrpcPort
+	address := ":" + config.GrpcPort
 	grpcServer := grpc.NewServer()
 	grpcHandler := grpcHandlers.NewGrpcHandlers(serv)
 
@@ -110,7 +110,7 @@ func main() {
 	http.Handle("/query", srvGraphQl)
 
 	graphqlServer := http.Server{
-		Addr:    config.GraphqlPort,
+		Addr:    ":" + config.GraphqlPort,
 		Handler: srvGraphQl,
 	}
 
