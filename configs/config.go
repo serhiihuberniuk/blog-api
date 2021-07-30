@@ -17,7 +17,7 @@ type Config struct {
 func (c *Config) validate() error {
 	err := validation.ValidateStruct(c,
 		validation.Field(&c.PostgresUrl, validation.Required, is.URL),
-		validation.Field(&c.HttpPort, validation.Required, is.Port, validation.NotIn()),
+		validation.Field(&c.HttpPort, validation.Required, is.Port),
 		validation.Field(&c.GrpcPort, validation.Required, is.Port, validation.NotIn(c.HttpPort)),
 		validation.Field(&c.GraphqlPort, validation.Required, is.Port, validation.NotIn(c.HttpPort, c.GrpcPort)),
 	)
@@ -30,12 +30,13 @@ func (c *Config) validate() error {
 
 func LoadConfig() (*Config, error) {
 	viper.AutomaticEnv()
+	viper.SetEnvPrefix("api")
 
 	config := &Config{
-		PostgresUrl: viper.GetString("postgresql_url"),
-		HttpPort:    viper.GetString("http_port"),
-		GrpcPort:    viper.GetString("grpc_port"),
-		GraphqlPort: viper.GetString("graphql_port"),
+		PostgresUrl: viper.GetString("POSTGRESQL_URL"),
+		HttpPort:    viper.GetString("HTTP_PORT"),
+		GrpcPort:    viper.GetString("GRPC_PORT"),
+		GraphqlPort: viper.GetString("GRAPHQL_PORT"),
 	}
 
 	if err := config.validate(); err != nil {
