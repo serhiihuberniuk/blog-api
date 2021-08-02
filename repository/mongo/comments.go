@@ -13,6 +13,8 @@ func (r *Repository) CreateComment(ctx context.Context, comment *models.Comment)
 	commentsCollection := useCommentsCollection(r)
 
 	if _, err := commentsCollection.InsertOne(ctx, comment); err != nil {
+		err = models.ErrorBadRequest
+
 		return fmt.Errorf("cannot create comment: %w", err)
 	}
 
@@ -25,6 +27,8 @@ func (r *Repository) GetComment(ctx context.Context, commentID string) (*models.
 	var comment models.Comment
 
 	if err := commentsCollection.FindOne(ctx, bson.M{"_id": commentID}).Decode(&comment); err != nil {
+		err = models.CommentNotFound
+
 		return nil, fmt.Errorf("cannot get comment: %w", err)
 	}
 
@@ -42,6 +46,8 @@ func (r *Repository) UpdateComment(ctx context.Context, comment *models.Comment)
 				"content": comment.Content,
 			},
 		}); err != nil {
+		err = models.ErrorBadRequest
+
 		return fmt.Errorf("cannot update comment: %w", err)
 	}
 
@@ -52,6 +58,8 @@ func (r *Repository) DeleteComment(ctx context.Context, commentID string) error 
 	commentsCollection := useCommentsCollection(r)
 
 	if _, err := commentsCollection.DeleteOne(ctx, bson.M{"_id": commentID}); err != nil {
+		err = models.CommentNotFound
+
 		return fmt.Errorf("cannot delete comment: %w", err)
 	}
 

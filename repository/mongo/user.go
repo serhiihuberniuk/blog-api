@@ -12,6 +12,8 @@ func (r *Repository) CreateUser(ctx context.Context, user *models.User) error {
 	usersCollection := useUsersCollection(r)
 
 	if _, err := usersCollection.InsertOne(ctx, user); err != nil {
+		err = models.ErrorBadRequest
+
 		return fmt.Errorf("cannot create user: %w", err)
 	}
 
@@ -23,6 +25,8 @@ func (r *Repository) GetUser(ctx context.Context, userID string) (*models.User, 
 
 	var user models.User
 	if err := usersCollection.FindOne(ctx, bson.M{"_id": userID}).Decode(&user); err != nil {
+		err = models.UserNotFound
+
 		return nil, fmt.Errorf("cannot get user: %w", err)
 	}
 
@@ -42,6 +46,8 @@ func (r *Repository) UpdateUser(ctx context.Context, user *models.User) error {
 				"updated_at": user.UpdatedAt,
 			},
 		}); err != nil {
+		err = models.ErrorBadRequest
+
 		return fmt.Errorf("cannot update user: %w", err)
 	}
 
@@ -52,6 +58,8 @@ func (r *Repository) DeleteUser(ctx context.Context, userID string) error {
 	usersCollection := useUsersCollection(r)
 
 	if _, err := usersCollection.DeleteOne(ctx, bson.M{"_id": userID}); err != nil {
+		err = models.UserNotFound
+
 		return fmt.Errorf("cannot delete user: %w", err)
 	}
 

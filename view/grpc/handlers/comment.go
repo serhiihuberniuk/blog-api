@@ -2,10 +2,12 @@ package grpcHandlers
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
 	"github.com/serhiihuberniuk/blog-api/models"
 	"github.com/serhiihuberniuk/blog-api/view/grpc/pb"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -30,12 +32,16 @@ func (h *Handlers) CreateComment(ctx context.Context,
 		PostID:   request.GetPostId(),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("cannot create comment: %w", err)
+		if errors.Is(err, models.ErrorBadRequest) {
+			return nil, status.Errorf(codes.InvalidArgument, models.ErrorBadRequest.Error(), err)
+		}
+
+		return nil, status.Errorf(codes.Internal, "cannot create comment: %v", err)
 	}
 
 	comment, err := h.service.GetComment(ctx, commentID)
 	if err != nil {
-		return nil, fmt.Errorf("cannot get created comment: %w", err)
+		return nil, status.Errorf(codes.Internal, "cannot get created comment: %v", err)
 	}
 
 	return &pb.CreateCommentResponse{
@@ -50,7 +56,11 @@ func (h *Handlers) CreateComment(ctx context.Context,
 func (h *Handlers) GetComment(ctx context.Context, request *pb.GetCommentRequest) (*pb.GetCommentResponse, error) {
 	comment, err := h.service.GetComment(ctx, request.GetId())
 	if err != nil {
-		return nil, fmt.Errorf("cannot get comment: %w", err)
+		if errors.Is(err, models.CommentNotFound) {
+			return nil, status.Errorf(codes.NotFound, models.CommentNotFound.Error(), err)
+		}
+
+		return nil, status.Errorf(codes.Internal, "cannot get comment: %v", err)
 	}
 
 	return &pb.GetCommentResponse{
@@ -69,12 +79,20 @@ func (h *Handlers) UpdateComment(ctx context.Context,
 		Content:   request.GetContent(),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("cannot update comment: %w", err)
+		if errors.Is(err, models.CommentNotFound) {
+			return nil, status.Errorf(codes.NotFound, models.CommentNotFound.Error(), err)
+		}
+
+		if errors.Is(err, models.ErrorBadRequest) {
+			return nil, status.Errorf(codes.InvalidArgument, models.ErrorBadRequest.Error(), err)
+		}
+
+		return nil, status.Errorf(codes.Internal, "cannot update comment: %v", err)
 	}
 
 	comment, err := h.service.GetComment(ctx, request.GetId())
 	if err != nil {
-		return nil, fmt.Errorf("cannot get updated comment: %w", err)
+		return nil, status.Errorf(codes.Internal, "cannot get updated comment: %v", err)
 	}
 
 	return &pb.UpdateCommentResponse{
@@ -89,7 +107,11 @@ func (h *Handlers) UpdateComment(ctx context.Context,
 func (h *Handlers) DeleteComment(ctx context.Context,
 	request *pb.DeleteCommentRequest) (*pb.DeleteCommentResponse, error) {
 	if err := h.service.DeleteComment(ctx, request.GetId()); err != nil {
-		return nil, fmt.Errorf("cannot delete comment: %w", err)
+		if errors.Is(err, models.CommentNotFound) {
+			return nil, status.Errorf(codes.NotFound, models.CommentNotFound.Error(), err)
+		}
+
+		return nil, status.Errorf(codes.Internal, "cannot delete comment: %v", err)
 	}
 
 	return &pb.DeleteCommentResponse{}, nil
@@ -119,7 +141,7 @@ func (h *Handlers) ListComments(ctx context.Context,
 
 	comments, err := h.service.ListComments(ctx, pagination, filter, sort)
 	if err != nil {
-		return nil, fmt.Errorf("cannot get list of comments, %w", err)
+		return nil, status.Errorf(codes.Internal, "cannot get list of comments: %v", err)
 	}
 
 	var outs pb.ListCommentsResponse

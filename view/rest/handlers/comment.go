@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -33,14 +34,20 @@ func (h *Handlers) CreateComment(w http.ResponseWriter, r *http.Request) {
 		AuthorID: in.AuthorID,
 	})
 	if err != nil {
-		http.Error(w, "cannot create comment", http.StatusBadRequest)
+		if errors.Is(err, models.ErrorBadRequest) {
+			http.Error(w, models.ErrorBadRequest.Error(), http.StatusBadRequest)
+
+			return
+		}
+
+		http.Error(w, "cannot create comment", http.StatusInternalServerError)
 
 		return
 	}
 
 	comment, err := h.service.GetComment(r.Context(), commentID)
 	if err != nil {
-		http.Error(w, "cannot get created comment", http.StatusNotFound)
+		http.Error(w, "cannot get created comment", http.StatusInternalServerError)
 
 		return
 	}
@@ -63,7 +70,13 @@ func (h *Handlers) GetComment(w http.ResponseWriter, r *http.Request) {
 
 	comment, err := h.service.GetComment(r.Context(), commentID)
 	if err != nil {
-		http.Error(w, "cannot get comment with such ID", http.StatusNotFound)
+		if errors.Is(err, models.CommentNotFound) {
+			http.Error(w, models.CommentNotFound.Error(), http.StatusNotFound)
+
+			return
+		}
+
+		http.Error(w, "cannot get comment", http.StatusInternalServerError)
 
 		return
 	}
@@ -95,7 +108,19 @@ func (h *Handlers) UpdateComment(w http.ResponseWriter, r *http.Request) {
 		Content:   in.Content,
 	})
 	if err != nil {
-		http.Error(w, "cannot update comment", http.StatusBadRequest)
+		if errors.Is(err, models.CommentNotFound) {
+			http.Error(w, models.CommentNotFound.Error(), http.StatusNotFound)
+
+			return
+		}
+
+		if errors.Is(err, models.ErrorBadRequest) {
+			http.Error(w, models.ErrorBadRequest.Error(), http.StatusBadRequest)
+
+			return
+		}
+
+		http.Error(w, "cannot update comment", http.StatusInternalServerError)
 
 		return
 	}
@@ -124,7 +149,13 @@ func (h *Handlers) DeleteComment(w http.ResponseWriter, r *http.Request) {
 	commentID := mux.Vars(r)["id"]
 
 	if err := h.service.DeleteComment(r.Context(), commentID); err != nil {
-		http.Error(w, "cannot delete comment with such ID", http.StatusNotFound)
+		if errors.Is(err, models.CommentNotFound) {
+			http.Error(w, models.CommentNotFound.Error(), http.StatusNotFound)
+
+			return
+		}
+
+		http.Error(w, "cannot delete comment", http.StatusInternalServerError)
 
 		return
 	}

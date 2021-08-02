@@ -13,6 +13,8 @@ func (r *Repository) CreatePost(ctx context.Context, post *models.Post) error {
 	postsCollection := usePostsCollection(r)
 
 	if _, err := postsCollection.InsertOne(ctx, post); err != nil {
+		err = models.ErrorBadRequest
+
 		return fmt.Errorf("cannot create post: %w", err)
 	}
 
@@ -25,6 +27,8 @@ func (r *Repository) GetPost(ctx context.Context, postID string) (*models.Post, 
 	var post models.Post
 
 	if err := postsCollection.FindOne(ctx, bson.M{"_id": postID}).Decode(&post); err != nil {
+		err = models.PostNotFound
+
 		return nil, fmt.Errorf("cannot get post: %w", err)
 	}
 
@@ -44,6 +48,8 @@ func (r *Repository) UpdatePost(ctx context.Context, post *models.Post) error {
 				"tags":        post.Tags,
 			},
 		}); err != nil {
+		err = models.ErrorBadRequest
+
 		return fmt.Errorf("cannot update post: %w", err)
 	}
 
@@ -54,6 +60,8 @@ func (r *Repository) DeletePost(ctx context.Context, postID string) error {
 	postsCollection := usePostsCollection(r)
 
 	if _, err := postsCollection.DeleteOne(ctx, bson.M{"_id": postID}); err != nil {
+		err = models.PostNotFound
+
 		return fmt.Errorf("cannot delete post: %w", err)
 	}
 

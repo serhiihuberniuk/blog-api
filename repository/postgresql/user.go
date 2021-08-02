@@ -13,6 +13,8 @@ func (r *Repository) CreateUser(ctx context.Context, user *models.User) error {
 
 	_, err := r.Db.Exec(ctx, sql, user.ID, user.Name, user.Email, user.CreatedAt, user.UpdatedAt)
 	if err != nil {
+		err = models.ErrorBadRequest
+
 		return fmt.Errorf("cannot create user: %w", err)
 	}
 
@@ -26,6 +28,8 @@ func (r *Repository) GetUser(ctx context.Context, userID string) (*models.User, 
 
 	err := pgxscan.Get(ctx, r.Db, &user, sql, userID)
 	if err != nil {
+		err = models.UserNotFound
+
 		return nil, fmt.Errorf("cannot get user: %w", err)
 	}
 
@@ -37,6 +41,8 @@ func (r *Repository) UpdateUser(ctx context.Context, user *models.User) error {
 
 	_, err := r.Db.Exec(ctx, sql, user.Name, user.Email, user.UpdatedAt, user.ID)
 	if err != nil {
+		err = models.ErrorBadRequest
+
 		return fmt.Errorf("cannot update user: %w", err)
 	}
 
@@ -48,6 +54,8 @@ func (r *Repository) DeleteUser(ctx context.Context, userID string) error {
 
 	_, err := r.Db.Exec(ctx, sql, userID)
 	if err != nil {
+		err = models.UserNotFound
+
 		return fmt.Errorf("cannot delete user: %w", err)
 	}
 

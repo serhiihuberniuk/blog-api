@@ -3,9 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/serhiihuberniuk/blog-api/configs"
-	"github.com/serhiihuberniuk/blog-api/view/graphql/graph"
-	"github.com/serhiihuberniuk/blog-api/view/graphql/graph/generated"
 	"log"
 	"net"
 	"net/http"
@@ -17,15 +14,16 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/rs/cors"
+	"github.com/serhiihuberniuk/blog-api/configs"
 	repository "github.com/serhiihuberniuk/blog-api/repository/postgresql"
 	"github.com/serhiihuberniuk/blog-api/service"
+	"github.com/serhiihuberniuk/blog-api/view/graphql/graph"
+	"github.com/serhiihuberniuk/blog-api/view/graphql/graph/generated"
 	grpcHandlers "github.com/serhiihuberniuk/blog-api/view/grpc/handlers"
 	"github.com/serhiihuberniuk/blog-api/view/grpc/pb"
 	"github.com/serhiihuberniuk/blog-api/view/rest/handlers"
 	"google.golang.org/grpc"
 )
-
-//const dbUrl = "postgres://serhii:serhii@localhost:5432/api"
 
 func postgresConnPool(ctx context.Context, dbUrl string) (*pgxpool.Pool, error) {
 	pool, err := pgxpool.Connect(ctx, dbUrl)
@@ -41,7 +39,7 @@ func main() {
 
 	config, err := configs.LoadConfig()
 	if err != nil {
-		log.Fatalf("error occured while initialisation configs: %v", err)
+		log.Fatalf("error occurred while initialisation configs: %v", err)
 	}
 
 	pool, err := postgresConnPool(ctx, config.PostgresUrl)

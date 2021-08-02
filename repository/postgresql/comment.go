@@ -14,6 +14,8 @@ func (r *Repository) CreateComment(ctx context.Context, comment *models.Comment)
 
 	_, err := r.Db.Exec(ctx, sql, comment.ID, comment.Content, comment.CreatedBy, comment.CreatedAt, comment.PostID)
 	if err != nil {
+		err = models.ErrorBadRequest
+
 		return fmt.Errorf("cannot create comment, %w", err)
 	}
 
@@ -27,7 +29,9 @@ func (r *Repository) GetComment(ctx context.Context, commentID string) (*models.
 
 	err := pgxscan.Get(ctx, r.Db, &comment, sql, commentID)
 	if err != nil {
-		return nil, fmt.Errorf("cennot get comment, %w", err)
+		err = models.CommentNotFound
+
+		return nil, fmt.Errorf("cannot get comment, %w", err)
 	}
 
 	return &comment, nil
@@ -38,6 +42,8 @@ func (r *Repository) UpdateComment(ctx context.Context, comment *models.Comment)
 
 	_, err := r.Db.Exec(ctx, sql, comment.Content, comment.ID)
 	if err != nil {
+		err = models.ErrorBadRequest
+
 		return fmt.Errorf("cannot update comment: %w", err)
 	}
 
@@ -49,6 +55,8 @@ func (r *Repository) DeleteComment(ctx context.Context, commentID string) error 
 
 	_, err := r.Db.Exec(ctx, sql, commentID)
 	if err != nil {
+		err = models.CommentNotFound
+
 		return fmt.Errorf("cannot delete comment: %w", err)
 	}
 

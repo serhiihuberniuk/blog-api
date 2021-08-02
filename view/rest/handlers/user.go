@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -20,7 +21,13 @@ func (h *Handlers) CreateUser(w http.ResponseWriter, r *http.Request) {
 		Email: in.Email,
 	})
 	if err != nil {
-		http.Error(w, "cannot create user", http.StatusBadRequest)
+		if errors.Is(err, models.ErrorBadRequest) {
+			http.Error(w, models.ErrorBadRequest.Error(), http.StatusBadRequest)
+
+			return
+		}
+
+		http.Error(w, "cannot create user", http.StatusInternalServerError)
 
 		return
 	}
@@ -50,7 +57,11 @@ func (h *Handlers) GetUser(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.service.GetUser(r.Context(), userID)
 	if err != nil {
-		http.Error(w, "cannot find user with such ID", http.StatusNotFound)
+		if errors.Is(err, models.UserNotFound) {
+			http.Error(w, models.UserNotFound.Error(), http.StatusNotFound)
+		}
+
+		http.Error(w, "cannot get user", http.StatusInternalServerError)
 
 		return
 	}
@@ -83,6 +94,18 @@ func (h *Handlers) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		Email:  in.Email,
 	})
 	if err != nil {
+		if errors.Is(err, models.UserNotFound) {
+			http.Error(w, models.UserNotFound.Error(), http.StatusNotFound)
+
+			return
+		}
+
+		if errors.Is(err, models.ErrorBadRequest) {
+			http.Error(w, models.ErrorBadRequest.Error(), http.StatusBadRequest)
+
+			return
+		}
+
 		http.Error(w, "cannot update user", http.StatusBadRequest)
 
 		return
@@ -90,7 +113,7 @@ func (h *Handlers) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.service.GetUser(r.Context(), userID)
 	if err != nil {
-		http.Error(w, "cannot get updated user", http.StatusNotFound)
+		http.Error(w, "cannot get updated user", http.StatusInternalServerError)
 
 		return
 	}
@@ -112,7 +135,13 @@ func (h *Handlers) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	userID := mux.Vars(r)["id"]
 
 	if err := h.service.DeleteUser(r.Context(), userID); err != nil {
-		http.Error(w, "cannot find user with such ID to delete", http.StatusNotFound)
+		if errors.Is(err, models.UserNotFound) {
+			http.Error(w, models.UserNotFound.Error(), http.StatusNotFound)
+
+			return
+		}
+
+		http.Error(w, "cannot delete user", http.StatusInternalServerError)
 
 		return
 	}

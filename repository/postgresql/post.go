@@ -14,6 +14,8 @@ func (r *Repository) CreatePost(ctx context.Context, post *models.Post) error {
 
 	_, err := r.Db.Exec(ctx, sql, post.ID, post.Title, post.Description, post.CreatedBy, post.CreatedAt, post.Tags)
 	if err != nil {
+		err = models.ErrorBadRequest
+
 		return fmt.Errorf("cannot create post: %w", err)
 	}
 
@@ -27,6 +29,8 @@ func (r *Repository) GetPost(ctx context.Context, postID string) (*models.Post, 
 
 	err := pgxscan.Get(ctx, r.Db, &post, sql, postID)
 	if err != nil {
+		err = models.PostNotFound
+
 		return nil, fmt.Errorf("cannot get post: %w", err)
 	}
 
@@ -38,6 +42,8 @@ func (r *Repository) UpdatePost(ctx context.Context, post *models.Post) error {
 
 	_, err := r.Db.Exec(ctx, sql, post.Title, post.Description, post.Tags, post.ID)
 	if err != nil {
+		err = models.ErrorBadRequest
+
 		return fmt.Errorf("cannot update post: %w", err)
 	}
 
@@ -49,6 +55,8 @@ func (r *Repository) DeletePost(ctx context.Context, postID string) error {
 
 	_, err := r.Db.Exec(ctx, sql, postID)
 	if err != nil {
+		err = models.PostNotFound
+
 		return fmt.Errorf("cannot delete post, %w", err)
 	}
 

@@ -2,10 +2,12 @@ package grpcHandlers
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
 	"github.com/serhiihuberniuk/blog-api/models"
 	"github.com/serhiihuberniuk/blog-api/view/grpc/pb"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -32,12 +34,16 @@ func (h *Handlers) CreatePost(ctx context.Context, request *pb.CreatePostRequest
 		Tags:        request.GetTags(),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("cannot create post: %w", err)
+		if errors.Is(err, models.ErrorBadRequest) {
+			return nil, status.Errorf(codes.InvalidArgument, models.ErrorBadRequest.Error(), err)
+		}
+
+		return nil, status.Errorf(codes.Internal, "cannot create post: %v", err)
 	}
 
 	post, err := h.service.GetPost(ctx, postID)
 	if err != nil {
-		return nil, fmt.Errorf("cannot get created post: %w", err)
+		return nil, status.Errorf(codes.Internal, "cannot get created post: %v", err)
 	}
 
 	return &pb.CreatePostResponse{
@@ -53,7 +59,11 @@ func (h *Handlers) CreatePost(ctx context.Context, request *pb.CreatePostRequest
 func (h *Handlers) GetPost(ctx context.Context, request *pb.GetPostRequest) (*pb.GetPostResponse, error) {
 	post, err := h.service.GetPost(ctx, request.GetId())
 	if err != nil {
-		return nil, fmt.Errorf("cannot get post: %w", err)
+		if errors.Is(err, models.PostNotFound) {
+			return nil, status.Errorf(codes.NotFound, models.PostNotFound.Error(), err)
+		}
+
+		return nil, status.Errorf(codes.Internal, "cannot get post: %v", err)
 	}
 
 	return &pb.GetPostResponse{
@@ -74,12 +84,20 @@ func (h *Handlers) UpdatePost(ctx context.Context, request *pb.UpdatePostRequest
 		Tags:        request.GetTags(),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("cannot update post: %w", err)
+		if errors.Is(err, models.PostNotFound) {
+			return nil, status.Errorf(codes.NotFound, models.PostNotFound.Error(), err)
+		}
+
+		if errors.Is(err, models.ErrorBadRequest) {
+			return nil, status.Errorf(codes.InvalidArgument, models.ErrorBadRequest.Error(), err)
+		}
+
+		return nil, status.Errorf(codes.Internal, "cannot update post: %v", err)
 	}
 
 	post, err := h.service.GetPost(ctx, request.GetId())
 	if err != nil {
-		return nil, fmt.Errorf("cannot get updated post: %w", err)
+		return nil, status.Errorf(codes.Internal, "cannot get updated post: %v", err)
 	}
 
 	return &pb.UpdatePostResponse{
@@ -94,7 +112,11 @@ func (h *Handlers) UpdatePost(ctx context.Context, request *pb.UpdatePostRequest
 
 func (h *Handlers) DeletePost(ctx context.Context, request *pb.DeletePostRequest) (*pb.DeletePostResponse, error) {
 	if err := h.service.DeletePost(ctx, request.GetId()); err != nil {
-		return nil, fmt.Errorf("cannot delete post: %w", err)
+		if errors.Is(err, models.PostNotFound) {
+			return nil, status.Errorf(codes.NotFound, models.PostNotFound.Error(), err)
+		}
+
+		return nil, status.Errorf(codes.Internal, "cannot delete post: %v", err)
 	}
 
 	return &pb.DeletePostResponse{}, nil
@@ -124,7 +146,7 @@ func (h *Handlers) ListPosts(ctx context.Context,
 
 	posts, err := h.service.ListPosts(ctx, pagination, filter, sort)
 	if err != nil {
-		return nil, fmt.Errorf("cannot get list of posts: %w", err)
+		return nil, status.Errorf(codes.Internal, "cannot get list of posts: %v", err)
 	}
 
 	var outs pb.ListPostsResponse

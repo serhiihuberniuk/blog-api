@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -34,6 +35,12 @@ func (h *Handlers) CreatePost(w http.ResponseWriter, r *http.Request) {
 		AuthorID:    in.AuthorID,
 	})
 	if err != nil {
+		if errors.Is(err, models.ErrorBadRequest) {
+			http.Error(w, models.ErrorBadRequest.Error(), http.StatusBadRequest)
+
+			return
+		}
+
 		http.Error(w, "cannot create post", http.StatusInternalServerError)
 
 		return
@@ -41,7 +48,7 @@ func (h *Handlers) CreatePost(w http.ResponseWriter, r *http.Request) {
 
 	post, err := h.service.GetPost(r.Context(), postID)
 	if err != nil {
-		http.Error(w, "cannot get created post", http.StatusNotFound)
+		http.Error(w, "cannot get created post", http.StatusInternalServerError)
 
 		return
 	}
@@ -65,7 +72,13 @@ func (h *Handlers) GetPost(w http.ResponseWriter, r *http.Request) {
 
 	post, err := h.service.GetPost(r.Context(), postID)
 	if err != nil {
-		http.Error(w, "cannot find post with such ID", http.StatusNotFound)
+		if errors.Is(err, models.PostNotFound) {
+			http.Error(w, models.PostNotFound.Error(), http.StatusNotFound)
+
+			return
+		}
+
+		http.Error(w, "cannot get post", http.StatusInternalServerError)
 
 		return
 	}
@@ -100,7 +113,19 @@ func (h *Handlers) UpdatePost(w http.ResponseWriter, r *http.Request) {
 		Tags:        in.Tags,
 	})
 	if err != nil {
-		http.Error(w, "cannot update post", http.StatusBadRequest)
+		if errors.Is(err, models.PostNotFound) {
+			http.Error(w, models.PostNotFound.Error(), http.StatusNotFound)
+
+			return
+		}
+
+		if errors.Is(err, models.ErrorBadRequest) {
+			http.Error(w, models.ErrorBadRequest.Error(), http.StatusBadRequest)
+
+			return
+		}
+
+		http.Error(w, "cannot update post", http.StatusInternalServerError)
 
 		return
 	}
@@ -130,7 +155,13 @@ func (h *Handlers) DeletePost(w http.ResponseWriter, r *http.Request) {
 	postID := mux.Vars(r)["id"]
 
 	if err := h.service.DeletePost(r.Context(), postID); err != nil {
-		http.Error(w, "cannot get post with such ID", http.StatusNotFound)
+		if errors.Is(err, models.PostNotFound) {
+			http.Error(w, models.PostNotFound.Error(), http.StatusNotFound)
+
+			return
+		}
+
+		http.Error(w, "cannot delete post", http.StatusInternalServerError)
 
 		return
 	}
