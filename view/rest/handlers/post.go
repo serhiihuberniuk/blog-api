@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -35,13 +34,8 @@ func (h *Handlers) CreatePost(w http.ResponseWriter, r *http.Request) {
 		AuthorID:    in.AuthorID,
 	})
 	if err != nil {
-		if errors.Is(err, models.ErrorBadRequest) {
-			http.Error(w, models.ErrorBadRequest.Error(), http.StatusBadRequest)
-
-			return
-		}
-
-		http.Error(w, "cannot create post", http.StatusInternalServerError)
+		code := handleError(err)
+		http.Error(w, "cannot create post", code)
 
 		return
 	}
@@ -72,13 +66,8 @@ func (h *Handlers) GetPost(w http.ResponseWriter, r *http.Request) {
 
 	post, err := h.service.GetPost(r.Context(), postID)
 	if err != nil {
-		if errors.Is(err, models.PostNotFound) {
-			http.Error(w, models.PostNotFound.Error(), http.StatusNotFound)
-
-			return
-		}
-
-		http.Error(w, "cannot get post", http.StatusInternalServerError)
+		code := handleError(err)
+		http.Error(w, "cannot get post", code)
 
 		return
 	}
@@ -113,19 +102,8 @@ func (h *Handlers) UpdatePost(w http.ResponseWriter, r *http.Request) {
 		Tags:        in.Tags,
 	})
 	if err != nil {
-		if errors.Is(err, models.PostNotFound) {
-			http.Error(w, models.PostNotFound.Error(), http.StatusNotFound)
-
-			return
-		}
-
-		if errors.Is(err, models.ErrorBadRequest) {
-			http.Error(w, models.ErrorBadRequest.Error(), http.StatusBadRequest)
-
-			return
-		}
-
-		http.Error(w, "cannot update post", http.StatusInternalServerError)
+		code := handleError(err)
+		http.Error(w, "cannot update post", code)
 
 		return
 	}
@@ -155,13 +133,8 @@ func (h *Handlers) DeletePost(w http.ResponseWriter, r *http.Request) {
 	postID := mux.Vars(r)["id"]
 
 	if err := h.service.DeletePost(r.Context(), postID); err != nil {
-		if errors.Is(err, models.PostNotFound) {
-			http.Error(w, models.PostNotFound.Error(), http.StatusNotFound)
-
-			return
-		}
-
-		http.Error(w, "cannot delete post", http.StatusInternalServerError)
+		code := handleError(err)
+		http.Error(w, "cannot delete post", code)
 
 		return
 	}

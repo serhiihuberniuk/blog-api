@@ -2,10 +2,12 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/serhiihuberniuk/blog-api/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -13,8 +15,6 @@ func (r *Repository) CreatePost(ctx context.Context, post *models.Post) error {
 	postsCollection := usePostsCollection(r)
 
 	if _, err := postsCollection.InsertOne(ctx, post); err != nil {
-		err = models.ErrorBadRequest
-
 		return fmt.Errorf("cannot create post: %w", err)
 	}
 
@@ -27,7 +27,9 @@ func (r *Repository) GetPost(ctx context.Context, postID string) (*models.Post, 
 	var post models.Post
 
 	if err := postsCollection.FindOne(ctx, bson.M{"_id": postID}).Decode(&post); err != nil {
-		err = models.PostNotFound
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, models.ErrNotFoundPost
+		}
 
 		return nil, fmt.Errorf("cannot get post: %w", err)
 	}
@@ -38,7 +40,7 @@ func (r *Repository) GetPost(ctx context.Context, postID string) (*models.Post, 
 func (r *Repository) UpdatePost(ctx context.Context, post *models.Post) error {
 	postsCollection := usePostsCollection(r)
 
-	if _, err := postsCollection.UpdateOne(
+	result, err := postsCollection.UpdateOne(
 		ctx,
 		bson.M{"_id": post.ID},
 		bson.M{
@@ -47,10 +49,13 @@ func (r *Repository) UpdatePost(ctx context.Context, post *models.Post) error {
 				"description": post.Description,
 				"tags":        post.Tags,
 			},
-		}); err != nil {
-		err = models.ErrorBadRequest
-
+		})
+	if err != nil {
 		return fmt.Errorf("cannot update post: %w", err)
+	}
+
+	if result.MatchedCount == 0 {
+		return models.ErrNotFoundPost
 	}
 
 	return nil
@@ -59,10 +64,13 @@ func (r *Repository) UpdatePost(ctx context.Context, post *models.Post) error {
 func (r *Repository) DeletePost(ctx context.Context, postID string) error {
 	postsCollection := usePostsCollection(r)
 
-	if _, err := postsCollection.DeleteOne(ctx, bson.M{"_id": postID}); err != nil {
-		err = models.PostNotFound
-
+	result, err := postsCollection.DeleteOne(ctx, bson.M{"_id": postID})
+	if err != nil {
 		return fmt.Errorf("cannot delete post: %w", err)
+	}
+
+	if result.DeletedCount == 0 {
+		return models.ErrNotFoundPost
 	}
 
 	return nil

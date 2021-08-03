@@ -2,7 +2,6 @@ package grpcHandlers
 
 import (
 	"context"
-	"errors"
 
 	"github.com/serhiihuberniuk/blog-api/models"
 	"github.com/serhiihuberniuk/blog-api/view/grpc/pb"
@@ -32,11 +31,9 @@ func (h *Handlers) CreateComment(ctx context.Context,
 		PostID:   request.GetPostId(),
 	})
 	if err != nil {
-		if errors.Is(err, models.ErrorBadRequest) {
-			return nil, status.Errorf(codes.InvalidArgument, models.ErrorBadRequest.Error(), err)
-		}
+		code, err := handleError(err)
 
-		return nil, status.Errorf(codes.Internal, "cannot create comment: %v", err)
+		return nil, status.Errorf(code, "cannot create comment: %v", err)
 	}
 
 	comment, err := h.service.GetComment(ctx, commentID)
@@ -56,11 +53,9 @@ func (h *Handlers) CreateComment(ctx context.Context,
 func (h *Handlers) GetComment(ctx context.Context, request *pb.GetCommentRequest) (*pb.GetCommentResponse, error) {
 	comment, err := h.service.GetComment(ctx, request.GetId())
 	if err != nil {
-		if errors.Is(err, models.CommentNotFound) {
-			return nil, status.Errorf(codes.NotFound, models.CommentNotFound.Error(), err)
-		}
+		code, err := handleError(err)
 
-		return nil, status.Errorf(codes.Internal, "cannot get comment: %v", err)
+		return nil, status.Errorf(code, "cannot get comment: %v", err)
 	}
 
 	return &pb.GetCommentResponse{
@@ -79,15 +74,9 @@ func (h *Handlers) UpdateComment(ctx context.Context,
 		Content:   request.GetContent(),
 	})
 	if err != nil {
-		if errors.Is(err, models.CommentNotFound) {
-			return nil, status.Errorf(codes.NotFound, models.CommentNotFound.Error(), err)
-		}
+		code, err := handleError(err)
 
-		if errors.Is(err, models.ErrorBadRequest) {
-			return nil, status.Errorf(codes.InvalidArgument, models.ErrorBadRequest.Error(), err)
-		}
-
-		return nil, status.Errorf(codes.Internal, "cannot update comment: %v", err)
+		return nil, status.Errorf(code, "cannot update comment: %v", err)
 	}
 
 	comment, err := h.service.GetComment(ctx, request.GetId())
@@ -107,11 +96,9 @@ func (h *Handlers) UpdateComment(ctx context.Context,
 func (h *Handlers) DeleteComment(ctx context.Context,
 	request *pb.DeleteCommentRequest) (*pb.DeleteCommentResponse, error) {
 	if err := h.service.DeleteComment(ctx, request.GetId()); err != nil {
-		if errors.Is(err, models.CommentNotFound) {
-			return nil, status.Errorf(codes.NotFound, models.CommentNotFound.Error(), err)
-		}
+		code, err := handleError(err)
 
-		return nil, status.Errorf(codes.Internal, "cannot delete comment: %v", err)
+		return nil, status.Errorf(code, "cannot delete comment: %v", err)
 	}
 
 	return &pb.DeleteCommentResponse{}, nil

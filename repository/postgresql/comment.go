@@ -14,8 +14,6 @@ func (r *Repository) CreateComment(ctx context.Context, comment *models.Comment)
 
 	_, err := r.Db.Exec(ctx, sql, comment.ID, comment.Content, comment.CreatedBy, comment.CreatedAt, comment.PostID)
 	if err != nil {
-		err = models.ErrorBadRequest
-
 		return fmt.Errorf("cannot create comment, %w", err)
 	}
 
@@ -29,7 +27,9 @@ func (r *Repository) GetComment(ctx context.Context, commentID string) (*models.
 
 	err := pgxscan.Get(ctx, r.Db, &comment, sql, commentID)
 	if err != nil {
-		err = models.CommentNotFound
+		if pgxscan.NotFound(err) {
+			return nil, models.ErrNotFoundComment
+		}
 
 		return nil, fmt.Errorf("cannot get comment, %w", err)
 	}
@@ -40,11 +40,13 @@ func (r *Repository) GetComment(ctx context.Context, commentID string) (*models.
 func (r *Repository) UpdateComment(ctx context.Context, comment *models.Comment) error {
 	const sql = "UPDATE comments SET content=$1 WHERE id=$2"
 
-	_, err := r.Db.Exec(ctx, sql, comment.Content, comment.ID)
+	result, err := r.Db.Exec(ctx, sql, comment.Content, comment.ID)
 	if err != nil {
-		err = models.ErrorBadRequest
-
 		return fmt.Errorf("cannot update comment: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return models.ErrNotFoundComment
 	}
 
 	return nil
@@ -53,11 +55,13 @@ func (r *Repository) UpdateComment(ctx context.Context, comment *models.Comment)
 func (r *Repository) DeleteComment(ctx context.Context, commentID string) error {
 	const sql = "DELETE FROM comments WHERE id=$1"
 
-	_, err := r.Db.Exec(ctx, sql, commentID)
+	result, err := r.Db.Exec(ctx, sql, commentID)
 	if err != nil {
-		err = models.CommentNotFound
-
 		return fmt.Errorf("cannot delete comment: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return models.ErrNotFoundComment
 	}
 
 	return nil

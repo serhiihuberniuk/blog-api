@@ -2,7 +2,6 @@ package grpcHandlers
 
 import (
 	"context"
-	"errors"
 
 	"github.com/serhiihuberniuk/blog-api/models"
 	"github.com/serhiihuberniuk/blog-api/view/grpc/pb"
@@ -17,11 +16,9 @@ func (h *Handlers) CreateUser(ctx context.Context, request *pb.CreateUserRequest
 		Email: request.GetEmail(),
 	})
 	if err != nil {
-		if errors.Is(err, models.ErrorBadRequest) {
-			return nil, status.Errorf(codes.InvalidArgument, models.ErrorBadRequest.Error(), err)
-		}
+		code, err := handleError(err)
 
-		return nil, status.Errorf(codes.Internal, "cannot create user: %v", err)
+		return nil, status.Errorf(code, "cannot create user, %v", err)
 	}
 
 	user, err := h.service.GetUser(ctx, userID)
@@ -41,11 +38,9 @@ func (h *Handlers) CreateUser(ctx context.Context, request *pb.CreateUserRequest
 func (h *Handlers) GetUser(ctx context.Context, request *pb.GetUserRequest) (*pb.GetUserResponse, error) {
 	user, err := h.service.GetUser(ctx, request.GetId())
 	if err != nil {
-		if errors.Is(err, models.UserNotFound) {
-			return nil, status.Errorf(codes.NotFound, models.UserNotFound.Error(), err)
-		}
+		code, err := handleError(err)
 
-		return nil, status.Errorf(codes.Internal, "cannot get user: %v", err)
+		return nil, status.Errorf(code, "cannot get user, %v", err)
 	}
 
 	return &pb.GetUserResponse{
@@ -64,15 +59,9 @@ func (h *Handlers) UpdateUser(ctx context.Context, request *pb.UpdateUserRequest
 		Email:  request.GetEmail(),
 	})
 	if err != nil {
-		if errors.Is(err, models.UserNotFound) {
-			return nil, status.Errorf(codes.NotFound, models.UserNotFound.Error(), err)
-		}
+		code, err := handleError(err)
 
-		if errors.Is(err, models.ErrorBadRequest) {
-			return nil, status.Errorf(codes.InvalidArgument, models.ErrorBadRequest.Error(), err)
-		}
-
-		return nil, status.Errorf(codes.Internal, "cannot update user: %v", err)
+		return nil, status.Errorf(code, "cannot update user: %v", err)
 	}
 
 	user, err := h.service.GetUser(ctx, request.GetId())
@@ -91,11 +80,9 @@ func (h *Handlers) UpdateUser(ctx context.Context, request *pb.UpdateUserRequest
 
 func (h *Handlers) DeleteUser(ctx context.Context, request *pb.DeleteUserRequest) (*pb.DeleteUserResponse, error) {
 	if err := h.service.DeleteUser(ctx, request.GetId()); err != nil {
-		if errors.Is(err, models.UserNotFound) {
-			return nil, status.Errorf(codes.NotFound, models.UserNotFound.Error(), err)
-		}
+		code, err := handleError(err)
 
-		return nil, status.Errorf(codes.Internal, "cannot delete user: %v", err)
+		return nil, status.Errorf(code, "cannot delete user, %v", err)
 	}
 
 	return &pb.DeleteUserResponse{}, nil

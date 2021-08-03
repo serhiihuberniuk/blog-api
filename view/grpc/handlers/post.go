@@ -2,7 +2,6 @@ package grpcHandlers
 
 import (
 	"context"
-	"errors"
 
 	"github.com/serhiihuberniuk/blog-api/models"
 	"github.com/serhiihuberniuk/blog-api/view/grpc/pb"
@@ -34,11 +33,9 @@ func (h *Handlers) CreatePost(ctx context.Context, request *pb.CreatePostRequest
 		Tags:        request.GetTags(),
 	})
 	if err != nil {
-		if errors.Is(err, models.ErrorBadRequest) {
-			return nil, status.Errorf(codes.InvalidArgument, models.ErrorBadRequest.Error(), err)
-		}
+		code, err := handleError(err)
 
-		return nil, status.Errorf(codes.Internal, "cannot create post: %v", err)
+		return nil, status.Errorf(code, "cannot create post: %v", err)
 	}
 
 	post, err := h.service.GetPost(ctx, postID)
@@ -59,11 +56,9 @@ func (h *Handlers) CreatePost(ctx context.Context, request *pb.CreatePostRequest
 func (h *Handlers) GetPost(ctx context.Context, request *pb.GetPostRequest) (*pb.GetPostResponse, error) {
 	post, err := h.service.GetPost(ctx, request.GetId())
 	if err != nil {
-		if errors.Is(err, models.PostNotFound) {
-			return nil, status.Errorf(codes.NotFound, models.PostNotFound.Error(), err)
-		}
+		code, err := handleError(err)
 
-		return nil, status.Errorf(codes.Internal, "cannot get post: %v", err)
+		return nil, status.Errorf(code, "cannot get post: %v", err)
 	}
 
 	return &pb.GetPostResponse{
@@ -84,15 +79,9 @@ func (h *Handlers) UpdatePost(ctx context.Context, request *pb.UpdatePostRequest
 		Tags:        request.GetTags(),
 	})
 	if err != nil {
-		if errors.Is(err, models.PostNotFound) {
-			return nil, status.Errorf(codes.NotFound, models.PostNotFound.Error(), err)
-		}
+		code, err := handleError(err)
 
-		if errors.Is(err, models.ErrorBadRequest) {
-			return nil, status.Errorf(codes.InvalidArgument, models.ErrorBadRequest.Error(), err)
-		}
-
-		return nil, status.Errorf(codes.Internal, "cannot update post: %v", err)
+		return nil, status.Errorf(code, "cannot update post: %v", err)
 	}
 
 	post, err := h.service.GetPost(ctx, request.GetId())
@@ -112,11 +101,9 @@ func (h *Handlers) UpdatePost(ctx context.Context, request *pb.UpdatePostRequest
 
 func (h *Handlers) DeletePost(ctx context.Context, request *pb.DeletePostRequest) (*pb.DeletePostResponse, error) {
 	if err := h.service.DeletePost(ctx, request.GetId()); err != nil {
-		if errors.Is(err, models.PostNotFound) {
-			return nil, status.Errorf(codes.NotFound, models.PostNotFound.Error(), err)
-		}
+		code, err := handleError(err)
 
-		return nil, status.Errorf(codes.Internal, "cannot delete post: %v", err)
+		return nil, status.Errorf(code, "cannot delete post: %v", err)
 	}
 
 	return &pb.DeletePostResponse{}, nil

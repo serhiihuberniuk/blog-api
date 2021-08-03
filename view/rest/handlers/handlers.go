@@ -3,10 +3,12 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/serhiihuberniuk/blog-api/models"
 )
 
@@ -19,6 +21,26 @@ type queryParam struct {
 	isAsc         bool
 	limit         int
 	offset        int
+}
+
+func handleError(err error) int {
+	if errors.Is(err, models.ErrNotFoundUser) {
+		return http.StatusNotFound
+	}
+
+	if errors.Is(err, models.ErrNotFoundPost) {
+		return http.StatusNotFound
+	}
+
+	if errors.Is(err, models.ErrNotFoundComment) {
+		return http.StatusNotFound
+	}
+
+	if errors.As(err, &validation.Errors{}) {
+		return http.StatusBadRequest
+	}
+
+	return http.StatusInternalServerError
 }
 
 func decodeFromJson(w http.ResponseWriter, r *http.Request, a interface{}) bool {
