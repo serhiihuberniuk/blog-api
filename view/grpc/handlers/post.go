@@ -2,7 +2,6 @@ package grpcHandlers
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/serhiihuberniuk/blog-api/models"
 	"github.com/serhiihuberniuk/blog-api/view/grpc/pb"
@@ -32,12 +31,12 @@ func (h *Handlers) CreatePost(ctx context.Context, request *pb.CreatePostRequest
 		Tags:        request.GetTags(),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("cannot create post: %w", err)
+		return nil, errorStatusGrpc(err)
 	}
 
 	post, err := h.service.GetPost(ctx, postID)
 	if err != nil {
-		return nil, fmt.Errorf("cannot get created post: %w", err)
+		return nil, errorStatusGrpc(err)
 	}
 
 	return &pb.CreatePostResponse{
@@ -53,7 +52,7 @@ func (h *Handlers) CreatePost(ctx context.Context, request *pb.CreatePostRequest
 func (h *Handlers) GetPost(ctx context.Context, request *pb.GetPostRequest) (*pb.GetPostResponse, error) {
 	post, err := h.service.GetPost(ctx, request.GetId())
 	if err != nil {
-		return nil, fmt.Errorf("cannot get post: %w", err)
+		return nil, errorStatusGrpc(err)
 	}
 
 	return &pb.GetPostResponse{
@@ -74,12 +73,12 @@ func (h *Handlers) UpdatePost(ctx context.Context, request *pb.UpdatePostRequest
 		Tags:        request.GetTags(),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("cannot update post: %w", err)
+		return nil, errorStatusGrpc(err)
 	}
 
 	post, err := h.service.GetPost(ctx, request.GetId())
 	if err != nil {
-		return nil, fmt.Errorf("cannot get updated post: %w", err)
+		return nil, errorStatusGrpc(err)
 	}
 
 	return &pb.UpdatePostResponse{
@@ -94,7 +93,7 @@ func (h *Handlers) UpdatePost(ctx context.Context, request *pb.UpdatePostRequest
 
 func (h *Handlers) DeletePost(ctx context.Context, request *pb.DeletePostRequest) (*pb.DeletePostResponse, error) {
 	if err := h.service.DeletePost(ctx, request.GetId()); err != nil {
-		return nil, fmt.Errorf("cannot delete post: %w", err)
+		return nil, errorStatusGrpc(err)
 	}
 
 	return &pb.DeletePostResponse{}, nil
@@ -124,7 +123,7 @@ func (h *Handlers) ListPosts(ctx context.Context,
 
 	posts, err := h.service.ListPosts(ctx, pagination, filter, sort)
 	if err != nil {
-		return nil, fmt.Errorf("cannot get list of posts: %w", err)
+		return nil, errorStatusGrpc(err)
 	}
 
 	var outs pb.ListPostsResponse

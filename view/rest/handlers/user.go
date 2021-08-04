@@ -20,14 +20,14 @@ func (h *Handlers) CreateUser(w http.ResponseWriter, r *http.Request) {
 		Email: in.Email,
 	})
 	if err != nil {
-		http.Error(w, "cannot create user", http.StatusBadRequest)
+		errorStatusHttp(w, err)
 
 		return
 	}
 
 	user, err := h.service.GetUser(r.Context(), userID)
 	if err != nil {
-		http.Error(w, "cannot get created user", http.StatusInternalServerError)
+		errorStatusHttp(w, err)
 
 		return
 	}
@@ -50,7 +50,7 @@ func (h *Handlers) GetUser(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.service.GetUser(r.Context(), userID)
 	if err != nil {
-		http.Error(w, "cannot find user with such ID", http.StatusNotFound)
+		errorStatusHttp(w, err)
 
 		return
 	}
@@ -83,14 +83,14 @@ func (h *Handlers) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		Email:  in.Email,
 	})
 	if err != nil {
-		http.Error(w, "cannot update user", http.StatusBadRequest)
+		errorStatusHttp(w, err)
 
 		return
 	}
 
 	user, err := h.service.GetUser(r.Context(), userID)
 	if err != nil {
-		http.Error(w, "cannot get updated user", http.StatusNotFound)
+		errorStatusHttp(w, err)
 
 		return
 	}
@@ -112,7 +112,7 @@ func (h *Handlers) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	userID := mux.Vars(r)["id"]
 
 	if err := h.service.DeleteUser(r.Context(), userID); err != nil {
-		http.Error(w, "cannot find user with such ID to delete", http.StatusNotFound)
+		errorStatusHttp(w, err)
 
 		return
 	}

@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/pkg/errors"
 	"github.com/serhiihuberniuk/blog-api/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -25,6 +27,10 @@ func (r *Repository) GetComment(ctx context.Context, commentID string) (*models.
 	var comment models.Comment
 
 	if err := commentsCollection.FindOne(ctx, bson.M{"_id": commentID}).Decode(&comment); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, models.ErrNotFound
+		}
+
 		return nil, fmt.Errorf("cannot get comment: %w", err)
 	}
 
@@ -34,15 +40,20 @@ func (r *Repository) GetComment(ctx context.Context, commentID string) (*models.
 func (r *Repository) UpdateComment(ctx context.Context, comment *models.Comment) error {
 	commentsCollection := useCommentsCollection(r)
 
-	if _, err := commentsCollection.UpdateOne(
+	result, err := commentsCollection.UpdateOne(
 		ctx,
 		bson.M{"_id": comment.ID},
 		bson.M{
 			"$set": bson.M{
 				"content": comment.Content,
 			},
-		}); err != nil {
+		})
+	if err != nil {
 		return fmt.Errorf("cannot update comment: %w", err)
+	}
+
+	if result.MatchedCount == 0 {
+		return models.ErrNotFound
 	}
 
 	return nil
@@ -51,8 +62,13 @@ func (r *Repository) UpdateComment(ctx context.Context, comment *models.Comment)
 func (r *Repository) DeleteComment(ctx context.Context, commentID string) error {
 	commentsCollection := useCommentsCollection(r)
 
-	if _, err := commentsCollection.DeleteOne(ctx, bson.M{"_id": commentID}); err != nil {
+	result, err := commentsCollection.DeleteOne(ctx, bson.M{"_id": commentID})
+	if err != nil {
 		return fmt.Errorf("cannot delete comment: %w", err)
+	}
+
+	if result.DeletedCount == 0 {
+		return models.ErrNotFound
 	}
 
 	return nil

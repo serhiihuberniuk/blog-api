@@ -27,6 +27,10 @@ func (r *Repository) GetPost(ctx context.Context, postID string) (*models.Post, 
 
 	err := pgxscan.Get(ctx, r.Db, &post, sql, postID)
 	if err != nil {
+		if pgxscan.NotFound(err) {
+			return nil, models.ErrNotFound
+		}
+
 		return nil, fmt.Errorf("cannot get post: %w", err)
 	}
 
@@ -36,9 +40,13 @@ func (r *Repository) GetPost(ctx context.Context, postID string) (*models.Post, 
 func (r *Repository) UpdatePost(ctx context.Context, post *models.Post) error {
 	const sql = "UPDATE posts SET title=$1, description=$2, tags=$3 WHERE id=$4"
 
-	_, err := r.Db.Exec(ctx, sql, post.Title, post.Description, post.Tags, post.ID)
+	result, err := r.Db.Exec(ctx, sql, post.Title, post.Description, post.Tags, post.ID)
 	if err != nil {
 		return fmt.Errorf("cannot update post: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return models.ErrNotFound
 	}
 
 	return nil
@@ -47,9 +55,13 @@ func (r *Repository) UpdatePost(ctx context.Context, post *models.Post) error {
 func (r *Repository) DeletePost(ctx context.Context, postID string) error {
 	const sql = "DELETE FROM posts WHERE id=$1"
 
-	_, err := r.Db.Exec(ctx, sql, postID)
+	result, err := r.Db.Exec(ctx, sql, postID)
 	if err != nil {
 		return fmt.Errorf("cannot delete post, %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return models.ErrNotFound
 	}
 
 	return nil

@@ -34,14 +34,14 @@ func (h *Handlers) CreatePost(w http.ResponseWriter, r *http.Request) {
 		AuthorID:    in.AuthorID,
 	})
 	if err != nil {
-		http.Error(w, "cannot create post", http.StatusInternalServerError)
+		errorStatusHttp(w, err)
 
 		return
 	}
 
 	post, err := h.service.GetPost(r.Context(), postID)
 	if err != nil {
-		http.Error(w, "cannot get created post", http.StatusNotFound)
+		errorStatusHttp(w, err)
 
 		return
 	}
@@ -65,7 +65,7 @@ func (h *Handlers) GetPost(w http.ResponseWriter, r *http.Request) {
 
 	post, err := h.service.GetPost(r.Context(), postID)
 	if err != nil {
-		http.Error(w, "cannot find post with such ID", http.StatusNotFound)
+		errorStatusHttp(w, err)
 
 		return
 	}
@@ -100,14 +100,14 @@ func (h *Handlers) UpdatePost(w http.ResponseWriter, r *http.Request) {
 		Tags:        in.Tags,
 	})
 	if err != nil {
-		http.Error(w, "cannot update post", http.StatusBadRequest)
+		errorStatusHttp(w, err)
 
 		return
 	}
 
 	post, err := h.service.GetPost(r.Context(), postID)
 	if err != nil {
-		http.Error(w, "cannot get updated post", http.StatusInternalServerError)
+		errorStatusHttp(w, err)
 
 		return
 	}
@@ -130,7 +130,7 @@ func (h *Handlers) DeletePost(w http.ResponseWriter, r *http.Request) {
 	postID := mux.Vars(r)["id"]
 
 	if err := h.service.DeletePost(r.Context(), postID); err != nil {
-		http.Error(w, "cannot get post with such ID", http.StatusNotFound)
+		errorStatusHttp(w, err)
 
 		return
 	}
@@ -149,7 +149,7 @@ func (h *Handlers) GetListOfPosts(w http.ResponseWriter, r *http.Request) {
 		return ok
 	})
 	if err != nil {
-		http.Error(w, "requested parameters is bad", http.StatusBadRequest)
+		errorStatusHttp(w, err)
 
 		return
 	}
@@ -167,7 +167,7 @@ func (h *Handlers) GetListOfPosts(w http.ResponseWriter, r *http.Request) {
 			IsASC:       queryParams.isAsc,
 		})
 	if err != nil {
-		http.Error(w, "cannot get posts", http.StatusBadRequest)
+		errorStatusHttp(w, err)
 
 		return
 	}

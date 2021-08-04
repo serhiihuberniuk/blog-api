@@ -2,9 +2,13 @@ package grpcHandlers
 
 import (
 	"context"
+	"errors"
+	"google.golang.org/grpc/status"
 
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/serhiihuberniuk/blog-api/models"
 	"github.com/serhiihuberniuk/blog-api/view/grpc/pb"
+	"google.golang.org/grpc/codes"
 )
 
 const maxLimit = 50
@@ -30,6 +34,18 @@ func getPaginationParam(p *pb.Pagination) models.Pagination {
 	}
 
 	return pagination
+}
+
+func errorStatusGrpc(err error) error {
+	if errors.Is(err, models.ErrNotFound) {
+		return status.Error(codes.NotFound, codes.NotFound.String())
+	}
+
+	if errors.As(err, &validation.Errors{}) {
+		return status.Error(codes.InvalidArgument, codes.InvalidArgument.String())
+	}
+
+	return status.Error(codes.Internal, codes.Internal.String())
 }
 
 type Handlers struct {

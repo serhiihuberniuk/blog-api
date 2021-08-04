@@ -33,14 +33,14 @@ func (h *Handlers) CreateComment(w http.ResponseWriter, r *http.Request) {
 		AuthorID: in.AuthorID,
 	})
 	if err != nil {
-		http.Error(w, "cannot create comment", http.StatusBadRequest)
+		errorStatusHttp(w, err)
 
 		return
 	}
 
 	comment, err := h.service.GetComment(r.Context(), commentID)
 	if err != nil {
-		http.Error(w, "cannot get created comment", http.StatusNotFound)
+		errorStatusHttp(w, err)
 
 		return
 	}
@@ -63,7 +63,7 @@ func (h *Handlers) GetComment(w http.ResponseWriter, r *http.Request) {
 
 	comment, err := h.service.GetComment(r.Context(), commentID)
 	if err != nil {
-		http.Error(w, "cannot get comment with such ID", http.StatusNotFound)
+		errorStatusHttp(w, err)
 
 		return
 	}
@@ -95,14 +95,14 @@ func (h *Handlers) UpdateComment(w http.ResponseWriter, r *http.Request) {
 		Content:   in.Content,
 	})
 	if err != nil {
-		http.Error(w, "cannot update comment", http.StatusBadRequest)
+		errorStatusHttp(w, err)
 
 		return
 	}
 
 	comment, err := h.service.GetComment(r.Context(), commentID)
 	if err != nil {
-		http.Error(w, "cannot get updated comment", http.StatusInternalServerError)
+		errorStatusHttp(w, err)
 
 		return
 	}
@@ -124,7 +124,7 @@ func (h *Handlers) DeleteComment(w http.ResponseWriter, r *http.Request) {
 	commentID := mux.Vars(r)["id"]
 
 	if err := h.service.DeleteComment(r.Context(), commentID); err != nil {
-		http.Error(w, "cannot delete comment with such ID", http.StatusNotFound)
+		errorStatusHttp(w, err)
 
 		return
 	}
@@ -143,7 +143,7 @@ func (h *Handlers) GetListOfComments(w http.ResponseWriter, r *http.Request) {
 		return ok
 	})
 	if err != nil {
-		http.Error(w, "requested parameters is bad", http.StatusBadRequest)
+		errorStatusHttp(w, err)
 
 		return
 	}
@@ -159,7 +159,7 @@ func (h *Handlers) GetListOfComments(w http.ResponseWriter, r *http.Request) {
 		IsASC: queryParams.isAsc,
 	})
 	if err != nil {
-		http.Error(w, "cannot get comments", http.StatusBadRequest)
+		errorStatusHttp(w, err)
 
 		return
 	}
