@@ -28,7 +28,7 @@ func (r *Repository) GetComment(ctx context.Context, commentID string) (*models.
 	err := pgxscan.Get(ctx, r.Db, &comment, sql, commentID)
 	if err != nil {
 		if pgxscan.NotFound(err) {
-			return nil, models.ErrNotFoundComment
+			return nil, models.ErrNotFound
 		}
 
 		return nil, fmt.Errorf("cannot get comment, %w", err)
@@ -46,7 +46,7 @@ func (r *Repository) UpdateComment(ctx context.Context, comment *models.Comment)
 	}
 
 	if result.RowsAffected() == 0 {
-		return models.ErrNotFoundComment
+		return models.ErrNotFound
 	}
 
 	return nil
@@ -61,7 +61,7 @@ func (r *Repository) DeleteComment(ctx context.Context, commentID string) error 
 	}
 
 	if result.RowsAffected() == 0 {
-		return models.ErrNotFoundComment
+		return models.ErrNotFound
 	}
 
 	return nil

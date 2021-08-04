@@ -26,7 +26,7 @@ func (r *Repository) GetUser(ctx context.Context, userID string) (*models.User, 
 	var user models.User
 	if err := usersCollection.FindOne(ctx, bson.M{"_id": userID}).Decode(&user); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return nil, models.ErrNotFoundUser
+			return nil, models.ErrNotFound
 		}
 
 		return nil, fmt.Errorf("cannot get user: %w", err)
@@ -53,7 +53,7 @@ func (r *Repository) UpdateUser(ctx context.Context, user *models.User) error {
 	}
 
 	if result.MatchedCount == 0 {
-		return models.ErrNotFoundUser
+		return models.ErrNotFound
 	}
 
 	return nil
@@ -68,7 +68,7 @@ func (r *Repository) DeleteUser(ctx context.Context, userID string) error {
 	}
 
 	if result.DeletedCount == 0 {
-		return models.ErrNotFoundUser
+		return models.ErrNotFound
 	}
 
 	return nil

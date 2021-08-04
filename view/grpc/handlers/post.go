@@ -5,8 +5,6 @@ import (
 
 	"github.com/serhiihuberniuk/blog-api/models"
 	"github.com/serhiihuberniuk/blog-api/view/grpc/pb"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -33,14 +31,12 @@ func (h *Handlers) CreatePost(ctx context.Context, request *pb.CreatePostRequest
 		Tags:        request.GetTags(),
 	})
 	if err != nil {
-		code, err := handleError(err)
-
-		return nil, status.Errorf(code, "cannot create post: %v", err)
+		return nil, errorStatusGrpc(err)
 	}
 
 	post, err := h.service.GetPost(ctx, postID)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "cannot get created post: %v", err)
+		return nil, errorStatusGrpc(err)
 	}
 
 	return &pb.CreatePostResponse{
@@ -56,9 +52,7 @@ func (h *Handlers) CreatePost(ctx context.Context, request *pb.CreatePostRequest
 func (h *Handlers) GetPost(ctx context.Context, request *pb.GetPostRequest) (*pb.GetPostResponse, error) {
 	post, err := h.service.GetPost(ctx, request.GetId())
 	if err != nil {
-		code, err := handleError(err)
-
-		return nil, status.Errorf(code, "cannot get post: %v", err)
+		return nil, errorStatusGrpc(err)
 	}
 
 	return &pb.GetPostResponse{
@@ -79,14 +73,12 @@ func (h *Handlers) UpdatePost(ctx context.Context, request *pb.UpdatePostRequest
 		Tags:        request.GetTags(),
 	})
 	if err != nil {
-		code, err := handleError(err)
-
-		return nil, status.Errorf(code, "cannot update post: %v", err)
+		return nil, errorStatusGrpc(err)
 	}
 
 	post, err := h.service.GetPost(ctx, request.GetId())
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "cannot get updated post: %v", err)
+		return nil, errorStatusGrpc(err)
 	}
 
 	return &pb.UpdatePostResponse{
@@ -101,9 +93,7 @@ func (h *Handlers) UpdatePost(ctx context.Context, request *pb.UpdatePostRequest
 
 func (h *Handlers) DeletePost(ctx context.Context, request *pb.DeletePostRequest) (*pb.DeletePostResponse, error) {
 	if err := h.service.DeletePost(ctx, request.GetId()); err != nil {
-		code, err := handleError(err)
-
-		return nil, status.Errorf(code, "cannot delete post: %v", err)
+		return nil, errorStatusGrpc(err)
 	}
 
 	return &pb.DeletePostResponse{}, nil
@@ -133,7 +123,7 @@ func (h *Handlers) ListPosts(ctx context.Context,
 
 	posts, err := h.service.ListPosts(ctx, pagination, filter, sort)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "cannot get list of posts: %v", err)
+		return nil, errorStatusGrpc(err)
 	}
 
 	var outs pb.ListPostsResponse

@@ -23,24 +23,18 @@ type queryParam struct {
 	offset        int
 }
 
-func handleError(err error) int {
-	if errors.Is(err, models.ErrNotFoundUser) {
-		return http.StatusNotFound
-	}
-
-	if errors.Is(err, models.ErrNotFoundPost) {
-		return http.StatusNotFound
-	}
-
-	if errors.Is(err, models.ErrNotFoundComment) {
-		return http.StatusNotFound
+func errorStatusHttp(w http.ResponseWriter, err error) {
+	if errors.Is(err, models.ErrNotFound) {
+		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		return
 	}
 
 	if errors.As(err, &validation.Errors{}) {
-		return http.StatusBadRequest
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
 	}
 
-	return http.StatusInternalServerError
+	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 }
 
 func decodeFromJson(w http.ResponseWriter, r *http.Request, a interface{}) bool {

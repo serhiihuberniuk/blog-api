@@ -28,7 +28,7 @@ func (r *Repository) GetPost(ctx context.Context, postID string) (*models.Post, 
 	err := pgxscan.Get(ctx, r.Db, &post, sql, postID)
 	if err != nil {
 		if pgxscan.NotFound(err) {
-			return nil, models.ErrNotFoundPost
+			return nil, models.ErrNotFound
 		}
 
 		return nil, fmt.Errorf("cannot get post: %w", err)
@@ -46,7 +46,7 @@ func (r *Repository) UpdatePost(ctx context.Context, post *models.Post) error {
 	}
 
 	if result.RowsAffected() == 0 {
-		return models.ErrNotFoundPost
+		return models.ErrNotFound
 	}
 
 	return nil
@@ -61,7 +61,7 @@ func (r *Repository) DeletePost(ctx context.Context, postID string) error {
 	}
 
 	if result.RowsAffected() == 0 {
-		return models.ErrNotFoundPost
+		return models.ErrNotFound
 	}
 
 	return nil

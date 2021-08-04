@@ -28,7 +28,7 @@ func (r *Repository) GetComment(ctx context.Context, commentID string) (*models.
 
 	if err := commentsCollection.FindOne(ctx, bson.M{"_id": commentID}).Decode(&comment); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return nil, models.ErrNotFoundComment
+			return nil, models.ErrNotFound
 		}
 
 		return nil, fmt.Errorf("cannot get comment: %w", err)
@@ -53,7 +53,7 @@ func (r *Repository) UpdateComment(ctx context.Context, comment *models.Comment)
 	}
 
 	if result.MatchedCount == 0 {
-		return models.ErrNotFoundComment
+		return models.ErrNotFound
 	}
 
 	return nil
@@ -68,7 +68,7 @@ func (r *Repository) DeleteComment(ctx context.Context, commentID string) error 
 	}
 
 	if result.DeletedCount == 0 {
-		return models.ErrNotFoundComment
+		return models.ErrNotFound
 	}
 
 	return nil

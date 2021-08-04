@@ -28,7 +28,7 @@ func (r *Repository) GetPost(ctx context.Context, postID string) (*models.Post, 
 
 	if err := postsCollection.FindOne(ctx, bson.M{"_id": postID}).Decode(&post); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return nil, models.ErrNotFoundPost
+			return nil, models.ErrNotFound
 		}
 
 		return nil, fmt.Errorf("cannot get post: %w", err)
@@ -55,7 +55,7 @@ func (r *Repository) UpdatePost(ctx context.Context, post *models.Post) error {
 	}
 
 	if result.MatchedCount == 0 {
-		return models.ErrNotFoundPost
+		return models.ErrNotFound
 	}
 
 	return nil
@@ -70,7 +70,7 @@ func (r *Repository) DeletePost(ctx context.Context, postID string) error {
 	}
 
 	if result.DeletedCount == 0 {
-		return models.ErrNotFoundPost
+		return models.ErrNotFound
 	}
 
 	return nil

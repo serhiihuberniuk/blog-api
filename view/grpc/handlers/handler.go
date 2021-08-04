@@ -3,6 +3,7 @@ package grpcHandlers
 import (
 	"context"
 	"errors"
+	"google.golang.org/grpc/status"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/serhiihuberniuk/blog-api/models"
@@ -35,24 +36,16 @@ func getPaginationParam(p *pb.Pagination) models.Pagination {
 	return pagination
 }
 
-func handleError(err error) (codes.Code, error) {
-	if errors.Is(err, models.ErrNotFoundUser) {
-		return codes.NotFound, models.ErrNotFoundUser
-	}
-
-	if errors.Is(err, models.ErrNotFoundPost) {
-		return codes.NotFound, models.ErrNotFoundPost
-	}
-
-	if errors.Is(err, models.ErrNotFoundComment) {
-		return codes.NotFound, models.ErrNotFoundComment
+func errorStatusGrpc(err error) error {
+	if errors.Is(err, models.ErrNotFound) {
+		return status.Error(codes.NotFound, codes.NotFound.String())
 	}
 
 	if errors.As(err, &validation.Errors{}) {
-		return codes.InvalidArgument, err
+		return status.Error(codes.InvalidArgument, codes.InvalidArgument.String())
 	}
 
-	return codes.Internal, err
+	return status.Error(codes.Internal, codes.Internal.String())
 }
 
 type Handlers struct {
