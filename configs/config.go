@@ -2,6 +2,7 @@ package configs
 
 import (
 	"fmt"
+
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/spf13/viper"
@@ -40,13 +41,12 @@ func LoadConfig() (*Config, error) {
 	}
 
 	if err := config.validate(); err != nil {
-		return nil, fmt.Errorf("error occured while initialisation configs: %w", err)
+		return nil, fmt.Errorf("error occurred while initialisation configs: %w", err)
 	}
 
-	err := viper.Unmarshal(config)
-	if err != nil {
-		return nil, fmt.Errorf("error occured while initialisation configs: %w", err)
+	if err := viper.Unmarshal(config); err != nil {
+		return nil, fmt.Errorf("error occurred while initialisation configs: %w", err)
 	}
 
-	return config, err
+	return config, nil
 }
