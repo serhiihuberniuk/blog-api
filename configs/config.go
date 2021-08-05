@@ -9,10 +9,11 @@ import (
 )
 
 type Config struct {
-	PostgresUrl string `mapstructure:"POSTGRESQL_URL"`
-	HttpPort    string `mapstructure:"HTTP_PORT"`
-	GrpcPort    string `mapstructure:"GRPC_PORT"`
-	GraphqlPort string `mapstructure:"GRAPHQL_PORT"`
+	PostgresUrl      string `mapstructure:"POSTGRESQL_URL"`
+	HttpPort         string `mapstructure:"HTTP_PORT"`
+	GrpcPort         string `mapstructure:"GRPC_PORT"`
+	GraphqlPort      string `mapstructure:"GRAPHQL_PORT"`
+	PostgresInitFile string `mapstructure:"POSTGRES_INIT"`
 }
 
 func (c *Config) validate() error {
@@ -21,6 +22,7 @@ func (c *Config) validate() error {
 		validation.Field(&c.HttpPort, validation.Required, is.Port),
 		validation.Field(&c.GrpcPort, validation.Required, is.Port, validation.NotIn(c.HttpPort)),
 		validation.Field(&c.GraphqlPort, validation.Required, is.Port, validation.NotIn(c.HttpPort, c.GrpcPort)),
+		validation.Field(&c.PostgresInitFile, validation.Required),
 	)
 	if err != nil {
 		return fmt.Errorf("validation failed: %w", err)
@@ -34,10 +36,11 @@ func LoadConfig() (*Config, error) {
 	viper.SetEnvPrefix("api")
 
 	config := &Config{
-		PostgresUrl: viper.GetString("POSTGRESQL_URL"),
-		HttpPort:    viper.GetString("HTTP_PORT"),
-		GrpcPort:    viper.GetString("GRPC_PORT"),
-		GraphqlPort: viper.GetString("GRAPHQL_PORT"),
+		PostgresUrl:      viper.GetString("POSTGRESQL_URL"),
+		HttpPort:         viper.GetString("HTTP_PORT"),
+		GrpcPort:         viper.GetString("GRPC_PORT"),
+		GraphqlPort:      viper.GetString("GRAPHQL_PORT"),
+		PostgresInitFile: viper.GetString("POSTGRES_INIT_FILE"),
 	}
 
 	if err := config.validate(); err != nil {

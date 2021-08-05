@@ -1,19 +1,17 @@
-FROM golang
+FROM golang:1.16-buster AS build
 
-WORKDIR /blog-api
+WORKDIR /app
 
-COPY go.mod ./
-COPY go.sum ./
-RUN go mod download
 COPY . .
-RUN go build -o main
+RUN go mod download
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o blog-api
 
-ENV API_HTTP_PORT=8080
-ENV API_GRPC_PORT=8081
-ENV API_GRAPHQL_PORT=8082
-ENV API_POSTGRESQL_URL=postgres://serhii:serhii@localhost:5432/api
+FROM scratch
 
-CMD ["./main"]
+COPY --from=build /app/blog-api /
+COPY --from=build /app/init.sql /
+
+ENTRYPOINT ["/blog-api"]
 
 
 

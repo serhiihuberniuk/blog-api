@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -12,7 +11,6 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/rs/cors"
 	"github.com/serhiihuberniuk/blog-api/configs"
 	repository "github.com/serhiihuberniuk/blog-api/repository/postgresql"
@@ -25,15 +23,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-func postgresConnPool(ctx context.Context, dbUrl string) (*pgxpool.Pool, error) {
-	pool, err := pgxpool.Connect(ctx, dbUrl)
-	if err != nil {
-		return nil, fmt.Errorf("connection to database failed: %w", err)
-	}
-
-	return pool, nil
-}
-
 func main() {
 	ctx := context.Background()
 
@@ -42,7 +31,7 @@ func main() {
 		log.Fatalf("error occurred while initialisation configs: %v", err)
 	}
 
-	pool, err := postgresConnPool(ctx, config.PostgresUrl)
+	pool, err := repository.NewPostgresDb(ctx, config.PostgresUrl, config.PostgresInitFile)
 	if err != nil {
 		log.Fatalf("cannot connect to DB: %v", err)
 	}
