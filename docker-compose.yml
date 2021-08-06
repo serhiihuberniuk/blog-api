@@ -1,0 +1,30 @@
+version: "3.9"
+services:
+  web:
+    restart: always
+    container_name: blog-api
+    build: .
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+      - "8082:8082"
+    environment:
+      API_HTTP_PORT: 8080
+      API_GRPC_PORT: 8081
+      API_GRAPHQL_PORT: 8082
+      API_POSTGRESQL_URL: postgres://serhii:serhii@postgres:5432/blog-api_postgresdb
+      API_POSTGRES_INIT_FILE: init.sql
+    depends_on:
+      - postgres
+  postgres:
+    restart: always
+    container_name: postgresDb
+    image: postgres
+    environment:
+      POSTGRES_USER: serhii
+      POSTGRES_PASSWORD: serhii
+      POSTGRES_DB: blog-api_postgresdb
+    ports:
+      - "5432:5432"
+
+
