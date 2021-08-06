@@ -12,6 +12,3 @@ COPY --from=build /app/blog-api /
 COPY --from=build /app/init.sql /
 
 ENTRYPOINT ["/blog-api"]
-
-
-
