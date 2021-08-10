@@ -47,10 +47,7 @@ func main() {
 
 	// Health check server
 
-	healthHandler := health.HandlerHealth{
-		PostgresDb: pool,
-		MongoDB:    true,
-	}
+	healthHandler := health.NewHandlerHealth(repo)
 
 	healthServer := http.Server{
 		Addr:    ":" + config.HealthcheckPort,

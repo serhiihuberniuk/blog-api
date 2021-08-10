@@ -29,3 +29,11 @@ func NewPostgresDb(ctx context.Context, dbUrl, init string) (*pgxpool.Pool, erro
 
 	return pool, nil
 }
+
+func (r *Repository) HealthCheck(ctx context.Context) error {
+	if err := r.Db.Ping(ctx); err != nil {
+		return fmt.Errorf("connection to database failed: %w", err)
+	}
+
+	return nil
+}

@@ -13,6 +13,14 @@ type Repository struct {
 	Db *mongo.Database
 }
 
+func (r Repository) HealthCheck(ctx context.Context) error {
+	if err := r.Db.Client().Ping(ctx, nil); err != nil {
+		return fmt.Errorf("connection to database failed: %w", err)
+	}
+
+	return nil
+}
+
 func NewMongoDb(ctx context.Context, r *Repository) (*mongo.Database, error) {
 	if err := createIndexForUsers(ctx, useUsersCollection(r)); err != nil {
 		return nil, fmt.Errorf("cannot create database: %w", err)
