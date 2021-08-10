@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"os"
+	"time"
 )
 
 type Repository struct {
@@ -28,4 +29,15 @@ func NewPostgresDb(ctx context.Context, dbUrl, init string) (*pgxpool.Pool, erro
 	}
 
 	return pool, nil
+}
+
+func (r *Repository) HealthCheck(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
+
+	if err := r.Db.Ping(ctx); err != nil {
+		return fmt.Errorf("connection to database failed: %w", err)
+	}
+
+	return nil
 }

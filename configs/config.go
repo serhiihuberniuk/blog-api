@@ -13,6 +13,7 @@ type Config struct {
 	HttpPort         string `mapstructure:"HTTP_PORT"`
 	GrpcPort         string `mapstructure:"GRPC_PORT"`
 	GraphqlPort      string `mapstructure:"GRAPHQL_PORT"`
+	HealthcheckPort  string `mapstructure:"HEALTHCHECK_PORT"`
 	PostgresInitFile string `mapstructure:"POSTGRES_INIT"`
 }
 
@@ -22,6 +23,7 @@ func (c *Config) validate() error {
 		validation.Field(&c.HttpPort, validation.Required, is.Port),
 		validation.Field(&c.GrpcPort, validation.Required, is.Port, validation.NotIn(c.HttpPort)),
 		validation.Field(&c.GraphqlPort, validation.Required, is.Port, validation.NotIn(c.HttpPort, c.GrpcPort)),
+		validation.Field(&c.HealthcheckPort, validation.Required, is.Port, validation.NotIn(c.HttpPort, c.GrpcPort, c.GraphqlPort)),
 		validation.Field(&c.PostgresInitFile, validation.Required),
 	)
 	if err != nil {
@@ -40,6 +42,7 @@ func LoadConfig() (*Config, error) {
 		HttpPort:         viper.GetString("HTTP_PORT"),
 		GrpcPort:         viper.GetString("GRPC_PORT"),
 		GraphqlPort:      viper.GetString("GRAPHQL_PORT"),
+		HealthcheckPort:  viper.GetString("HEALTHCHECK_PORT"),
 		PostgresInitFile: viper.GetString("POSTGRES_INIT_FILE"),
 	}
 

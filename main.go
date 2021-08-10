@@ -13,6 +13,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/rs/cors"
 	"github.com/serhiihuberniuk/blog-api/configs"
+	"github.com/serhiihuberniuk/blog-api/health"
 	repository "github.com/serhiihuberniuk/blog-api/repository/postgresql"
 	"github.com/serhiihuberniuk/blog-api/service"
 	"github.com/serhiihuberniuk/blog-api/view/graphql/graph"
@@ -42,14 +43,30 @@ func main() {
 
 	serv := service.NewService(repo)
 
+	errs := make(chan error)
+
+	// Health check server
+
+	healthHandler := health.NewHandlerHealth(repo)
+
+	healthServer := http.Server{
+		Addr:    ":" + config.HealthcheckPort,
+		Handler: healthHandler.HealthRouter(),
+	}
+	go func() {
+		if err := http.ListenAndServe(healthServer.Addr, healthServer.Handler); err != nil {
+			errs <- err
+		}
+	}()
+
+	log.Println(" Health check server is listening on ", healthServer.Addr)
+
 	handlerRest := handlers.NewRestHandlers(serv)
 
 	restServer := http.Server{
 		Addr:    ":" + config.HttpPort,
 		Handler: handlerRest.ApiRouter(),
 	}
-
-	errs := make(chan error)
 
 	// Rest server
 
@@ -127,6 +144,10 @@ func main() {
 	}
 
 	if err := graphqlServer.Shutdown(ctx); err != nil && err != http.ErrServerClosed {
+		log.Fatalf("error while shutting down: %v", err)
+	}
+
+	if err := healthServer.Shutdown(ctx); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("error while shutting down: %v", err)
 	}
 

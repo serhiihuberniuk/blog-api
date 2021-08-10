@@ -3,12 +3,12 @@ package grpcHandlers
 import (
 	"context"
 	"errors"
-	"google.golang.org/grpc/status"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/serhiihuberniuk/blog-api/models"
 	"github.com/serhiihuberniuk/blog-api/view/grpc/pb"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const maxLimit = 50
