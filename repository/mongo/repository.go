@@ -3,10 +3,10 @@ package repository
 import (
 	"context"
 	"fmt"
-
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"time"
 )
 
 type Repository struct {
@@ -14,6 +14,9 @@ type Repository struct {
 }
 
 func (r Repository) HealthCheck(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
+
 	if err := r.Db.Client().Ping(ctx, nil); err != nil {
 		return fmt.Errorf("connection to database failed: %w", err)
 	}

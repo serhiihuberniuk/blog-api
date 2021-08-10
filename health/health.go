@@ -8,16 +8,16 @@ import (
 )
 
 type HandlerHealth struct {
-	repo
+	service []service
 }
 
-type repo interface {
+type service interface {
 	HealthCheck(ctx context.Context) error
 }
 
-func NewHandlerHealth(r repo) *HandlerHealth {
+func NewHandlerHealth(s ...service) *HandlerHealth {
 	return &HandlerHealth{
-		r,
+		s,
 	}
 }
 
@@ -29,10 +29,12 @@ func (h *HandlerHealth) HealthRouter() *mux.Router {
 }
 
 func (h *HandlerHealth) Health(w http.ResponseWriter, r *http.Request) {
-	if err := h.repo.HealthCheck(r.Context()); err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	for _, service := range h.service {
+		if err := service.HealthCheck(r.Context()); err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 
-		return
+			return
+		}
 	}
 
 	w.WriteHeader(http.StatusOK)
