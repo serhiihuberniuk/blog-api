@@ -8,16 +8,14 @@ import (
 )
 
 type HandlerHealth struct {
-	service []service
+	checks []check
 }
 
-type service interface {
-	HealthCheck(ctx context.Context) error
-}
+type check func(ctx context.Context) error
 
-func NewHandlerHealth(s ...service) *HandlerHealth {
+func NewHandlerHealth(c ...check) *HandlerHealth {
 	return &HandlerHealth{
-		s,
+		c,
 	}
 }
 
@@ -29,8 +27,8 @@ func (h *HandlerHealth) HealthRouter() *mux.Router {
 }
 
 func (h *HandlerHealth) Health(w http.ResponseWriter, r *http.Request) {
-	for _, service := range h.service {
-		if err := service.HealthCheck(r.Context()); err != nil {
+	for _, check := range h.checks {
+		if err := check(r.Context()); err != nil {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 
 			return

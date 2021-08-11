@@ -47,7 +47,7 @@ func main() {
 
 	// Health check server
 
-	healthHandler := health.NewHandlerHealth(repo)
+	healthHandler := health.NewHandlerHealth(repo.HealthCheck)
 
 	healthServer := http.Server{
 		Addr:    ":" + config.HealthcheckPort,
