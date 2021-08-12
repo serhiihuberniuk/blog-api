@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-
 	"github.com/serhiihuberniuk/blog-api/models"
 )
 
@@ -11,6 +10,8 @@ type Service struct {
 }
 
 type repository interface {
+	Login(ctx context.Context, email, hashedPassword string) (*models.User, error)
+
 	CreateUser(ctx context.Context, user *models.User) error
 	GetUser(ctx context.Context, userID string) (*models.User, error)
 	UpdateUser(ctx context.Context, user *models.User) error

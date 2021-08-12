@@ -59,6 +59,8 @@ func getPaginationParams(paginationInput *model.PaginationInput) models.Paginati
 }
 
 type service interface {
+	Login(ctx context.Context, payload models.LoginPayload) (string, error)
+
 	CreateUser(ctx context.Context, payload models.CreateUserPayload) (string, error)
 	GetUser(ctx context.Context, userID string) (*models.User, error)
 	UpdateUser(ctx context.Context, payload models.UpdateUserPayload) error

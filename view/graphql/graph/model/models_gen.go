@@ -47,6 +47,11 @@ type FilterPostInput struct {
 	Value string           `json:"value"`
 }
 
+type LoginInput struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
 type PaginationInput struct {
 	Limit  int `json:"limit"`
 	Offset int `json:"offset"`
@@ -70,6 +75,10 @@ type SortCommentsInput struct {
 type SortPostsInput struct {
 	Field SortPostsField `json:"field"`
 	IsAsc bool           `json:"isAsc"`
+}
+
+type Token struct {
+	Token string `json:"token"`
 }
 
 type UpdateCommentInput struct {

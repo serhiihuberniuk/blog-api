@@ -5,6 +5,8 @@ import "github.com/gorilla/mux"
 func (h *Handlers) ApiRouter() *mux.Router {
 	router := mux.NewRouter()
 
+	router.HandleFunc("/auth", h.Login).Methods("GET")
+
 	router.HandleFunc("/users", h.CreateUser).Methods("POST")
 	router.HandleFunc("/users/{id}", h.GetUser).Methods("GET")
 	router.HandleFunc("/users/{id}", h.UpdateUser).Methods("PUT")

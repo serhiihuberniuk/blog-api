@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"strconv"
 
@@ -27,6 +28,10 @@ func errorStatusHttp(w http.ResponseWriter, err error) {
 	if errors.Is(err, models.ErrNotFound) {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 		return
+	}
+
+	if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 	}
 
 	if errors.As(err, &validation.Errors{}) {
@@ -104,6 +109,8 @@ func GetQueryParams(r *http.Request, allowFilterFn, allowSortFn func(string) boo
 }
 
 type service interface {
+	Login(ctx context.Context, payload models.LoginPayload) (string, error)
+
 	CreateUser(ctx context.Context, payload models.CreateUserPayload) (string, error)
 	GetUser(ctx context.Context, userID string) (*models.User, error)
 	UpdateUser(ctx context.Context, payload models.UpdateUserPayload) error

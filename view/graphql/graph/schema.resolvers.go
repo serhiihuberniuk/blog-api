@@ -172,6 +172,20 @@ func (r *postResolver) CreatedBy(ctx context.Context, obj *model.Post) (*model.U
 	return user, nil
 }
 
+func (r *queryResolver) Login(ctx context.Context, loginInput model.LoginInput) (*model.Token, error) {
+	token, err := r.service.Login(ctx, models.LoginPayload{
+		Email:    loginInput.Email,
+		Password: loginInput.Password,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("authentification failed: %w", err)
+	}
+
+	return &model.Token{
+		Token: token,
+	}, nil
+}
+
 func (r *queryResolver) GetUser(ctx context.Context, id string) (*model.User, error) {
 	user, err := r.service.GetUser(ctx, id)
 	if err != nil {

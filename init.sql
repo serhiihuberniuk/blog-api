@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS users (
     email varchar UNIQUE NOT NULL,
     created_at timestamp NOT NULL,
     updated_at timestamp NOT NULL,
-    hashed_password varchar(60) UNIQUE NOT NULL
+    password varchar(60) UNIQUE NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS posts (

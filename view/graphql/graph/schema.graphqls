@@ -30,6 +30,10 @@ type Comment {
   postID: ID!
 }
 
+type Token {
+  token: String!
+}
+
 input PaginationInput {
   limit: Int!
   offset: Int!
@@ -77,11 +81,17 @@ input SortCommentsInput{
 }
 
 type Query {
+  login (loginInput: LoginInput!): Token!
   getUser(id: ID!): User!
   getPost(id: ID!): Post!
   getComment(id: ID!): Comment!
   listPosts(paginationInput: PaginationInput, filterPostsInput: FilterPostInput, sortPostsInput: SortPostsInput): [Post!]!
   listComments(paginationInput: PaginationInput, filterCommentsInput: FilterCommentsInput, sortCommentsInput: SortCommentsInput): [Comment!]!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
 }
 
 input CreateUserInput {

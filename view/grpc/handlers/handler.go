@@ -3,6 +3,7 @@ package grpcHandlers
 import (
 	"context"
 	"errors"
+	"golang.org/x/crypto/bcrypt"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/serhiihuberniuk/blog-api/models"
@@ -41,6 +42,10 @@ func errorStatusGrpc(err error) error {
 		return status.Error(codes.NotFound, codes.NotFound.String())
 	}
 
+	if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+		return status.Error(codes.Unauthenticated, codes.Unauthenticated.String())
+	}
+
 	if errors.As(err, &validation.Errors{}) {
 		return status.Error(codes.InvalidArgument, codes.InvalidArgument.String())
 	}
@@ -53,6 +58,8 @@ type Handlers struct {
 }
 
 type service interface {
+	Login(ctx context.Context, payload models.LoginPayload) (string, error)
+
 	CreateUser(ctx context.Context, payload models.CreateUserPayload) (string, error)
 	GetUser(ctx context.Context, userID string) (*models.User, error)
 	UpdateUser(ctx context.Context, payload models.UpdateUserPayload) error
