@@ -16,8 +16,9 @@ func (h *Handlers) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userID, err := h.service.CreateUser(r.Context(), models.CreateUserPayload{
-		Name:  in.Name,
-		Email: in.Email,
+		Name:     in.Name,
+		Email:    in.Email,
+		Password: in.Password,
 	})
 	if err != nil {
 		errorStatusHttp(w, err)
