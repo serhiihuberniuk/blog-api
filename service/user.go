@@ -28,7 +28,7 @@ func (s *Service) CreateUser(ctx context.Context, payload models.CreateUserPaylo
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(payload.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return "", fmt.Errorf("cannot create user, %w", err)
+		return "", fmt.Errorf("error occured while hashing the password, %w", err)
 	}
 
 	user.Password = string(hashedPassword)

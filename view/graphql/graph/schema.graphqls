@@ -7,6 +7,7 @@ type User {
   email : String!
   createdAt: String!
   updatedAt: String!
+  password: String!
 }
 
 type Post {
@@ -86,6 +87,7 @@ type Query {
 input CreateUserInput {
   name: String!
   email: String!
+  password: String!
 }
 
 input UpdateUserInput {

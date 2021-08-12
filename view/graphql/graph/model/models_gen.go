@@ -32,8 +32,9 @@ type CreatePostInput struct {
 }
 
 type CreateUserInput struct {
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 type FilterCommentsInput struct {
@@ -92,6 +93,7 @@ type User struct {
 	Email     string `json:"email"`
 	CreatedAt string `json:"createdAt"`
 	UpdatedAt string `json:"updatedAt"`
+	Password  string `json:"password"`
 }
 
 type FilterCommentsField string
