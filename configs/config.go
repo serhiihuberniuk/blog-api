@@ -15,6 +15,8 @@ type Config struct {
 	GraphqlPort      string `mapstructure:"GRAPHQL_PORT"`
 	HealthcheckPort  string `mapstructure:"HEALTHCHECK_PORT"`
 	PostgresInitFile string `mapstructure:"POSTGRES_INIT"`
+	PrivateKeyPath   string `mapstructure:"PRIVATE_KEY_PATH"`
+	PublicKeyPath    string `mapstructure:"PUBLIC_KEY_PATH"`
 }
 
 func (c *Config) validate() error {
@@ -25,6 +27,8 @@ func (c *Config) validate() error {
 		validation.Field(&c.GraphqlPort, validation.Required, is.Port, validation.NotIn(c.HttpPort, c.GrpcPort)),
 		validation.Field(&c.HealthcheckPort, validation.Required, is.Port, validation.NotIn(c.HttpPort, c.GrpcPort, c.GraphqlPort)),
 		validation.Field(&c.PostgresInitFile, validation.Required),
+		validation.Field(&c.PrivateKeyPath, validation.Required),
+		validation.Field(&c.PublicKeyPath, validation.Required),
 	)
 	if err != nil {
 		return fmt.Errorf("validation failed: %w", err)
@@ -44,6 +48,8 @@ func LoadConfig() (*Config, error) {
 		GraphqlPort:      viper.GetString("GRAPHQL_PORT"),
 		HealthcheckPort:  viper.GetString("HEALTHCHECK_PORT"),
 		PostgresInitFile: viper.GetString("POSTGRES_INIT_FILE"),
+		PrivateKeyPath:   viper.GetString("PRIVATE_KEY_PATH"),
+		PublicKeyPath:    viper.GetString("PUBLIC_KEY_PATH"),
 	}
 
 	if err := config.validate(); err != nil {

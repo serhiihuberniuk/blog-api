@@ -41,7 +41,7 @@ func main() {
 		Db: pool,
 	}
 
-	serv := service.NewService(repo)
+	serv := service.NewService(repo, config)
 
 	errs := make(chan error)
 

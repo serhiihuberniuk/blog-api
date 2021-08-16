@@ -2,13 +2,15 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io/ioutil"
+	"time"
+
 	"github.com/golang-jwt/jwt"
 	"github.com/serhiihuberniuk/blog-api/models"
-	"time"
+	"golang.org/x/crypto/bcrypt"
 )
-
-const key = "mysecretkey"
 
 type tokenClaims struct {
 	jwt.StandardClaims
@@ -16,25 +18,40 @@ type tokenClaims struct {
 }
 
 func (s *Service) Login(ctx context.Context, payload models.LoginPayload) (string, error) {
-
-	user, err := s.repo.Login(ctx, payload.Email, payload.Password)
-	fmt.Println(err)
+	user, err := s.repo.Login(ctx, payload.Email)
 	if err != nil {
-		return "", fmt.Errorf("authentication failed :%w", err)
+		return "", fmt.Errorf("error occurred while getting user :%w", err)
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, tokenClaims{
+	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(payload.Password)); err != nil {
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			return "", models.ErrNotAuthenticated
+		}
+
+		return "", fmt.Errorf("error occurred while checking the password, %w", err)
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, tokenClaims{
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Hour * 12).Unix(),
+			ExpiresAt: time.Now().Add(time.Minute).Unix(),
 			IssuedAt:  time.Now().Unix(),
 		},
 		userID: user.ID,
 	})
 
-	tokenString, err := token.SignedString([]byte(key))
+	privateKey, err := ioutil.ReadFile(s.config.PrivateKeyPath)
 	if err != nil {
-		fmt.Println(err)
-		return "", fmt.Errorf("authentification failed: %w", err)
+		return "", fmt.Errorf("error occurred while reading private.pem file :%w", err)
+	}
+
+	privateRSA, err := jwt.ParseRSAPrivateKeyFromPEM(privateKey)
+	if err != nil {
+		return "", fmt.Errorf("error occurred while parsing private key: %w", err)
+	}
+
+	tokenString, err := token.SignedString(privateRSA)
+	if err != nil {
+		return "", fmt.Errorf("error occurred while signing token: %w", err)
 	}
 
 	return tokenString, nil

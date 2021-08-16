@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/serhiihuberniuk/blog-api/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"golang.org/x/crypto/bcrypt"
 )
 
-func (r *Repository) Login(ctx context.Context, email, password string) (*models.User, error) {
+func (r *Repository) Login(ctx context.Context, email string) (*models.User, error) {
 	usersCollection := useUsersCollection(r)
 
 	var user models.User
@@ -20,10 +20,6 @@ func (r *Repository) Login(ctx context.Context, email, password string) (*models
 		}
 
 		return nil, fmt.Errorf("authentication failed: %w", err)
-	}
-
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-		return nil, fmt.Errorf("authentication failed, %w", err)
 	}
 
 	return &user, nil

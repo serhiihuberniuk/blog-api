@@ -77,10 +77,6 @@ type SortPostsInput struct {
 	IsAsc bool           `json:"isAsc"`
 }
 
-type Token struct {
-	Token string `json:"token"`
-}
-
 type UpdateCommentInput struct {
 	Content string `json:"content"`
 }

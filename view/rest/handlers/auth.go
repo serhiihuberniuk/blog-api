@@ -1,9 +1,10 @@
 package handlers
 
 import (
+	"net/http"
+
 	"github.com/serhiihuberniuk/blog-api/models"
 	viewmodels "github.com/serhiihuberniuk/blog-api/view/rest/models"
-	"net/http"
 )
 
 func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {

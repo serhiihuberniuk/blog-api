@@ -86,10 +86,6 @@ type ComplexityRoot struct {
 		Login        func(childComplexity int, loginInput model.LoginInput) int
 	}
 
-	Token struct {
-		Token func(childComplexity int) int
-	}
-
 	User struct {
 		CreatedAt func(childComplexity int) int
 		Email     func(childComplexity int) int
@@ -120,7 +116,7 @@ type PostResolver interface {
 	CreatedBy(ctx context.Context, obj *model.Post) (*model.User, error)
 }
 type QueryResolver interface {
-	Login(ctx context.Context, loginInput model.LoginInput) (*model.Token, error)
+	Login(ctx context.Context, loginInput model.LoginInput) (string, error)
 	GetUser(ctx context.Context, id string) (*model.User, error)
 	GetPost(ctx context.Context, id string) (*model.Post, error)
 	GetComment(ctx context.Context, id string) (*model.Comment, error)
@@ -421,13 +417,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Login(childComplexity, args["loginInput"].(model.LoginInput)), true
 
-	case "Token.token":
-		if e.complexity.Token.Token == nil {
-			break
-		}
-
-		return e.complexity.Token.Token(childComplexity), true
-
 	case "User.createdAt":
 		if e.complexity.User.CreatedAt == nil {
 			break
@@ -566,10 +555,6 @@ type Comment {
   postID: ID!
 }
 
-type Token {
-  token: String!
-}
-
 input PaginationInput {
   limit: Int!
   offset: Int!
@@ -617,7 +602,7 @@ input SortCommentsInput{
 }
 
 type Query {
-  login (loginInput: LoginInput!): Token!
+  login (loginInput: LoginInput!): String!
   getUser(id: ID!): User!
   getPost(id: ID!): Post!
   getComment(id: ID!): Comment!
@@ -1931,9 +1916,9 @@ func (ec *executionContext) _Query_login(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Token)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNToken2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlᚋgraphᚋmodelᚐToken(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_getUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2215,41 +2200,6 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	res := resTmp.(*introspection.Schema)
 	fc.Result = res
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Token_token(ctx context.Context, field graphql.CollectedField, obj *model.Token) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Token",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Token, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
@@ -4251,33 +4201,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 	return out
 }
 
-var tokenImplementors = []string{"Token"}
-
-func (ec *executionContext) _Token(ctx context.Context, sel ast.SelectionSet, obj *model.Token) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, tokenImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("Token")
-		case "token":
-			out.Values[i] = ec._Token_token(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
 var userImplementors = []string{"User"}
 
 func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj *model.User) graphql.Marshaler {
@@ -4825,20 +4748,6 @@ func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel
 	}
 
 	return ret
-}
-
-func (ec *executionContext) marshalNToken2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlᚋgraphᚋmodelᚐToken(ctx context.Context, sel ast.SelectionSet, v model.Token) graphql.Marshaler {
-	return ec._Token(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNToken2ᚖgithubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlᚋgraphᚋmodelᚐToken(ctx context.Context, sel ast.SelectionSet, v *model.Token) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._Token(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNUpdateCommentInput2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlᚋgraphᚋmodelᚐUpdateCommentInput(ctx context.Context, v interface{}) (model.UpdateCommentInput, error) {

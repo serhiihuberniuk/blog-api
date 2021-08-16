@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"strconv"
 
@@ -30,8 +29,10 @@ func errorStatusHttp(w http.ResponseWriter, err error) {
 		return
 	}
 
-	if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+	if errors.Is(err, models.ErrNotAuthenticated) {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+
+		return
 	}
 
 	if errors.As(err, &validation.Errors{}) {

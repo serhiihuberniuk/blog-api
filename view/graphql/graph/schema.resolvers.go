@@ -172,18 +172,16 @@ func (r *postResolver) CreatedBy(ctx context.Context, obj *model.Post) (*model.U
 	return user, nil
 }
 
-func (r *queryResolver) Login(ctx context.Context, loginInput model.LoginInput) (*model.Token, error) {
+func (r *queryResolver) Login(ctx context.Context, loginInput model.LoginInput) (string, error) {
 	token, err := r.service.Login(ctx, models.LoginPayload{
 		Email:    loginInput.Email,
 		Password: loginInput.Password,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("authentification failed: %w", err)
+		return "", fmt.Errorf("authentification failed: %w", err)
 	}
 
-	return &model.Token{
-		Token: token,
-	}, nil
+	return token, nil
 }
 
 func (r *queryResolver) GetUser(ctx context.Context, id string) (*model.User, error) {
@@ -351,7 +349,9 @@ func (r *Resolver) Post() generated.PostResolver { return &postResolver{r} }
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
-type commentResolver struct{ *Resolver }
-type mutationResolver struct{ *Resolver }
-type postResolver struct{ *Resolver }
-type queryResolver struct{ *Resolver }
+type (
+	commentResolver  struct{ *Resolver }
+	mutationResolver struct{ *Resolver }
+	postResolver     struct{ *Resolver }
+	queryResolver    struct{ *Resolver }
+)

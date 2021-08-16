@@ -2,15 +2,18 @@ package service
 
 import (
 	"context"
+
+	"github.com/serhiihuberniuk/blog-api/configs"
 	"github.com/serhiihuberniuk/blog-api/models"
 )
 
 type Service struct {
-	repo repository
+	repo   repository
+	config *configs.Config
 }
 
 type repository interface {
-	Login(ctx context.Context, email, hashedPassword string) (*models.User, error)
+	Login(ctx context.Context, email string) (*models.User, error)
 
 	CreateUser(ctx context.Context, user *models.User) error
 	GetUser(ctx context.Context, userID string) (*models.User, error)
@@ -32,8 +35,9 @@ type repository interface {
 		filter models.FilterComments, sort models.SortComments) ([]*models.Comment, error)
 }
 
-func NewService(r repository) *Service {
+func NewService(r repository, c *configs.Config) *Service {
 	return &Service{
-		repo: r,
+		repo:   r,
+		config: c,
 	}
 }
