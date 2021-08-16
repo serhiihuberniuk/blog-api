@@ -62,6 +62,7 @@ type ComplexityRoot struct {
 		DeleteComment func(childComplexity int, id string) int
 		DeletePost    func(childComplexity int, id string) int
 		DeleteUser    func(childComplexity int, id string) int
+		Login         func(childComplexity int, loginInput model.LoginInput) int
 		UpdateComment func(childComplexity int, id string, input model.UpdateCommentInput) int
 		UpdatePost    func(childComplexity int, id string, input model.UpdatePostInput) int
 		UpdateUser    func(childComplexity int, id string, input model.UpdateUserInput) int
@@ -83,7 +84,6 @@ type ComplexityRoot struct {
 		GetUser      func(childComplexity int, id string) int
 		ListComments func(childComplexity int, paginationInput *model.PaginationInput, filterCommentsInput *model.FilterCommentsInput, sortCommentsInput *model.SortCommentsInput) int
 		ListPosts    func(childComplexity int, paginationInput *model.PaginationInput, filterPostsInput *model.FilterPostInput, sortPostsInput *model.SortPostsInput) int
-		Login        func(childComplexity int, loginInput model.LoginInput) int
 	}
 
 	User struct {
@@ -102,6 +102,7 @@ type CommentResolver interface {
 	Post(ctx context.Context, obj *model.Comment) (*model.Post, error)
 }
 type MutationResolver interface {
+	Login(ctx context.Context, loginInput model.LoginInput) (string, error)
 	CreateUser(ctx context.Context, input model.CreateUserInput) (*model.User, error)
 	UpdateUser(ctx context.Context, id string, input model.UpdateUserInput) (*model.User, error)
 	DeleteUser(ctx context.Context, id string) (bool, error)
@@ -116,7 +117,6 @@ type PostResolver interface {
 	CreatedBy(ctx context.Context, obj *model.Post) (*model.User, error)
 }
 type QueryResolver interface {
-	Login(ctx context.Context, loginInput model.LoginInput) (string, error)
 	GetUser(ctx context.Context, id string) (*model.User, error)
 	GetPost(ctx context.Context, id string) (*model.Post, error)
 	GetComment(ctx context.Context, id string) (*model.Comment, error)
@@ -259,6 +259,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteUser(childComplexity, args["id"].(string)), true
+
+	case "Mutation.login":
+		if e.complexity.Mutation.Login == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_login_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.Login(childComplexity, args["loginInput"].(model.LoginInput)), true
 
 	case "Mutation.updateComment":
 		if e.complexity.Mutation.UpdateComment == nil {
@@ -404,18 +416,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.ListPosts(childComplexity, args["paginationInput"].(*model.PaginationInput), args["filterPostsInput"].(*model.FilterPostInput), args["sortPostsInput"].(*model.SortPostsInput)), true
-
-	case "Query.login":
-		if e.complexity.Query.Login == nil {
-			break
-		}
-
-		args, err := ec.field_Query_login_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.Login(childComplexity, args["loginInput"].(model.LoginInput)), true
 
 	case "User.createdAt":
 		if e.complexity.User.CreatedAt == nil {
@@ -602,7 +602,6 @@ input SortCommentsInput{
 }
 
 type Query {
-  login (loginInput: LoginInput!): String!
   getUser(id: ID!): User!
   getPost(id: ID!): Post!
   getComment(id: ID!): Comment!
@@ -650,6 +649,8 @@ input UpdateCommentInput {
 }
 
 type Mutation {
+  login (loginInput: LoginInput!): String!
+
   createUser(input: CreateUserInput!): User!
   updateUser(id: ID!, input: UpdateUserInput!): User!
   deleteUser(id: ID!): Boolean!
@@ -757,6 +758,21 @@ func (ec *executionContext) field_Mutation_deleteUser_args(ctx context.Context, 
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_login_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.LoginInput
+	if tmp, ok := rawArgs["loginInput"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("loginInput"))
+		arg0, err = ec.unmarshalNLoginInput2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlᚋgraphᚋmodelᚐLoginInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["loginInput"] = arg0
 	return args, nil
 }
 
@@ -955,21 +971,6 @@ func (ec *executionContext) field_Query_listPosts_args(ctx context.Context, rawA
 		}
 	}
 	args["sortPostsInput"] = arg2
-	return args, nil
-}
-
-func (ec *executionContext) field_Query_login_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.LoginInput
-	if tmp, ok := rawArgs["loginInput"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("loginInput"))
-		arg0, err = ec.unmarshalNLoginInput2githubᚗcomᚋserhiihuberniukᚋblogᚑapiᚋviewᚋgraphqlᚋgraphᚋmodelᚐLoginInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["loginInput"] = arg0
 	return args, nil
 }
 
@@ -1254,6 +1255,48 @@ func (ec *executionContext) _Comment_postID(ctx context.Context, field graphql.C
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_login(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_login_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().Login(rctx, args["loginInput"].(model.LoginInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1877,48 +1920,6 @@ func (ec *executionContext) _Post_tags(ctx context.Context, field graphql.Collec
 	res := resTmp.([]string)
 	fc.Result = res
 	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Query_login(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Query_login_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Login(rctx, args["loginInput"].(model.LoginInput))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_getUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3965,6 +3966,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
+		case "login":
+			out.Values[i] = ec._Mutation_login(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "createUser":
 			out.Values[i] = ec._Mutation_createUser(ctx, field)
 			if out.Values[i] == graphql.Null {
@@ -4102,20 +4108,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
-		case "login":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_login(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
 		case "getUser":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {

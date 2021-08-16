@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -20,7 +19,7 @@ type tokenClaims struct {
 func (s *Service) Login(ctx context.Context, payload models.LoginPayload) (string, error) {
 	user, err := s.repo.Login(ctx, payload.Email)
 	if err != nil {
-		return "", fmt.Errorf("error occurred while getting user :%w", err)
+		return "", models.ErrNotAuthenticated
 	}
 
 	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(payload.Password)); err != nil {
@@ -39,17 +38,7 @@ func (s *Service) Login(ctx context.Context, payload models.LoginPayload) (strin
 		userID: user.ID,
 	})
 
-	privateKey, err := ioutil.ReadFile(s.config.PrivateKeyPath)
-	if err != nil {
-		return "", fmt.Errorf("error occurred while reading private.pem file :%w", err)
-	}
-
-	privateRSA, err := jwt.ParseRSAPrivateKeyFromPEM(privateKey)
-	if err != nil {
-		return "", fmt.Errorf("error occurred while parsing private key: %w", err)
-	}
-
-	tokenString, err := token.SignedString(privateRSA)
+	tokenString, err := token.SignedString(s.privateKey)
 	if err != nil {
 		return "", fmt.Errorf("error occurred while signing token: %w", err)
 	}

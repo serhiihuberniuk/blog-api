@@ -30,6 +30,18 @@ func (r *commentResolver) Post(ctx context.Context, obj *model.Comment) (*model.
 	return post, nil
 }
 
+func (r *mutationResolver) Login(ctx context.Context, loginInput model.LoginInput) (string, error) {
+	token, err := r.service.Login(ctx, models.LoginPayload{
+		Email:    loginInput.Email,
+		Password: loginInput.Password,
+	})
+	if err != nil {
+		return "", fmt.Errorf("authentification failed: %w", err)
+	}
+
+	return token, nil
+}
+
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUserInput) (*model.User, error) {
 	userId, err := r.service.CreateUser(ctx, models.CreateUserPayload{
 		Name:     input.Name,
@@ -170,18 +182,6 @@ func (r *postResolver) CreatedBy(ctx context.Context, obj *model.Post) (*model.U
 	}
 
 	return user, nil
-}
-
-func (r *queryResolver) Login(ctx context.Context, loginInput model.LoginInput) (string, error) {
-	token, err := r.service.Login(ctx, models.LoginPayload{
-		Email:    loginInput.Email,
-		Password: loginInput.Password,
-	})
-	if err != nil {
-		return "", fmt.Errorf("authentification failed: %w", err)
-	}
-
-	return token, nil
 }
 
 func (r *queryResolver) GetUser(ctx context.Context, id string) (*model.User, error) {
@@ -349,9 +349,14 @@ func (r *Resolver) Post() generated.PostResolver { return &postResolver{r} }
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
-type (
-	commentResolver  struct{ *Resolver }
-	mutationResolver struct{ *Resolver }
-	postResolver     struct{ *Resolver }
-	queryResolver    struct{ *Resolver }
-)
+type commentResolver struct{ *Resolver }
+type mutationResolver struct{ *Resolver }
+type postResolver struct{ *Resolver }
+type queryResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.

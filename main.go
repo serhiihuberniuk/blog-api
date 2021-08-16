@@ -41,7 +41,10 @@ func main() {
 		Db: pool,
 	}
 
-	serv := service.NewService(repo, config)
+	serv, err := service.NewService(repo, config.PrivateKeyFile)
+	if err != nil {
+		log.Fatalf("error occured while creating service: %v", err)
+	}
 
 	errs := make(chan error)
 

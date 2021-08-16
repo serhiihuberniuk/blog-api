@@ -77,7 +77,6 @@ input SortCommentsInput{
 }
 
 type Query {
-  login (loginInput: LoginInput!): String!
   getUser(id: ID!): User!
   getPost(id: ID!): Post!
   getComment(id: ID!): Comment!
@@ -125,6 +124,8 @@ input UpdateCommentInput {
 }
 
 type Mutation {
+  login (loginInput: LoginInput!): String!
+
   createUser(input: CreateUserInput!): User!
   updateUser(id: ID!, input: UpdateUserInput!): User!
   deleteUser(id: ID!): Boolean!
