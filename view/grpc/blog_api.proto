@@ -7,6 +7,7 @@ package grpc;
 option go_package = "grpc/pb";
 
 service BlogApi {
+  rpc Login(LoginRequest) returns (LoginResponse) {}
   rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {}
   rpc GetUser(GetUserRequest) returns (GetUserResponse) {}
   rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {}
@@ -23,9 +24,19 @@ service BlogApi {
   rpc ListComments(ListCommentsRequest) returns (ListCommentsResponse) {}
 }
 
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  string token = 1;
+}
+
 message CreateUserRequest {
   string name = 1;
   string email = 2;
+  string password = 3;
 }
 
 message CreateUserResponse {

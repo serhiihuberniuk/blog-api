@@ -29,6 +29,12 @@ func errorStatusHttp(w http.ResponseWriter, err error) {
 		return
 	}
 
+	if errors.Is(err, models.ErrNotAuthenticated) {
+		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+
+		return
+	}
+
 	if errors.As(err, &validation.Errors{}) {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
@@ -104,6 +110,8 @@ func GetQueryParams(r *http.Request, allowFilterFn, allowSortFn func(string) boo
 }
 
 type service interface {
+	Login(ctx context.Context, payload models.LoginPayload) (string, error)
+
 	CreateUser(ctx context.Context, payload models.CreateUserPayload) (string, error)
 	GetUser(ctx context.Context, userID string) (*models.User, error)
 	UpdateUser(ctx context.Context, payload models.UpdateUserPayload) error

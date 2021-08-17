@@ -30,10 +30,23 @@ func (r *commentResolver) Post(ctx context.Context, obj *model.Comment) (*model.
 	return post, nil
 }
 
+func (r *mutationResolver) Login(ctx context.Context, loginInput model.LoginInput) (string, error) {
+	token, err := r.service.Login(ctx, models.LoginPayload{
+		Email:    loginInput.Email,
+		Password: loginInput.Password,
+	})
+	if err != nil {
+		return "", fmt.Errorf("authentification failed: %w", err)
+	}
+
+	return token, nil
+}
+
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUserInput) (*model.User, error) {
 	userId, err := r.service.CreateUser(ctx, models.CreateUserPayload{
-		Name:  input.Name,
-		Email: input.Email,
+		Name:     input.Name,
+		Email:    input.Email,
+		Password: input.Password,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("cannot create user, %w", err)
@@ -47,8 +60,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUse
 	return user, nil
 }
 
-func (r *mutationResolver) UpdateUser(ctx context.Context, id string,
-	input model.UpdateUserInput) (*model.User, error) {
+func (r *mutationResolver) UpdateUser(ctx context.Context, id string, input model.UpdateUserInput) (*model.User, error) {
 	err := r.service.UpdateUser(ctx, models.UpdateUserPayload{
 		UserID: id,
 		Name:   input.Name,
@@ -93,8 +105,7 @@ func (r *mutationResolver) CreatePost(ctx context.Context, input model.CreatePos
 	return post, nil
 }
 
-func (r *mutationResolver) UpdatePost(ctx context.Context, id string,
-	input model.UpdatePostInput) (*model.Post, error) {
+func (r *mutationResolver) UpdatePost(ctx context.Context, id string, input model.UpdatePostInput) (*model.Post, error) {
 	err := r.service.UpdatePost(ctx, models.UpdatePostPayload{
 		PostID:      id,
 		Title:       input.Title,
@@ -139,8 +150,7 @@ func (r *mutationResolver) CreateComment(ctx context.Context, input model.Create
 	return comment, nil
 }
 
-func (r *mutationResolver) UpdateComment(ctx context.Context, id string,
-	input model.UpdateCommentInput) (*model.Comment, error) {
+func (r *mutationResolver) UpdateComment(ctx context.Context, id string, input model.UpdateCommentInput) (*model.Comment, error) {
 	err := r.service.UpdateComment(ctx, models.UpdateCommentPayload{
 		CommentID: id,
 		Content:   input.Content,
@@ -239,8 +249,7 @@ func (r *queryResolver) GetComment(ctx context.Context, id string) (*model.Comme
 	return out, nil
 }
 
-func (r *queryResolver) ListPosts(ctx context.Context, paginationInput *model.PaginationInput,
-	filterPostsInput *model.FilterPostInput, sortPostsInput *model.SortPostsInput) ([]*model.Post, error) {
+func (r *queryResolver) ListPosts(ctx context.Context, paginationInput *model.PaginationInput, filterPostsInput *model.FilterPostInput, sortPostsInput *model.SortPostsInput) ([]*model.Post, error) {
 	pagination := getPaginationParams(paginationInput)
 
 	filterPost := models.FilterPosts{}
@@ -284,9 +293,7 @@ func (r *queryResolver) ListPosts(ctx context.Context, paginationInput *model.Pa
 	return listPosts, nil
 }
 
-func (r *queryResolver) ListComments(ctx context.Context, paginationInput *model.PaginationInput,
-	filterCommentsInput *model.FilterCommentsInput,
-	sortCommentsInput *model.SortCommentsInput) ([]*model.Comment, error) {
+func (r *queryResolver) ListComments(ctx context.Context, paginationInput *model.PaginationInput, filterCommentsInput *model.FilterCommentsInput, sortCommentsInput *model.SortCommentsInput) ([]*model.Comment, error) {
 	pagination := getPaginationParams(paginationInput)
 
 	filterComments := models.FilterComments{}

@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/serhiihuberniuk/blog-api/models"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func (s *Service) CreateUser(ctx context.Context, payload models.CreateUserPayload) (string, error) {
@@ -18,10 +19,18 @@ func (s *Service) CreateUser(ctx context.Context, payload models.CreateUserPaylo
 		Email:     payload.Email,
 		CreatedAt: now,
 		UpdatedAt: now,
+		Password:  payload.Password,
 	}
 	if err := user.Validate(); err != nil {
 		return "", fmt.Errorf("cannot create user: %w", err)
 	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(payload.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", fmt.Errorf("error occurred while hashing the password, %w", err)
+	}
+
+	user.Password = string(hashedPassword)
 
 	if err := s.repo.CreateUser(ctx, user); err != nil {
 		return "", fmt.Errorf("cannot create user: %w", err)

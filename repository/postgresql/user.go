@@ -9,9 +9,10 @@ import (
 )
 
 func (r *Repository) CreateUser(ctx context.Context, user *models.User) error {
-	const sql = "INSERT INTO users (id, name, email, created_at, updated_at) VALUES ($1, $2, $3, $4, $5)"
+	const sql = "INSERT INTO users (id, name, email, created_at, updated_at, password) " +
+		"VALUES ($1, $2, $3, $4, $5, $6)"
 
-	_, err := r.Db.Exec(ctx, sql, user.ID, user.Name, user.Email, user.CreatedAt, user.UpdatedAt)
+	_, err := r.Db.Exec(ctx, sql, user.ID, user.Name, user.Email, user.CreatedAt, user.UpdatedAt, user.Password)
 	if err != nil {
 		return fmt.Errorf("cannot create user: %w", err)
 	}

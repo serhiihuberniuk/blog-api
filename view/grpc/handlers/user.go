@@ -10,8 +10,9 @@ import (
 
 func (h *Handlers) CreateUser(ctx context.Context, request *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
 	userID, err := h.service.CreateUser(ctx, models.CreateUserPayload{
-		Name:  request.GetName(),
-		Email: request.GetEmail(),
+		Name:     request.GetName(),
+		Email:    request.GetEmail(),
+		Password: request.GetPassword(),
 	})
 	if err != nil {
 		return nil, errorStatusGrpc(err)

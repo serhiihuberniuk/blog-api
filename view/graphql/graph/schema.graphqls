@@ -7,6 +7,7 @@ type User {
   email : String!
   createdAt: String!
   updatedAt: String!
+  password: String!
 }
 
 type Post {
@@ -83,9 +84,15 @@ type Query {
   listComments(paginationInput: PaginationInput, filterCommentsInput: FilterCommentsInput, sortCommentsInput: SortCommentsInput): [Comment!]!
 }
 
+input LoginInput {
+  email: String!
+  password: String!
+}
+
 input CreateUserInput {
   name: String!
   email: String!
+  password: String!
 }
 
 input UpdateUserInput {
@@ -117,6 +124,8 @@ input UpdateCommentInput {
 }
 
 type Mutation {
+  login (loginInput: LoginInput!): String!
+
   createUser(input: CreateUserInput!): User!
   updateUser(id: ID!, input: UpdateUserInput!): User!
   deleteUser(id: ID!): Boolean!

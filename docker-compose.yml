@@ -16,6 +16,9 @@ services:
       API_HEALTHCHECK_PORT: 8083
       API_POSTGRESQL_URL: postgres://serhii:serhii@postgres:5432/blog-api_postgresdb
       API_POSTGRES_INIT_FILE: init.sql
+      API_PRIVATE_KEY_FILE: /run/secrets/private_key
+    secrets:
+      - private_key
     depends_on:
       - postgres
   postgres:
@@ -28,3 +31,6 @@ services:
       POSTGRES_DB: blog-api_postgresdb
     ports:
       - "5432:5432"
+secrets:
+  private_key:
+    file: ./app.rsa

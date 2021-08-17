@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -41,7 +42,15 @@ func main() {
 		Db: pool,
 	}
 
-	serv := service.NewService(repo)
+	privateKey, err := ioutil.ReadFile(config.PrivateKeyFile)
+	if err != nil {
+		log.Fatalf("cannot read Private Key from file: %v", err)
+	}
+
+	serv, err := service.NewService(repo, privateKey)
+	if err != nil {
+		log.Fatalf("error occurred while creating service: %v", err)
+	}
 
 	errs := make(chan error)
 
@@ -53,6 +62,7 @@ func main() {
 		Addr:    ":" + config.HealthcheckPort,
 		Handler: healthHandler.HealthRouter(),
 	}
+
 	go func() {
 		if err := http.ListenAndServe(healthServer.Addr, healthServer.Handler); err != nil {
 			errs <- err
