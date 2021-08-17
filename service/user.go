@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"golang.org/x/crypto/bcrypt"
-
 	"github.com/google/uuid"
 	"github.com/serhiihuberniuk/blog-api/models"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func (s *Service) CreateUser(ctx context.Context, payload models.CreateUserPayload) (string, error) {
@@ -28,7 +27,7 @@ func (s *Service) CreateUser(ctx context.Context, payload models.CreateUserPaylo
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(payload.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return "", fmt.Errorf("error occured while hashing the password, %w", err)
+		return "", fmt.Errorf("error occurred while hashing the password, %w", err)
 	}
 
 	user.Password = string(hashedPassword)
