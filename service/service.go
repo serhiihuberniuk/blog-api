@@ -4,9 +4,8 @@ import (
 	"context"
 	"crypto/rsa"
 	"fmt"
-	"github.com/golang-jwt/jwt"
-	"io/ioutil"
 
+	"github.com/golang-jwt/jwt"
 	"github.com/serhiihuberniuk/blog-api/models"
 )
 
@@ -38,12 +37,7 @@ type repository interface {
 		filter models.FilterComments, sort models.SortComments) ([]*models.Comment, error)
 }
 
-func NewService(r repository, privateKeyFile string) (*Service, error) {
-	privateKey, err := ioutil.ReadFile(privateKeyFile)
-	if err != nil {
-		return nil, fmt.Errorf("error occurred while reading privateKey file :%w", err)
-	}
-
+func NewService(r repository, privateKey []byte) (*Service, error) {
 	privateRSA, err := jwt.ParseRSAPrivateKeyFromPEM(privateKey)
 	if err != nil {
 		return nil, fmt.Errorf("error occurred while parsing private key: %w", err)

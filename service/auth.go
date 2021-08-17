@@ -32,7 +32,7 @@ func (s *Service) Login(ctx context.Context, payload models.LoginPayload) (strin
 
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, tokenClaims{
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Minute).Unix(),
+			ExpiresAt: time.Now().Add(time.Minute * 10).Unix(),
 			IssuedAt:  time.Now().Unix(),
 		},
 		userID: user.ID,
