@@ -31,7 +31,6 @@ func (h *Handlers) CreatePost(w http.ResponseWriter, r *http.Request) {
 		Title:       in.Title,
 		Description: in.Description,
 		Tags:        in.Tags,
-		AuthorID:    in.AuthorID,
 	})
 	if err != nil {
 		errorStatusHttp(w, err)

@@ -26,6 +26,7 @@ type queryParam struct {
 func errorStatusHttp(w http.ResponseWriter, err error) {
 	if errors.Is(err, models.ErrNotFound) {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+
 		return
 	}
 
@@ -37,6 +38,7 @@ func errorStatusHttp(w http.ResponseWriter, err error) {
 
 	if errors.As(err, &validation.Errors{}) {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+
 		return
 	}
 
@@ -111,11 +113,12 @@ func GetQueryParams(r *http.Request, allowFilterFn, allowSortFn func(string) boo
 
 type service interface {
 	Login(ctx context.Context, payload models.LoginPayload) (string, error)
+	ParseToken(tokenString string) (string, error)
 
 	CreateUser(ctx context.Context, payload models.CreateUserPayload) (string, error)
 	GetUser(ctx context.Context, userID string) (*models.User, error)
 	UpdateUser(ctx context.Context, payload models.UpdateUserPayload) error
-	DeleteUser(ctx context.Context, userID string) error
+	DeleteUser(ctx context.Context) error
 
 	CreatePost(ctx context.Context, payload models.CreatePostPayload) (string, error)
 	GetPost(ctx context.Context, postID string) (*models.Post, error)
@@ -132,12 +135,19 @@ type service interface {
 		filter models.FilterComments, sort models.SortComments) ([]*models.Comment, error)
 }
 
-type Handlers struct {
-	service
+type provider interface {
+	SetCurrentUserID(ctx context.Context, userID string) context.Context
+	GetCurrentUserID(ctx context.Context) string
 }
 
-func NewRestHandlers(s service) *Handlers {
+type Handlers struct {
+	service
+	provider
+}
+
+func NewRestHandlers(s service, p provider) *Handlers {
 	return &Handlers{
-		service: s,
+		service:  s,
+		provider: p,
 	}
 }

@@ -29,9 +29,10 @@ type CreateUserPayload struct {
 }
 
 type UpdateUserPayload struct {
-	UserID string
-	Name   string
-	Email  string
+	UserID   string
+	Name     string
+	Email    string
+	Password string
 }
 
 func (u *User) Validate() error {

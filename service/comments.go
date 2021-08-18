@@ -13,7 +13,7 @@ func (s *Service) CreateComment(ctx context.Context, payload models.CreateCommen
 	comment := &models.Comment{
 		ID:        uuid.New().String(),
 		Content:   payload.Content,
-		CreatedBy: payload.AuthorID,
+		CreatedBy: s.GetCurrentUserID(ctx),
 		CreatedAt: time.Now(),
 		PostID:    payload.PostID,
 	}
@@ -43,6 +43,10 @@ func (s *Service) UpdateComment(ctx context.Context, payload models.UpdateCommen
 		return fmt.Errorf("cannot update comment: %w", err)
 	}
 
+	if err = s.authCommentAuthor(ctx, payload.CommentID); err != nil {
+		return fmt.Errorf("authorization error: %w", err)
+	}
+
 	comment.Content = payload.Content
 
 	if err := comment.Validate(); err != nil {
@@ -57,6 +61,10 @@ func (s *Service) UpdateComment(ctx context.Context, payload models.UpdateCommen
 }
 
 func (s *Service) DeleteComment(ctx context.Context, commentID string) error {
+	if err := s.authCommentAuthor(ctx, commentID); err != nil {
+		return fmt.Errorf("authorization error: %w", err)
+	}
+
 	if err := s.repo.DeleteComment(ctx, commentID); err != nil {
 		return fmt.Errorf("cannot delete comment: %w", err)
 	}

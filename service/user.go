@@ -7,7 +7,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/serhiihuberniuk/blog-api/models"
-	"golang.org/x/crypto/bcrypt"
 )
 
 func (s *Service) CreateUser(ctx context.Context, payload models.CreateUserPayload) (string, error) {
@@ -25,12 +24,12 @@ func (s *Service) CreateUser(ctx context.Context, payload models.CreateUserPaylo
 		return "", fmt.Errorf("cannot create user: %w", err)
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(payload.Password), bcrypt.DefaultCost)
+	hashedPassword, err := generateHashPassword(payload.Password)
 	if err != nil {
-		return "", fmt.Errorf("error occurred while hashing the password, %w", err)
+		return "", fmt.Errorf("error occurred while hashing the password: %w", err)
 	}
 
-	user.Password = string(hashedPassword)
+	user.Password = hashedPassword
 
 	if err := s.repo.CreateUser(ctx, user); err != nil {
 		return "", fmt.Errorf("cannot create user: %w", err)
@@ -49,7 +48,7 @@ func (s *Service) GetUser(ctx context.Context, userID string) (*models.User, err
 }
 
 func (s *Service) UpdateUser(ctx context.Context, payload models.UpdateUserPayload) error {
-	user, err := s.GetUser(ctx, payload.UserID)
+	user, err := s.GetUser(ctx, s.GetCurrentUserID(ctx))
 	if err != nil {
 		return fmt.Errorf("cannot update user, %w", err)
 	}
@@ -57,20 +56,26 @@ func (s *Service) UpdateUser(ctx context.Context, payload models.UpdateUserPaylo
 	user.Name = payload.Name
 	user.Email = payload.Email
 	user.UpdatedAt = time.Now()
+	user.Password = payload.Password
 
-	if err := user.Validate(); err != nil {
+	if err = user.Validate(); err != nil {
 		return fmt.Errorf("cannot update user: %w", err)
 	}
 
-	if err := s.repo.UpdateUser(ctx, user); err != nil {
+	user.Password, err = generateHashPassword(payload.Password)
+	if err != nil {
+		return fmt.Errorf("error occurred while hashing the password: %w", err)
+	}
+
+	if err = s.repo.UpdateUser(ctx, user); err != nil {
 		return fmt.Errorf("cannot update user: %w", err)
 	}
 
 	return nil
 }
 
-func (s *Service) DeleteUser(ctx context.Context, userID string) error {
-	if err := s.repo.DeleteUser(ctx, userID); err != nil {
+func (s *Service) DeleteUser(ctx context.Context) error {
+	if err := s.repo.DeleteUser(ctx, s.GetCurrentUserID(ctx)); err != nil {
 		return fmt.Errorf("cannot delete user: %w", err)
 	}
 
