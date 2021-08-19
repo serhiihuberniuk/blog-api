@@ -15,7 +15,7 @@ func (s *Service) CreatePost(ctx context.Context, payload models.CreatePostPaylo
 		Title:       payload.Title,
 		Description: payload.Description,
 		CreatedAt:   time.Now(),
-		CreatedBy:   s.GetCurrentUserID(ctx),
+		CreatedBy:   s.prov.GetCurrentUserID(ctx),
 		Tags:        payload.Tags,
 	}
 
@@ -40,7 +40,7 @@ func (s *Service) GetPost(ctx context.Context, postID string) (*models.Post, err
 }
 
 func (s *Service) UpdatePost(ctx context.Context, payload models.UpdatePostPayload) error {
-	post, err := s.authPostAuthor(ctx, payload.PostID)
+	post, err := s.isAuthorOfPost(ctx, payload.PostID)
 	if err != nil {
 		return fmt.Errorf("authorization error: %w", err)
 	}
@@ -61,7 +61,7 @@ func (s *Service) UpdatePost(ctx context.Context, payload models.UpdatePostPaylo
 }
 
 func (s *Service) DeletePost(ctx context.Context, postID string) error {
-	if _, err := s.authPostAuthor(ctx, postID); err != nil {
+	if _, err := s.isAuthorOfPost(ctx, postID); err != nil {
 		return fmt.Errorf("authorization error: %w", err)
 	}
 

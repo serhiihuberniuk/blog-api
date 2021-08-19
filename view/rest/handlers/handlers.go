@@ -135,19 +135,24 @@ type service interface {
 		filter models.FilterComments, sort models.SortComments) ([]*models.Comment, error)
 }
 
-type provider interface {
-	SetCurrentUserID(ctx context.Context, userID string) context.Context
+type contextValueProvider interface {
 	GetCurrentUserID(ctx context.Context) string
+}
+
+type middleware interface {
+	Auth(next http.HandlerFunc) http.HandlerFunc
 }
 
 type Handlers struct {
 	service
-	provider
+	contextValueProvider
+	middleware
 }
 
-func NewRestHandlers(s service, p provider) *Handlers {
+func NewRestHandlers(s service, p contextValueProvider, m middleware) *Handlers {
 	return &Handlers{
-		service:  s,
-		provider: p,
+		service:              s,
+		contextValueProvider: p,
+		middleware:           m,
 	}
 }

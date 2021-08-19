@@ -1,4 +1,4 @@
-package handlers
+package middlewares
 
 import (
 	"net/http"
@@ -10,7 +10,7 @@ const (
 	bearerAuthentication = "bearer"
 )
 
-func (h *Handlers) Auth(next http.HandlerFunc) http.HandlerFunc {
+func (m *Middleware) Auth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		header := r.Header.Get(authorizationHeader)
 		if header == "" {
@@ -32,14 +32,14 @@ func (h *Handlers) Auth(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		userID, err := h.service.ParseToken(headerSplit[1])
+		userID, err := m.service.ParseToken(headerSplit[1])
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 
 			return
 		}
 
-		ctx := h.provider.SetCurrentUserID(r.Context(), userID)
+		ctx := m.SetCurrentUserID(r.Context(), userID)
 
 		next(w, r.WithContext(ctx))
 	}

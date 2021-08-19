@@ -49,13 +49,13 @@ func (s *Service) Login(ctx context.Context, payload models.LoginPayload) (strin
 func (s *Service) ParseToken(tokenString string) (string, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &tokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
-			return nil, fmt.Errorf("invalid signing method: %w", models.ErrNotAuthenticated)
+			return nil, errors.New("invalid signing method")
 		}
 
 		return s.privateKey.Public(), nil
 	})
 	if err != nil {
-		return "", fmt.Errorf("error ocured while parsing token: %w", models.ErrNotAuthenticated)
+		return "", fmt.Errorf("error occured while parsing token: %w", err)
 	}
 
 	claims, ok := token.Claims.(*tokenClaims)
@@ -63,29 +63,29 @@ func (s *Service) ParseToken(tokenString string) (string, error) {
 		return "", fmt.Errorf("token claims are not of type *tokenClaims; %w", models.ErrNotAuthenticated)
 	}
 
-	return fmt.Sprint(claims.UserID), nil
+	return claims.UserID, nil
 }
 
-func (s *Service) authPostAuthor(ctx context.Context, postID string) (*models.Post, error) {
+func (s *Service) isAuthorOfPost(ctx context.Context, postID string) (*models.Post, error) {
 	post, err := s.GetPost(ctx, postID)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get post: %w", err)
 	}
 
-	if post.CreatedBy != s.GetCurrentUserID(ctx) {
+	if post.CreatedBy != s.prov.GetCurrentUserID(ctx) {
 		return nil, models.ErrNotAuthenticated
 	}
 
 	return post, nil
 }
 
-func (s *Service) authCommentAuthor(ctx context.Context, commentID string) (*models.Comment, error) {
+func (s *Service) isAuthorOfComment(ctx context.Context, commentID string) (*models.Comment, error) {
 	comment, err := s.GetComment(ctx, commentID)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get comment: %w", err)
 	}
 
-	if comment.CreatedBy != s.GetCurrentUserID(ctx) {
+	if comment.CreatedBy != s.prov.GetCurrentUserID(ctx) {
 		return nil, models.ErrNotAuthenticated
 	}
 

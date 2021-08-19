@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/serhiihuberniuk/blog-api/view/rest/middlewares"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -9,7 +10,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/serhiihuberniuk/blog-api/provider"
+	"github.com/serhiihuberniuk/blog-api/providers"
 
 	"github.com/rs/cors"
 	"github.com/serhiihuberniuk/blog-api/configs"
@@ -41,9 +42,9 @@ func main() {
 		log.Fatalf("cannot read Private Key from file: %v", err)
 	}
 
-	prov := provider.NewProvider()
+	prov := providers.NewContextValueProvider()
 
-	serv, err := service.NewService(repo, prov, privateKey)
+	serv, err := service.NewService(repo, privateKey, prov)
 	if err != nil {
 		log.Fatalf("error occurred while creating service: %v", err)
 	}
@@ -67,7 +68,8 @@ func main() {
 
 	log.Println(" Health check server is listening on ", healthServer.Addr)
 
-	handlerRest := handlers.NewRestHandlers(serv, prov)
+	middleware := middlewares.NewMiddleware(serv, prov)
+	handlerRest := handlers.NewRestHandlers(serv, prov, middleware)
 
 	restServer := http.Server{
 		Addr:    ":" + config.HttpPort,
