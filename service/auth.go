@@ -66,28 +66,28 @@ func (s *Service) ParseToken(tokenString string) (string, error) {
 	return fmt.Sprint(claims.UserID), nil
 }
 
-func (s *Service) authPostAuthor(ctx context.Context, postID string) error {
+func (s *Service) authPostAuthor(ctx context.Context, postID string) (*models.Post, error) {
 	post, err := s.GetPost(ctx, postID)
 	if err != nil {
-		return fmt.Errorf("cannot get post: %w", err)
+		return nil, fmt.Errorf("cannot get post: %w", err)
 	}
 
 	if post.CreatedBy != s.GetCurrentUserID(ctx) {
-		return models.ErrNotAuthenticated
+		return nil, models.ErrNotAuthenticated
 	}
 
-	return nil
+	return post, nil
 }
 
-func (s *Service) authCommentAuthor(ctx context.Context, commentID string) error {
-	post, err := s.GetComment(ctx, commentID)
+func (s *Service) authCommentAuthor(ctx context.Context, commentID string) (*models.Comment, error) {
+	comment, err := s.GetComment(ctx, commentID)
 	if err != nil {
-		return fmt.Errorf("cannot get comment: %w", err)
+		return nil, fmt.Errorf("cannot get comment: %w", err)
 	}
 
-	if post.CreatedBy != s.GetCurrentUserID(ctx) {
-		return models.ErrNotAuthenticated
+	if comment.CreatedBy != s.GetCurrentUserID(ctx) {
+		return nil, models.ErrNotAuthenticated
 	}
 
-	return nil
+	return comment, nil
 }

@@ -38,12 +38,8 @@ func (s *Service) GetComment(ctx context.Context, commentID string) (*models.Com
 }
 
 func (s *Service) UpdateComment(ctx context.Context, payload models.UpdateCommentPayload) error {
-	comment, err := s.GetComment(ctx, payload.CommentID)
+	comment, err := s.authCommentAuthor(ctx, payload.CommentID)
 	if err != nil {
-		return fmt.Errorf("cannot update comment: %w", err)
-	}
-
-	if err = s.authCommentAuthor(ctx, payload.CommentID); err != nil {
 		return fmt.Errorf("authorization error: %w", err)
 	}
 
@@ -61,7 +57,7 @@ func (s *Service) UpdateComment(ctx context.Context, payload models.UpdateCommen
 }
 
 func (s *Service) DeleteComment(ctx context.Context, commentID string) error {
-	if err := s.authCommentAuthor(ctx, commentID); err != nil {
+	if _, err := s.authCommentAuthor(ctx, commentID); err != nil {
 		return fmt.Errorf("authorization error: %w", err)
 	}
 
