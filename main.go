@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"github.com/serhiihuberniuk/blog-api/view/rest/middlewares"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -10,11 +9,12 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/serhiihuberniuk/blog-api/providers"
+	"github.com/serhiihuberniuk/blog-api/view/rest/middlewares"
 
 	"github.com/rs/cors"
 	"github.com/serhiihuberniuk/blog-api/configs"
 	"github.com/serhiihuberniuk/blog-api/health"
+	"github.com/serhiihuberniuk/blog-api/providers"
 	repository "github.com/serhiihuberniuk/blog-api/repository/postgresql"
 	"github.com/serhiihuberniuk/blog-api/service"
 	"github.com/serhiihuberniuk/blog-api/view/rest/handlers"
@@ -42,9 +42,9 @@ func main() {
 		log.Fatalf("cannot read Private Key from file: %v", err)
 	}
 
-	prov := providers.NewContextValueProvider()
+	provider := providers.NewCurrentUserInformationProvider()
 
-	serv, err := service.NewService(repo, privateKey, prov)
+	serv, err := service.NewService(repo, privateKey, provider)
 	if err != nil {
 		log.Fatalf("error occurred while creating service: %v", err)
 	}
@@ -68,8 +68,8 @@ func main() {
 
 	log.Println(" Health check server is listening on ", healthServer.Addr)
 
-	middleware := middlewares.NewMiddleware(serv, prov)
-	handlerRest := handlers.NewRestHandlers(serv, prov, middleware)
+	middleware := middlewares.NewAuthMiddleware(serv, provider)
+	handlerRest := handlers.NewRestHandlers(serv, middleware)
 
 	restServer := http.Server{
 		Addr:    ":" + config.HttpPort,
@@ -81,6 +81,7 @@ func main() {
 	go func() {
 		c := cors.New(cors.Options{
 			AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
+			AllowedHeaders: []string{"Authorization", "content-type"},
 		})
 		handlerCors := c.Handler(restServer.Handler)
 

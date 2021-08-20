@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"context"
 	"net/http"
 	"strings"
 )
@@ -10,7 +11,28 @@ const (
 	bearerAuthentication = "bearer"
 )
 
-func (m *Middleware) Auth(next http.HandlerFunc) http.HandlerFunc {
+type AuthMiddleware struct {
+	service                        service
+	currentUserInformationProvider currentUserInformationProvider
+}
+
+func NewAuthMiddleware(s service, p currentUserInformationProvider) *AuthMiddleware {
+	return &AuthMiddleware{
+		service:                        s,
+		currentUserInformationProvider: p,
+	}
+}
+
+type currentUserInformationProvider interface {
+	SetCurrentUserID(ctx context.Context, userID string) context.Context
+	GetCurrentUserID(ctx context.Context) string
+}
+
+type service interface {
+	ParseToken(tokenString string) (string, error)
+}
+
+func (m *AuthMiddleware) Auth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		header := r.Header.Get(authorizationHeader)
 		if header == "" {
@@ -39,8 +61,12 @@ func (m *Middleware) Auth(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		ctx := m.SetCurrentUserID(r.Context(), userID)
+		ctx := m.currentUserInformationProvider.SetCurrentUserID(r.Context(), userID)
 
 		next(w, r.WithContext(ctx))
 	}
+}
+
+func (m *AuthMiddleware) GetCurrentUserID(ctx context.Context) string {
+	return m.currentUserInformationProvider.GetCurrentUserID(ctx)
 }

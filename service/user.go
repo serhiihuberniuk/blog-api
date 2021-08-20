@@ -48,7 +48,7 @@ func (s *Service) GetUser(ctx context.Context, userID string) (*models.User, err
 }
 
 func (s *Service) UpdateUser(ctx context.Context, payload models.UpdateUserPayload) error {
-	user, err := s.GetUser(ctx, s.prov.GetCurrentUserID(ctx))
+	user, err := s.GetUser(ctx, s.currentUserInformationProvider.GetCurrentUserID(ctx))
 	if err != nil {
 		return fmt.Errorf("cannot update user, %w", err)
 	}
@@ -75,7 +75,7 @@ func (s *Service) UpdateUser(ctx context.Context, payload models.UpdateUserPaylo
 }
 
 func (s *Service) DeleteUser(ctx context.Context) error {
-	if err := s.repo.DeleteUser(ctx, s.prov.GetCurrentUserID(ctx)); err != nil {
+	if err := s.repo.DeleteUser(ctx, s.currentUserInformationProvider.GetCurrentUserID(ctx)); err != nil {
 		return fmt.Errorf("cannot delete user: %w", err)
 	}
 

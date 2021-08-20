@@ -55,7 +55,7 @@ func (s *Service) ParseToken(tokenString string) (string, error) {
 		return s.privateKey.Public(), nil
 	})
 	if err != nil {
-		return "", fmt.Errorf("error occured while parsing token: %w", err)
+		return "", fmt.Errorf("error occurred while parsing token: %w", err)
 	}
 
 	claims, ok := token.Claims.(*tokenClaims)
@@ -66,28 +66,10 @@ func (s *Service) ParseToken(tokenString string) (string, error) {
 	return claims.UserID, nil
 }
 
-func (s *Service) isAuthorOfPost(ctx context.Context, postID string) (*models.Post, error) {
-	post, err := s.GetPost(ctx, postID)
-	if err != nil {
-		return nil, fmt.Errorf("cannot get post: %w", err)
+func (s *Service) checkCurrentUserIsOwner(ctx context.Context, id string) bool {
+	if id == s.currentUserInformationProvider.GetCurrentUserID(ctx) {
+		return true
 	}
 
-	if post.CreatedBy != s.prov.GetCurrentUserID(ctx) {
-		return nil, models.ErrNotAuthenticated
-	}
-
-	return post, nil
-}
-
-func (s *Service) isAuthorOfComment(ctx context.Context, commentID string) (*models.Comment, error) {
-	comment, err := s.GetComment(ctx, commentID)
-	if err != nil {
-		return nil, fmt.Errorf("cannot get comment: %w", err)
-	}
-
-	if comment.CreatedBy != s.prov.GetCurrentUserID(ctx) {
-		return nil, models.ErrNotAuthenticated
-	}
-
-	return comment, nil
+	return false
 }

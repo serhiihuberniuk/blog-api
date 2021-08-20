@@ -87,7 +87,7 @@ func (h *Handlers) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.service.GetUser(r.Context(), h.GetCurrentUserID(r.Context()))
+	user, err := h.service.GetUser(r.Context(), h.authMiddleware.GetCurrentUserID(r.Context()))
 	if err != nil {
 		errorStatusHttp(w, err)
 

@@ -41,6 +41,7 @@ paths:
           description: Not authenticated.
         500:
           description: Internal.
+
   /users:
     post:
       summary: Creates a user.
@@ -75,13 +76,71 @@ paths:
                 $ref: '#/components/schemas/User'
         400:
           description: Request body is invalid.
+        401:
+          description: Not authorized.
         404:
           description: Created user is not found.
         500:
           description: Error occured while encoding into JSON.
 
+    put:
+      security:
+        - Bearer: []
+      summary: Updates user's name, email and password.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 30
+                email:
+                  type: string
+                  format: email
+                  maxLength: 30
+                password:
+                  type: string
+                  minLength: 8
+                  maxLength: 30
+              required:
+                - name
+                - email
+                - password
+      responses:
+        200:
+          description: A user object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        404:
+          description: User with such ID is not found.
+        401:
+          description: Not authorized.
+        400:
+          description: Request body is invalid.
+        500:
+          description: Error occured while encoding into JSON.
+
+    delete:
+      security:
+         - Bearer: []
+      summary: Removes current user.
+      responses:
+        200:
+          description: User is removed.
+        401:
+          description: Not authorized.
+        404:
+          description: User with such ID is not found.
+
   /users/{id}:
     get:
+      security:
+        - Bearer: []
       summary: Returns user by ID.
       parameters:
         - name: id
@@ -98,70 +157,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+        401:
+          description: Not authorized.
         404:
           description: User with such ID is not found.
         500:
           description: Error occured while encoding into JSON.
-
-    put:
-      summary: Updates user's name and email.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                  maxLength: 30
-                email:
-                  type: string
-                  format: email
-                  maxLength: 30
-              required:
-                - name
-                - email
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: The ID of users to update.
-          schema:
-            type: string
-            format: uuid
-      responses:
-        200:
-          description: A user object.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-        404:
-          description: User with such ID is not found.
-        400:
-          description: Request body is invalid.
-        500:
-          description: Error occured while encoding into JSON.
-
-    delete:
-      summary: Removes user by ID.
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: The ID of users to delete.
-          schema:
-            type: string
-            format: uuid
-      responses:
-        200:
-          description: User is removed.
-        404:
-          description: User with such ID is not found.
 
   /posts:
     post:
+      security:
+        - Bearer: []
       summary: Creates a post and returns it.
       requestBody:
         required: true
@@ -178,16 +184,9 @@ paths:
                   type: array
                   items:
                     type: string
-                authorId:
-                  type: string
-                  format: uuid
               required:
                 - title
                 - description
-                - authorId
-
-
-
       responses:
         200:
           description: Created
@@ -197,11 +196,16 @@ paths:
                 $ref: '#/components/schemas/Post'
         400:
           description: Request body is invalid.
+        401:
+          description: Not authorized.
         404:
           description: Created post is not found.
         500:
           description: Error occured while encoding to JSON.
+
     get:
+      security:
+        - Bearer: []
       summary: Returns list of posts (max 50).
       parameters:
         - name: filter-field
@@ -262,11 +266,15 @@ paths:
                 $ref: '#/components/schemas/PostsList'
         400:
           description: Request parameters are invalid.
+        401:
+          description: Not authorized.
         500:
           description: Error occured while encoding into JSON.
 
   /posts/{id}:
     get:
+      security:
+        - Bearer: []
       summary: Returns post by ID.
       parameters:
         - name: id
@@ -285,10 +293,14 @@ paths:
                 $ref: '#/components/schemas/Post'
         404:
           description: Post with such ID is not found.
+        401:
+          description: Not authorized.
         500:
           description: Problem occured while encoding into JSON.
 
     put:
+      security:
+        - Bearer: []
       summary: Updates post's title, description and tags.
       requestBody:
         required: true
@@ -326,12 +338,16 @@ paths:
                 $ref: '#/components/schemas/Post'
         400:
           description: Request body is invalid.
+        401:
+          description: Not authorized.
         404:
           description: Post with such ID is not found.
         500:
           description: Problem occured while encoding into JSON.
 
     delete:
+      security:
+        - Bearer: []
       summary: Removes post by ID.
       parameters:
         - name: id
@@ -344,11 +360,15 @@ paths:
       responses:
         200:
           description: Post is removed.
+        401:
+          description: Not authorized.
         404:
           description: Post with such ID is not found.
 
   /comments:
     post:
+      security:
+        - Bearer: []
       summary: Creates a comment to post.
       requestBody:
         required: true
@@ -362,14 +382,9 @@ paths:
                 postId:
                   type: string
                   format: uuid
-                authorId:
-                  type: string
-                  format: uuid
               required:
                 - content
                 - postId
-                - authorId
-
       responses:
         200:
           description: Created
@@ -379,11 +394,16 @@ paths:
                 $ref: '#/components/schemas/Comment'
         400:
           description: Request body is invalid.
+        401:
+          description: Not authorized.
         404:
           description: Created comment is not found.
         500:
           description: Problem ocuured while encoding into JSON.
+
     get:
+      security:
+        - Bearer: []
       summary: Returns list of comments (max 50).
       parameters:
         - name: filter-field
@@ -443,11 +463,15 @@ paths:
                 $ref: '#/components/schemas/CommentsList'
         400:
           description: Request parameters are invalid.
+        401:
+          description: Not authorized.
         500:
           description: Error occured while encoding into JSON.
 
   /comments/{id}:
     get:
+      security:
+        - Bearer: []
       summary: Returns comments by ID.
       parameters:
         - name: id
@@ -464,6 +488,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Comment'
+        401:
+          description: Not authorized.
         404:
           description: Comment with such ID is not found.
         500:
@@ -471,6 +497,8 @@ paths:
 
     put:
       summary: Updates comment's content.
+      security:
+        - Bearer: []
       requestBody:
         required: true
         content:
@@ -502,6 +530,8 @@ paths:
                     type: string
                 required:
                   - content
+        401:
+          description: Not authorized.
         400:
           description: Request body is invalid.
         404:
@@ -509,8 +539,9 @@ paths:
         500:
           description: Error occured while encoding into JSON.
 
-
     delete:
+      security:
+        - Bearer: []
       summary: Removes comment by ID.
       parameters:
         - name: id
@@ -523,11 +554,18 @@ paths:
       responses:
         200:
           description: Comment is removed.
+        401:
+          description: Not authorized.
         404:
           description: Comment with such ID is not found.
 
-
 components:
+  securitySchemes:
+    Bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     User:
       properties:

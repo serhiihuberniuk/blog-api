@@ -11,12 +11,12 @@ import (
 )
 
 type Service struct {
-	repo       repository
-	privateKey *rsa.PrivateKey
-	prov       contextValueProvider
+	repo                           repository
+	privateKey                     *rsa.PrivateKey
+	currentUserInformationProvider currentUserInformationProvider
 }
 
-type contextValueProvider interface {
+type currentUserInformationProvider interface {
 	GetCurrentUserID(ctx context.Context) string
 }
 
@@ -43,16 +43,16 @@ type repository interface {
 		filter models.FilterComments, sort models.SortComments) ([]*models.Comment, error)
 }
 
-func NewService(r repository, privateKey []byte, p contextValueProvider) (*Service, error) {
+func NewService(r repository, privateKey []byte, p currentUserInformationProvider) (*Service, error) {
 	privateRSA, err := jwt.ParseRSAPrivateKeyFromPEM(privateKey)
 	if err != nil {
 		return nil, fmt.Errorf("error occurred while parsing private key: %w", err)
 	}
 
 	return &Service{
-		repo:       r,
-		privateKey: privateRSA,
-		prov:       p,
+		repo:                           r,
+		privateKey:                     privateRSA,
+		currentUserInformationProvider: p,
 	}, nil
 }
 

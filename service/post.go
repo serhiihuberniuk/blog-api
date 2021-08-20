@@ -15,7 +15,7 @@ func (s *Service) CreatePost(ctx context.Context, payload models.CreatePostPaylo
 		Title:       payload.Title,
 		Description: payload.Description,
 		CreatedAt:   time.Now(),
-		CreatedBy:   s.prov.GetCurrentUserID(ctx),
+		CreatedBy:   s.currentUserInformationProvider.GetCurrentUserID(ctx),
 		Tags:        payload.Tags,
 	}
 
@@ -40,9 +40,13 @@ func (s *Service) GetPost(ctx context.Context, postID string) (*models.Post, err
 }
 
 func (s *Service) UpdatePost(ctx context.Context, payload models.UpdatePostPayload) error {
-	post, err := s.isAuthorOfPost(ctx, payload.PostID)
+	post, err := s.GetPost(ctx, payload.PostID)
 	if err != nil {
-		return fmt.Errorf("authorization error: %w", err)
+		return fmt.Errorf("cannot get post: %w", err)
+	}
+
+	if !s.checkCurrentUserIsOwner(ctx, post.CreatedBy) {
+		return models.ErrNotAuthenticated
 	}
 
 	post.Title = payload.Title
@@ -61,8 +65,13 @@ func (s *Service) UpdatePost(ctx context.Context, payload models.UpdatePostPaylo
 }
 
 func (s *Service) DeletePost(ctx context.Context, postID string) error {
-	if _, err := s.isAuthorOfPost(ctx, postID); err != nil {
-		return fmt.Errorf("authorization error: %w", err)
+	post, err := s.GetPost(ctx, postID)
+	if err != nil {
+		return fmt.Errorf("cannot get post: %w", err)
+	}
+
+	if !s.checkCurrentUserIsOwner(ctx, post.CreatedBy) {
+		return models.ErrNotAuthenticated
 	}
 
 	if err := s.repo.DeletePost(ctx, postID); err != nil {
