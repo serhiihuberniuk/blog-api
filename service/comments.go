@@ -13,7 +13,7 @@ func (s *Service) CreateComment(ctx context.Context, payload models.CreateCommen
 	comment := &models.Comment{
 		ID:        uuid.New().String(),
 		Content:   payload.Content,
-		CreatedBy: payload.AuthorID,
+		CreatedBy: s.currentUserInformationProvider.GetCurrentUserID(ctx),
 		CreatedAt: time.Now(),
 		PostID:    payload.PostID,
 	}
@@ -40,7 +40,11 @@ func (s *Service) GetComment(ctx context.Context, commentID string) (*models.Com
 func (s *Service) UpdateComment(ctx context.Context, payload models.UpdateCommentPayload) error {
 	comment, err := s.GetComment(ctx, payload.CommentID)
 	if err != nil {
-		return fmt.Errorf("cannot update comment: %w", err)
+		return fmt.Errorf("cannot get comment: %w", err)
+	}
+
+	if !s.checkCurrentUserIsOwner(ctx, comment.CreatedBy) {
+		return models.ErrNotAuthenticated
 	}
 
 	comment.Content = payload.Content
@@ -57,6 +61,15 @@ func (s *Service) UpdateComment(ctx context.Context, payload models.UpdateCommen
 }
 
 func (s *Service) DeleteComment(ctx context.Context, commentID string) error {
+	comment, err := s.GetComment(ctx, commentID)
+	if err != nil {
+		return fmt.Errorf("cannot get comment: %w", err)
+	}
+
+	if !s.checkCurrentUserIsOwner(ctx, comment.CreatedBy) {
+		return models.ErrNotAuthenticated
+	}
+
 	if err := s.repo.DeleteComment(ctx, commentID); err != nil {
 		return fmt.Errorf("cannot delete comment: %w", err)
 	}

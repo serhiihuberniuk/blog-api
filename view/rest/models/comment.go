@@ -5,9 +5,8 @@ import (
 )
 
 type CreateCommentRequest struct {
-	Content  string `json:"content"`
-	PostID   string `json:"postId"`
-	AuthorID string `json:"authorId"`
+	Content string `json:"content"`
+	PostID  string `json:"postId"`
 }
 
 type GetCommentResponse struct {

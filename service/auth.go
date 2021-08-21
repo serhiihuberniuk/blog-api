@@ -13,7 +13,7 @@ import (
 
 type tokenClaims struct {
 	jwt.StandardClaims
-	userID string
+	UserID string `json:"userId"`
 }
 
 func (s *Service) Login(ctx context.Context, payload models.LoginPayload) (string, error) {
@@ -30,12 +30,12 @@ func (s *Service) Login(ctx context.Context, payload models.LoginPayload) (strin
 		return "", fmt.Errorf("error occurred while checking the password, %w", err)
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, tokenClaims{
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, &tokenClaims{
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Minute * 10).Unix(),
 			IssuedAt:  time.Now().Unix(),
 		},
-		userID: user.ID,
+		UserID: user.ID,
 	})
 
 	tokenString, err := token.SignedString(s.privateKey)
@@ -44,4 +44,32 @@ func (s *Service) Login(ctx context.Context, payload models.LoginPayload) (strin
 	}
 
 	return tokenString, nil
+}
+
+func (s *Service) ParseToken(tokenString string) (string, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &tokenClaims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+			return nil, errors.New("invalid signing method")
+		}
+
+		return s.privateKey.Public(), nil
+	})
+	if err != nil {
+		return "", fmt.Errorf("error occurred while parsing token: %w", err)
+	}
+
+	claims, ok := token.Claims.(*tokenClaims)
+	if !ok {
+		return "", fmt.Errorf("token claims are not of type *tokenClaims; %w", models.ErrNotAuthenticated)
+	}
+
+	return claims.UserID, nil
+}
+
+func (s *Service) checkCurrentUserIsOwner(ctx context.Context, id string) bool {
+	if id == s.currentUserInformationProvider.GetCurrentUserID(ctx) {
+		return true
+	}
+
+	return false
 }

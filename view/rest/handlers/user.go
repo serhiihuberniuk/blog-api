@@ -70,8 +70,6 @@ func (h *Handlers) GetUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) UpdateUser(w http.ResponseWriter, r *http.Request) {
-	userID := mux.Vars(r)["id"]
-
 	var in viewmodels.UpdateUserRequest
 
 	if !decodeFromJson(w, r, &in) {
@@ -79,9 +77,9 @@ func (h *Handlers) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err := h.service.UpdateUser(r.Context(), models.UpdateUserPayload{
-		UserID: userID,
-		Name:   in.Name,
-		Email:  in.Email,
+		Name:     in.Name,
+		Email:    in.Email,
+		Password: in.Password,
 	})
 	if err != nil {
 		errorStatusHttp(w, err)
@@ -89,7 +87,7 @@ func (h *Handlers) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.service.GetUser(r.Context(), userID)
+	user, err := h.service.GetUser(r.Context(), h.authMiddleware.GetCurrentUserID(r.Context()))
 	if err != nil {
 		errorStatusHttp(w, err)
 
@@ -110,9 +108,7 @@ func (h *Handlers) UpdateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) DeleteUser(w http.ResponseWriter, r *http.Request) {
-	userID := mux.Vars(r)["id"]
-
-	if err := h.service.DeleteUser(r.Context(), userID); err != nil {
+	if err := h.service.DeleteUser(r.Context()); err != nil {
 		errorStatusHttp(w, err)
 
 		return

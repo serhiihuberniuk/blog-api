@@ -7,11 +7,17 @@ import (
 
 	"github.com/golang-jwt/jwt"
 	"github.com/serhiihuberniuk/blog-api/models"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Service struct {
-	repo       repository
-	privateKey *rsa.PrivateKey
+	repo                           repository
+	privateKey                     *rsa.PrivateKey
+	currentUserInformationProvider currentUserInformationProvider
+}
+
+type currentUserInformationProvider interface {
+	GetCurrentUserID(ctx context.Context) string
 }
 
 type repository interface {
@@ -37,14 +43,24 @@ type repository interface {
 		filter models.FilterComments, sort models.SortComments) ([]*models.Comment, error)
 }
 
-func NewService(r repository, privateKey []byte) (*Service, error) {
+func NewService(r repository, privateKey []byte, p currentUserInformationProvider) (*Service, error) {
 	privateRSA, err := jwt.ParseRSAPrivateKeyFromPEM(privateKey)
 	if err != nil {
 		return nil, fmt.Errorf("error occurred while parsing private key: %w", err)
 	}
 
 	return &Service{
-		repo:       r,
-		privateKey: privateRSA,
+		repo:                           r,
+		privateKey:                     privateRSA,
+		currentUserInformationProvider: p,
 	}, nil
+}
+
+func generateHashPassword(password string) (string, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", fmt.Errorf("error occurred while hashing the password, %w", err)
+	}
+
+	return string(hashedPassword), nil
 }

@@ -28,9 +28,8 @@ func (h *Handlers) CreateComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	commentID, err := h.service.CreateComment(r.Context(), models.CreateCommentPayload{
-		Content:  in.Content,
-		PostID:   in.PostID,
-		AuthorID: in.AuthorID,
+		Content: in.Content,
+		PostID:  in.PostID,
 	})
 	if err != nil {
 		errorStatusHttp(w, err)
