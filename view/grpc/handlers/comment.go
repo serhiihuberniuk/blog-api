@@ -24,9 +24,8 @@ var (
 func (h *Handlers) CreateComment(ctx context.Context,
 	request *pb.CreateCommentRequest) (*pb.CreateCommentResponse, error) {
 	commentID, err := h.service.CreateComment(ctx, models.CreateCommentPayload{
-		Content:  request.GetContent(),
-		AuthorID: request.GetCreatedBy(),
-		PostID:   request.GetPostId(),
+		Content: request.GetContent(),
+		PostID:  request.GetPostId(),
 	})
 	if err != nil {
 		return nil, errorStatusGrpc(err)
