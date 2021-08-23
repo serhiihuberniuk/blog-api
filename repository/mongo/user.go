@@ -45,6 +45,7 @@ func (r *Repository) UpdateUser(ctx context.Context, user *models.User) error {
 			"$set": bson.M{
 				"name":       user.Name,
 				"email":      user.Email,
+				"password":   user.Password,
 				"updated_at": user.UpdatedAt,
 			},
 		})
