@@ -38,9 +38,9 @@ func (r *Repository) GetUser(ctx context.Context, userID string) (*models.User, 
 }
 
 func (r *Repository) UpdateUser(ctx context.Context, user *models.User) error {
-	const sql = "UPDATE users SET name=$1, email=$2, updated_at=$3 WHERE id=$4"
+	const sql = "UPDATE users SET name=$1, email=$2, password=$3, updated_at=$4 WHERE id=$5"
 
-	result, err := r.Db.Exec(ctx, sql, user.Name, user.Email, user.UpdatedAt, user.ID)
+	result, err := r.Db.Exec(ctx, sql, user.Name, user.Email, user.Password, user.UpdatedAt, user.ID)
 	if err != nil {
 		return fmt.Errorf("cannot update user: %w", err)
 	}
