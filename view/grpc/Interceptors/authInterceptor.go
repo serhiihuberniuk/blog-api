@@ -3,6 +3,8 @@ package interceptors
 import (
 	"context"
 	"errors"
+	"fmt"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -17,6 +19,23 @@ var publicAccess = map[string]bool{
 type AuthInterceptor struct {
 	service                        service
 	currentUserInformationProvider currentUserInformationProvider
+}
+
+type wrappedServerStream struct {
+	grpc.ServerStream
+	wrappedContext context.Context
+}
+
+func (w *wrappedServerStream) Context() context.Context {
+	return w.wrappedContext
+}
+
+func wrapServerStream(stream grpc.ServerStream) *wrappedServerStream {
+	if existing, ok := stream.(*wrappedServerStream); ok {
+		return existing
+	}
+
+	return &wrappedServerStream{ServerStream: stream, wrappedContext: stream.Context()}
 }
 
 func NewAuthInterceptor(s service, p currentUserInformationProvider) *AuthInterceptor {
@@ -43,19 +62,7 @@ func (i *AuthInterceptor) UnaryAuthInterceptor(ctx context.Context,
 		return handler(ctx, req)
 	}
 
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return nil, errors.New("metadata is empty")
-	}
-
-	values := md["authorization"]
-	if len(values) == 0 {
-		return nil, errors.New("authorization token is not provided")
-	}
-
-	token := values[0]
-
-	userID, err := i.service.ParseToken(token)
+	userID, err := i.auth(ctx)
 	if err != nil {
 		return nil, status.Error(codes.Unauthenticated, codes.Unauthenticated.String())
 	}
@@ -63,4 +70,42 @@ func (i *AuthInterceptor) UnaryAuthInterceptor(ctx context.Context,
 	ctx = i.currentUserInformationProvider.SetCurrentUserID(ctx, userID)
 
 	return handler(ctx, req)
+}
+
+func (i *AuthInterceptor) StreamAuthInterceptor(srv interface{},
+	ss grpc.ServerStream,
+	_ *grpc.StreamServerInfo,
+	handler grpc.StreamHandler) error {
+
+	userID, err := i.auth(ss.Context())
+	if err != nil {
+		return status.Error(codes.Unauthenticated, codes.Unauthenticated.String())
+	}
+
+	wrappedServerStream := wrapServerStream(ss)
+	wrappedServerStream.wrappedContext = i.currentUserInformationProvider.
+		SetCurrentUserID(wrappedServerStream.wrappedContext, userID)
+
+	return handler(srv, wrappedServerStream)
+}
+
+func (i *AuthInterceptor) auth(ctx context.Context) (string, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return "", errors.New("metadata is empty")
+	}
+
+	values := md["authorization"]
+	if len(values) == 0 {
+		return "", errors.New("authorization token is not provided")
+	}
+
+	token := values[0]
+
+	userID, err := i.service.ParseToken(token)
+	if err != nil {
+		return "", fmt.Errorf("cannot parse token: %w", err)
+	}
+
+	return userID, nil
 }

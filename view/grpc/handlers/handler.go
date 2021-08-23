@@ -3,6 +3,7 @@ package grpcHandlers
 import (
 	"context"
 	"errors"
+
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/serhiihuberniuk/blog-api/models"
 	"github.com/serhiihuberniuk/blog-api/view/grpc/pb"
@@ -52,7 +53,7 @@ func errorStatusGrpc(err error) error {
 }
 
 type Handlers struct {
-	service
+	service                        service
 	currentUserInformationProvider currentUserInformationProvider
 }
 

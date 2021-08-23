@@ -2,10 +2,6 @@ package main
 
 import (
 	"context"
-	interceptors "github.com/serhiihuberniuk/blog-api/view/grpc/Interceptors"
-	grpcHandlers "github.com/serhiihuberniuk/blog-api/view/grpc/handlers"
-	"github.com/serhiihuberniuk/blog-api/view/grpc/pb"
-	"google.golang.org/grpc"
 	"io/ioutil"
 	"log"
 	"net"
@@ -13,6 +9,11 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+
+	interceptors "github.com/serhiihuberniuk/blog-api/view/grpc/Interceptors"
+	grpcHandlers "github.com/serhiihuberniuk/blog-api/view/grpc/handlers"
+	"github.com/serhiihuberniuk/blog-api/view/grpc/pb"
+	"google.golang.org/grpc"
 
 	"github.com/serhiihuberniuk/blog-api/view/rest/middlewares"
 
@@ -102,7 +103,8 @@ func main() {
 	address := ":" + config.GrpcPort
 	authInterceptor := interceptors.NewAuthInterceptor(serv, provider)
 	grpcServer := grpc.NewServer(
-		grpc.UnaryInterceptor(authInterceptor.UnaryAuthInterceptor))
+		grpc.UnaryInterceptor(authInterceptor.UnaryAuthInterceptor),
+		grpc.StreamInterceptor(authInterceptor.StreamAuthInterceptor))
 	grpcHandler := grpcHandlers.NewGrpcHandlers(serv, provider)
 
 	go func() {
