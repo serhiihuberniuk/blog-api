@@ -4,10 +4,16 @@ import (
 	"context"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+
+	interceptors "github.com/serhiihuberniuk/blog-api/view/grpc/Interceptors"
+	grpcHandlers "github.com/serhiihuberniuk/blog-api/view/grpc/handlers"
+	"github.com/serhiihuberniuk/blog-api/view/grpc/pb"
+	"google.golang.org/grpc"
 
 	"github.com/serhiihuberniuk/blog-api/view/rest/middlewares"
 
@@ -93,28 +99,31 @@ func main() {
 	log.Println(" Rest server is listening on ", restServer.Addr)
 
 	// gRPC server
+
+	address := ":" + config.GrpcPort
+	authInterceptor := interceptors.NewAuthInterceptor(serv, provider)
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(authInterceptor.UnaryAuthInterceptor),
+		grpc.StreamInterceptor(authInterceptor.StreamAuthInterceptor))
+	grpcHandler := grpcHandlers.NewGrpcHandlers(serv, provider)
+
+	go func() {
+		lis, err := net.Listen("tcp", address)
+		if err != nil {
+			errs <- err
+
+			return
+		}
+
+		pb.RegisterBlogApiServer(grpcServer, grpcHandler)
+
+		if err := grpcServer.Serve(lis); err != nil {
+			errs <- err
+		}
+	}()
+
+	log.Println("gRPC server is listening on ", address)
 	/*
-		address := ":" + config.GrpcPort
-		grpcServer := grpc.NewServer()
-		grpcHandler := grpcHandlers.NewGrpcHandlers(serv)
-
-		go func() {
-			lis, err := net.Listen("tcp", address)
-			if err != nil {
-				errs <- err
-
-				return
-			}
-
-			pb.RegisterBlogApiServer(grpcServer, grpcHandler)
-
-			if err := grpcServer.Serve(lis); err != nil {
-				errs <- err
-			}
-		}()
-
-		log.Println("gRPC server is listening on ", address)
-
 		// GraphQl server
 		resolver := graph.NewResolver(serv)
 		srvGraphQl := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: resolver}))
@@ -159,8 +168,8 @@ func main() {
 	if err := healthServer.Shutdown(ctx); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("error while shutting down: %v", err)
 	}
-	/*
-		grpcServer.GracefulStop()
-	*/
+
+	grpcServer.GracefulStop()
+
 	log.Print("Done")
 }

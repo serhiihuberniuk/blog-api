@@ -60,9 +60,9 @@ message GetUserResponse {
 }
 
 message UpdateUserRequest {
-  string id = 1;
-  string name = 2;
-  string email = 3;
+  string name = 1;
+  string email = 2;
+  string password = 3;
 }
 
 message UpdateUserResponse {
@@ -73,17 +73,14 @@ message UpdateUserResponse {
   google.protobuf.Timestamp updated_at = 5;
 }
 
-message DeleteUserRequest {
-  string id = 1;
-}
+message DeleteUserRequest {}
 
 message DeleteUserResponse {}
 
 message CreatePostRequest {
   string title = 1;
   string description = 2;
-  string created_by = 3;
-  repeated string tags = 4;
+  repeated string tags = 3;
 }
 
 message CreatePostResponse {
@@ -168,8 +165,7 @@ message ListPostsResponse {
 
 message CreateCommentRequest {
   string content = 1;
-  string created_by = 2;
-  string post_id = 3;
+  string post_id = 2;
 }
 
 message CreateCommentResponse {

@@ -49,15 +49,15 @@ func (h *Handlers) GetUser(ctx context.Context, request *pb.GetUserRequest) (*pb
 
 func (h *Handlers) UpdateUser(ctx context.Context, request *pb.UpdateUserRequest) (*pb.UpdateUserResponse, error) {
 	err := h.service.UpdateUser(ctx, models.UpdateUserPayload{
-		UserID: request.GetId(),
-		Name:   request.GetName(),
-		Email:  request.GetEmail(),
+		Name:     request.GetName(),
+		Email:    request.GetEmail(),
+		Password: request.GetPassword(),
 	})
 	if err != nil {
 		return nil, errorStatusGrpc(err)
 	}
 
-	user, err := h.service.GetUser(ctx, request.GetId())
+	user, err := h.service.GetUser(ctx, h.currentUserInformationProvider.GetCurrentUserID(ctx))
 	if err != nil {
 		return nil, errorStatusGrpc(err)
 	}
@@ -71,8 +71,8 @@ func (h *Handlers) UpdateUser(ctx context.Context, request *pb.UpdateUserRequest
 	}, nil
 }
 
-func (h *Handlers) DeleteUser(ctx context.Context, request *pb.DeleteUserRequest) (*pb.DeleteUserResponse, error) {
-	if err := h.service.DeleteUser(ctx, request.GetId()); err != nil {
+func (h *Handlers) DeleteUser(ctx context.Context, _ *pb.DeleteUserRequest) (*pb.DeleteUserResponse, error) {
+	if err := h.service.DeleteUser(ctx); err != nil {
 		return nil, errorStatusGrpc(err)
 	}
 

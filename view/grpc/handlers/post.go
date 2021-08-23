@@ -27,7 +27,6 @@ func (h *Handlers) CreatePost(ctx context.Context, request *pb.CreatePostRequest
 	postID, err := h.service.CreatePost(ctx, models.CreatePostPayload{
 		Title:       request.GetTitle(),
 		Description: request.GetDescription(),
-		AuthorID:    request.GetCreatedBy(),
 		Tags:        request.GetTags(),
 	})
 	if err != nil {
