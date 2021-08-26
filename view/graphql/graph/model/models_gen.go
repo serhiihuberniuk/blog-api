@@ -19,16 +19,14 @@ type Comment struct {
 }
 
 type CreateCommentInput struct {
-	Content   string `json:"content"`
-	CreatedBy string `json:"createdBy"`
-	PostID    string `json:"postId"`
+	Content string `json:"content"`
+	PostID  string `json:"postId"`
 }
 
 type CreatePostInput struct {
 	Title       string   `json:"title"`
 	Description string   `json:"description"`
 	Tags        []string `json:"tags"`
-	CreatedBy   string   `json:"createdBy"`
 }
 
 type CreateUserInput struct {
@@ -88,8 +86,9 @@ type UpdatePostInput struct {
 }
 
 type UpdateUserInput struct {
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 type User struct {

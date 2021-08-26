@@ -10,20 +10,23 @@ import (
 	"os/signal"
 	"syscall"
 
-	interceptors "github.com/serhiihuberniuk/blog-api/view/grpc/Interceptors"
-	grpcHandlers "github.com/serhiihuberniuk/blog-api/view/grpc/handlers"
-	"github.com/serhiihuberniuk/blog-api/view/grpc/pb"
-	"google.golang.org/grpc"
-
-	"github.com/serhiihuberniuk/blog-api/view/rest/middlewares"
-
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/rs/cors"
 	"github.com/serhiihuberniuk/blog-api/configs"
 	"github.com/serhiihuberniuk/blog-api/health"
 	"github.com/serhiihuberniuk/blog-api/providers"
 	repository "github.com/serhiihuberniuk/blog-api/repository/postgresql"
 	"github.com/serhiihuberniuk/blog-api/service"
+	"github.com/serhiihuberniuk/blog-api/view/graphql/graph"
+	"github.com/serhiihuberniuk/blog-api/view/graphql/graph/generated"
+	graphqlMiddlewares "github.com/serhiihuberniuk/blog-api/view/graphql/middlewares"
+	interceptors "github.com/serhiihuberniuk/blog-api/view/grpc/Interceptors"
+	grpcHandlers "github.com/serhiihuberniuk/blog-api/view/grpc/handlers"
+	"github.com/serhiihuberniuk/blog-api/view/grpc/pb"
 	"github.com/serhiihuberniuk/blog-api/view/rest/handlers"
+	"github.com/serhiihuberniuk/blog-api/view/rest/middlewares"
+	"google.golang.org/grpc"
 )
 
 func main() {
@@ -123,27 +126,30 @@ func main() {
 	}()
 
 	log.Println("gRPC server is listening on ", address)
-	/*
-		// GraphQl server
-		resolver := graph.NewResolver(serv)
-		srvGraphQl := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: resolver}))
 
-		http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-		http.Handle("/query", srvGraphQl)
+	// GraphQl server
+	resolverConfig := graph.NewResolverConfig(serv, provider)
 
-		graphqlServer := http.Server{
-			Addr:    ":" + config.GraphqlPort,
-			Handler: srvGraphQl,
+	graphMiddleware := graphqlMiddlewares.NewAuthMiddleware(serv, provider).Auth
+
+	srvGraphQl := handler.NewDefaultServer(generated.NewExecutableSchema(resolverConfig))
+
+	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
+	http.Handle("/query", graphMiddleware(srvGraphQl))
+
+	graphqlServer := http.Server{
+		Addr:    ":" + config.GraphqlPort,
+		Handler: graphMiddleware(srvGraphQl),
+	}
+
+	go func() {
+		if err := http.ListenAndServe(graphqlServer.Addr, graphqlServer.Handler); err != nil {
+			errs <- err
 		}
+	}()
 
-		go func() {
-			if err := http.ListenAndServe(graphqlServer.Addr, nil); err != nil {
-				errs <- err
-			}
-		}()
+	log.Printf("GraphQl server is listening on: %s with GraphQl playground", graphqlServer.Addr)
 
-		log.Printf("GraphQl server is listening on: %s with GraphQl playground", graphqlServer.Addr)
-	*/
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
@@ -160,11 +166,11 @@ func main() {
 	if err := restServer.Shutdown(ctx); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("error while shutting down: %v", err)
 	}
-	/*
-		if err := graphqlServer.Shutdown(ctx); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("error while shutting down: %v", err)
-		}
-	*/
+
+	if err := graphqlServer.Shutdown(ctx); err != nil && err != http.ErrServerClosed {
+		log.Fatalf("error while shutting down: %v", err)
+	}
+
 	if err := healthServer.Shutdown(ctx); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("error while shutting down: %v", err)
 	}
