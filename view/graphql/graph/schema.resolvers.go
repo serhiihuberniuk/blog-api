@@ -60,17 +60,17 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUse
 	return user, nil
 }
 
-func (r *mutationResolver) UpdateUser(ctx context.Context, id string, input model.UpdateUserInput) (*model.User, error) {
+func (r *mutationResolver) UpdateUser(ctx context.Context, input model.UpdateUserInput) (*model.User, error) {
 	err := r.service.UpdateUser(ctx, models.UpdateUserPayload{
-		UserID: id,
-		Name:   input.Name,
-		Email:  input.Email,
+		Name:     input.Name,
+		Email:    input.Email,
+		Password: input.Password,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("cannot update user: %w", err)
 	}
 
-	user, err := r.Query().GetUser(ctx, id)
+	user, err := r.Query().GetUser(ctx, r.currentUserInformationProvider.GetCurrentUserID(ctx))
 	if err != nil {
 		return nil, fmt.Errorf("cannot get updated user: %w", err)
 	}
@@ -78,8 +78,8 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, id string, input mode
 	return user, nil
 }
 
-func (r *mutationResolver) DeleteUser(ctx context.Context, id string) (bool, error) {
-	if err := r.service.DeleteUser(ctx, id); err != nil {
+func (r *mutationResolver) DeleteUser(ctx context.Context) (bool, error) {
+	if err := r.service.DeleteUser(ctx); err != nil {
 		return false, fmt.Errorf("cannot dalete user: %w", err)
 	}
 
@@ -90,7 +90,6 @@ func (r *mutationResolver) CreatePost(ctx context.Context, input model.CreatePos
 	postId, err := r.service.CreatePost(ctx, models.CreatePostPayload{
 		Title:       input.Title,
 		Description: input.Description,
-		AuthorID:    input.CreatedBy,
 		Tags:        input.Tags,
 	})
 	if err != nil {
@@ -134,9 +133,8 @@ func (r *mutationResolver) DeletePost(ctx context.Context, id string) (bool, err
 
 func (r *mutationResolver) CreateComment(ctx context.Context, input model.CreateCommentInput) (*model.Comment, error) {
 	commentID, err := r.service.CreateComment(ctx, models.CreateCommentPayload{
-		Content:  input.Content,
-		PostID:   input.PostID,
-		AuthorID: input.CreatedBy,
+		Content: input.Content,
+		PostID:  input.PostID,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("cannot create comment: %w", err)

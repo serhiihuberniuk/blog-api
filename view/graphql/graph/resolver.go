@@ -3,7 +3,9 @@ package graph
 import (
 	"context"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/serhiihuberniuk/blog-api/models"
+	"github.com/serhiihuberniuk/blog-api/view/graphql/graph/generated"
 	"github.com/serhiihuberniuk/blog-api/view/graphql/graph/model"
 )
 
@@ -35,7 +37,12 @@ var (
 )
 
 type Resolver struct {
-	service
+	service                        service
+	currentUserInformationProvider currentUserInformationProvider
+}
+
+type currentUserInformationProvider interface {
+	GetCurrentUserID(ctx context.Context) string
 }
 
 func getPaginationParams(paginationInput *model.PaginationInput) models.Pagination {
@@ -64,7 +71,7 @@ type service interface {
 	CreateUser(ctx context.Context, payload models.CreateUserPayload) (string, error)
 	GetUser(ctx context.Context, userID string) (*models.User, error)
 	UpdateUser(ctx context.Context, payload models.UpdateUserPayload) error
-	DeleteUser(ctx context.Context, userID string) error
+	DeleteUser(ctx context.Context) error
 
 	CreatePost(ctx context.Context, payload models.CreatePostPayload) (string, error)
 	GetPost(ctx context.Context, postID string) (*models.Post, error)
@@ -81,8 +88,25 @@ type service interface {
 		filter models.FilterComments, sort models.SortComments) ([]*models.Comment, error)
 }
 
-func NewResolver(s service) *Resolver {
-	return &Resolver{
-		s,
+func NewResolverConfig(s service, p currentUserInformationProvider) generated.Config {
+	r := &Resolver{
+		service:                        s,
+		currentUserInformationProvider: p,
 	}
+
+	resolverConfig := generated.Config{
+		Resolvers: r,
+	}
+
+	resolverConfig.Directives.IsAuthenticated = func(ctx context.Context, obj interface{},
+		next graphql.Resolver) (res interface{}, err error) {
+		ctxUserID := r.currentUserInformationProvider.GetCurrentUserID(ctx)
+		if ctxUserID != "" {
+			return next(ctx)
+		}
+
+		return nil, models.ErrNotAuthenticated
+	}
+
+	return resolverConfig
 }

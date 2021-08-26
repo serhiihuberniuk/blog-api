@@ -17,5 +17,10 @@ func (p *CurrentUserInformationProvider) SetCurrentUserID(ctx context.Context, u
 }
 
 func (p *CurrentUserInformationProvider) GetCurrentUserID(ctx context.Context) string {
-	return ctx.Value(userIdKey).(string)
+	userID := ctx.Value(userIdKey)
+	if userID == nil {
+		return ""
+	}
+
+	return userID.(string)
 }
