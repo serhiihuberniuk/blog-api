@@ -57,7 +57,6 @@ func (i *AuthInterceptor) UnaryAuthInterceptor(ctx context.Context,
 	req interface{},
 	info *grpc.UnaryServerInfo,
 	handler grpc.UnaryHandler) (resp interface{}, err error) {
-
 	if publicAccess[info.FullMethod] {
 		return handler(ctx, req)
 	}
@@ -76,7 +75,6 @@ func (i *AuthInterceptor) StreamAuthInterceptor(srv interface{},
 	ss grpc.ServerStream,
 	_ *grpc.StreamServerInfo,
 	handler grpc.StreamHandler) error {
-
 	userID, err := i.auth(ss.Context())
 	if err != nil {
 		return status.Error(codes.Unauthenticated, codes.Unauthenticated.String())
