@@ -13,11 +13,9 @@ require (
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.8.0
 	github.com/jackc/pgx/v4 v4.11.0
-	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/rs/cors v1.8.0
 	github.com/spf13/viper v1.8.1
-	github.com/stretchr/testify v1.7.0 // indirect
 	github.com/vektah/gqlparser/v2 v2.1.0
 	go.mongodb.org/mongo-driver v1.5.4
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
