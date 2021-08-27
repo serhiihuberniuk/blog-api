@@ -51,12 +51,14 @@ func main() {
 		log.Fatalf("cannot read Private Key from file: %v", err)
 	}
 
-	provider := providers.NewCurrentUserInformationProvider()
+	userInfoProvider := providers.NewCurrentUserInformationProvider()
 
-	serv, err := service.NewService(repo, privateKey, provider)
+	serv, err := service.NewService(repo, privateKey, userInfoProvider)
 	if err != nil {
 		log.Fatalf("error occurred while creating service: %v", err)
 	}
+
+	authMiddlewareProvider := providers.NewAuthInfoProvider(serv, userInfoProvider)
 
 	errs := make(chan error)
 
@@ -77,8 +79,8 @@ func main() {
 
 	log.Println(" Health check server is listening on ", healthServer.Addr)
 
-	middleware := middlewares.NewAuthMiddleware(serv, provider)
-	handlerRest := handlers.NewRestHandlers(serv, middleware)
+	middleware := middlewares.NewAuthMiddleware(authMiddlewareProvider)
+	handlerRest := handlers.NewRestHandlers(serv, middleware, userInfoProvider)
 
 	restServer := http.Server{
 		Addr:    ":" + config.HttpPort,
@@ -104,11 +106,11 @@ func main() {
 	// gRPC server
 
 	address := ":" + config.GrpcPort
-	authInterceptor := interceptors.NewAuthInterceptor(serv, provider)
+	authInterceptor := interceptors.NewAuthInterceptor(serv, userInfoProvider)
 	grpcServer := grpc.NewServer(
 		grpc.UnaryInterceptor(authInterceptor.UnaryAuthInterceptor),
 		grpc.StreamInterceptor(authInterceptor.StreamAuthInterceptor))
-	grpcHandler := grpcHandlers.NewGrpcHandlers(serv, provider)
+	grpcHandler := grpcHandlers.NewGrpcHandlers(serv, userInfoProvider)
 
 	go func() {
 		lis, err := net.Listen("tcp", address)
@@ -128,9 +130,9 @@ func main() {
 	log.Println("gRPC server is listening on ", address)
 
 	// GraphQl server
-	resolverConfig := graph.NewResolverConfig(serv, provider)
+	resolverConfig := graph.NewResolverConfig(serv, userInfoProvider)
 
-	graphMiddleware := graphqlMiddlewares.NewAuthMiddleware(serv, provider).Auth
+	graphMiddleware := graphqlMiddlewares.NewAuthMiddleware(authMiddlewareProvider).Auth
 
 	srvGraphQl := handler.NewDefaultServer(generated.NewExecutableSchema(resolverConfig))
 

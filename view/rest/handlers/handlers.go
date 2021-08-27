@@ -137,17 +137,22 @@ type service interface {
 
 type authMiddleware interface {
 	Auth(next http.HandlerFunc) http.HandlerFunc
+}
+
+type currentUserInformationProvider interface {
 	GetCurrentUserID(ctx context.Context) string
 }
 
 type Handlers struct {
-	service        service
-	authMiddleware authMiddleware
+	service                        service
+	authMiddleware                 authMiddleware
+	currentUserInformationProvider currentUserInformationProvider
 }
 
-func NewRestHandlers(s service, m authMiddleware) *Handlers {
+func NewRestHandlers(s service, m authMiddleware, p currentUserInformationProvider) *Handlers {
 	return &Handlers{
-		service:        s,
-		authMiddleware: m,
+		service:                        s,
+		authMiddleware:                 m,
+		currentUserInformationProvider: p,
 	}
 }
