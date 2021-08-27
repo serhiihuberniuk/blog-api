@@ -1,4 +1,4 @@
-package middlewares
+package graphqlMiddlewares
 
 import (
 	"context"
@@ -19,15 +19,15 @@ type authMiddlewareProvider interface {
 	BearerAuthMiddleware(r *http.Request) (context.Context, error)
 }
 
-func (m *AuthMiddleware) Auth(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-
+func (m *AuthMiddleware) Auth(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx, err := m.authMiddlewareProvider.BearerAuthMiddleware(r)
 		if err != nil {
-			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			next.ServeHTTP(w, r)
+
 			return
 		}
 
-		next(w, r.WithContext(ctx))
-	}
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
