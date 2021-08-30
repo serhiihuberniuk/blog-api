@@ -2,21 +2,13 @@ package models
 
 import (
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
-var (
-	requiredErrMessage = "cannot be blank"
-	lengthErrMessage   = "the length must be between"
-	isMailErrMessage   = "must be a valid email address"
-)
-
-func TestValidate(t *testing.T) {
+func TestUser_Validate(t *testing.T) {
 	testCases := []struct {
 		name       string
 		in         User
-		errMessage *string
+		errMessage string
 	}{
 		{
 			name: "Validation passed",
@@ -25,7 +17,7 @@ func TestValidate(t *testing.T) {
 				Email:    "email@mail.com",
 				Password: "password",
 			},
-			errMessage: nil,
+			errMessage: "",
 		},
 		{
 			name: "Name field is empty",
@@ -33,7 +25,7 @@ func TestValidate(t *testing.T) {
 				Email:    "email@mail.com",
 				Password: "password",
 			},
-			errMessage: &requiredErrMessage,
+			errMessage: requiredErrMessage,
 		},
 		{
 			name: "Name field is too short",
@@ -42,7 +34,7 @@ func TestValidate(t *testing.T) {
 				Email:    "email@mail.com",
 				Password: "password",
 			},
-			errMessage: &lengthErrMessage,
+			errMessage: lengthErrMessage,
 		},
 		{
 			name: "Name field is too long",
@@ -51,7 +43,7 @@ func TestValidate(t *testing.T) {
 				Email:    "email@mail.com",
 				Password: "password",
 			},
-			errMessage: &lengthErrMessage,
+			errMessage: lengthErrMessage,
 		},
 		{
 			name: "Email field is empty",
@@ -59,7 +51,7 @@ func TestValidate(t *testing.T) {
 				Name:     "name",
 				Password: "password",
 			},
-			errMessage: &requiredErrMessage,
+			errMessage: requiredErrMessage,
 		},
 		{
 			name: "Email field is too short",
@@ -68,7 +60,7 @@ func TestValidate(t *testing.T) {
 				Email:    "m@m.com",
 				Password: "password",
 			},
-			errMessage: &lengthErrMessage,
+			errMessage: lengthErrMessage,
 		},
 		{
 			name: "Email field is too long",
@@ -77,7 +69,7 @@ func TestValidate(t *testing.T) {
 				Email:    "sssssssssssss@ssssssssssssssmail.sssssssssssssss",
 				Password: "password",
 			},
-			errMessage: &lengthErrMessage,
+			errMessage: lengthErrMessage,
 		},
 		{
 			name: "Email field is not an email",
@@ -86,7 +78,7 @@ func TestValidate(t *testing.T) {
 				Email:    "not an email address",
 				Password: "password",
 			},
-			errMessage: &isMailErrMessage,
+			errMessage: isMailErrMessage,
 		},
 		{
 			name: "Password field is empty",
@@ -94,7 +86,7 @@ func TestValidate(t *testing.T) {
 				Name:  "name",
 				Email: "email@mail.com",
 			},
-			errMessage: &requiredErrMessage,
+			errMessage: requiredErrMessage,
 		},
 		{
 			name: "Password is too short",
@@ -103,7 +95,7 @@ func TestValidate(t *testing.T) {
 				Email:    "email@mail.com",
 				Password: "short",
 			},
-			errMessage: &lengthErrMessage,
+			errMessage: lengthErrMessage,
 		},
 		{
 			name: "Password is too long",
@@ -112,7 +104,7 @@ func TestValidate(t *testing.T) {
 				Email:    "email@mail.com",
 				Password: "passwordpasswordpasswordpassword",
 			},
-			errMessage: &lengthErrMessage,
+			errMessage: lengthErrMessage,
 		},
 	}
 
@@ -120,11 +112,7 @@ func TestValidate(t *testing.T) {
 
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.Validate()
-			if tc.errMessage != nil {
-				assert.Contains(t, err.Error(), *tc.errMessage)
-			} else {
-				assert.NoError(t, err)
-			}
+			checkValidateErrorMessage(t, tc.errMessage, err)
 		})
 	}
 }
