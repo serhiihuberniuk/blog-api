@@ -13,6 +13,8 @@ const (
 )
 
 func checkValidateErrorMessage(t *testing.T, errMessage string, err error) {
+	t.Helper()
+
 	if errMessage == "" {
 		assert.NoError(t, err)
 

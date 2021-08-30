@@ -5,6 +5,8 @@ import (
 )
 
 func TestPost_Validate(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name       string
 		in         Post
@@ -43,7 +45,9 @@ func TestPost_Validate(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			err := tc.in.Validate()
 			checkValidateErrorMessage(t, tc.errMessage, err)
 		})
