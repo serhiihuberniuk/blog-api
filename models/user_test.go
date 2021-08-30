@@ -3,16 +3,20 @@ package models
 import (
 	"testing"
 
-	validation "github.com/go-ozzo/ozzo-validation"
-	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/stretchr/testify/assert"
+)
+
+var (
+	requiredErrMessage = "cannot be blank"
+	lengthErrMessage   = "the length must be between"
+	isMailErrMessage   = "must be a valid email address"
 )
 
 func TestValidate(t *testing.T) {
 	testCases := []struct {
-		name    string
-		in      User
-		wantErr bool
+		name       string
+		in         User
+		errMessage *string
 	}{
 		{
 			name: "Validation passed",
@@ -21,7 +25,7 @@ func TestValidate(t *testing.T) {
 				Email:    "email@mail.com",
 				Password: "password",
 			},
-			wantErr: false,
+			errMessage: nil,
 		},
 		{
 			name: "Name field is empty",
@@ -29,16 +33,16 @@ func TestValidate(t *testing.T) {
 				Email:    "email@mail.com",
 				Password: "password",
 			},
-			wantErr: true,
+			errMessage: &requiredErrMessage,
 		},
 		{
 			name: "Name field is too short",
 			in: User{
-				Name:     "",
+				Name:     "n",
 				Email:    "email@mail.com",
 				Password: "password",
 			},
-			wantErr: true,
+			errMessage: &lengthErrMessage,
 		},
 		{
 			name: "Name field is too long",
@@ -47,7 +51,7 @@ func TestValidate(t *testing.T) {
 				Email:    "email@mail.com",
 				Password: "password",
 			},
-			wantErr: true,
+			errMessage: &lengthErrMessage,
 		},
 		{
 			name: "Email field is empty",
@@ -55,25 +59,25 @@ func TestValidate(t *testing.T) {
 				Name:     "name",
 				Password: "password",
 			},
-			wantErr: true,
+			errMessage: &requiredErrMessage,
 		},
 		{
 			name: "Email field is too short",
 			in: User{
 				Name:     "name",
-				Email:    "",
+				Email:    "m@m.com",
 				Password: "password",
 			},
-			wantErr: true,
+			errMessage: &lengthErrMessage,
 		},
 		{
 			name: "Email field is too long",
 			in: User{
-				Name:     "",
+				Name:     "name",
 				Email:    "sssssssssssss@ssssssssssssssmail.sssssssssssssss",
 				Password: "password",
 			},
-			wantErr: true,
+			errMessage: &lengthErrMessage,
 		},
 		{
 			name: "Email field is not an email",
@@ -82,7 +86,7 @@ func TestValidate(t *testing.T) {
 				Email:    "not an email address",
 				Password: "password",
 			},
-			wantErr: true,
+			errMessage: &isMailErrMessage,
 		},
 		{
 			name: "Password field is empty",
@@ -90,16 +94,16 @@ func TestValidate(t *testing.T) {
 				Name:  "name",
 				Email: "email@mail.com",
 			},
-			wantErr: true,
+			errMessage: &requiredErrMessage,
 		},
 		{
 			name: "Password is too short",
 			in: User{
 				Name:     "name",
-				Email:    "",
+				Email:    "email@mail.com",
 				Password: "short",
 			},
-			wantErr: true,
+			errMessage: &lengthErrMessage,
 		},
 		{
 			name: "Password is too long",
@@ -108,23 +112,19 @@ func TestValidate(t *testing.T) {
 				Email:    "email@mail.com",
 				Password: "passwordpasswordpasswordpassword",
 			},
-			wantErr: true,
+			errMessage: &lengthErrMessage,
 		},
 	}
 
 	for _, tc := range testCases {
-		var isError = false
-		t.Run(tc.name, func(t *testing.T) {
-			err := validation.ValidateStruct(&tc.in,
-				validation.Field(&tc.in.Name, validation.Required, validation.Length(1, maxLength)),
-				validation.Field(&tc.in.Email, validation.Required, validation.Length(1, maxLength), is.Email),
-				validation.Field(&tc.in.Password, validation.Required, validation.Length(minLengthOfPassword, maxLength)),
-			)
-			if err != nil {
-				isError = true
-			}
-			assert.Equal(t, tc.wantErr, isError)
 
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.in.Validate()
+			if tc.errMessage != nil {
+				assert.Contains(t, err.Error(), *tc.errMessage)
+			} else {
+				assert.NoError(t, err)
+			}
 		})
 	}
 }
