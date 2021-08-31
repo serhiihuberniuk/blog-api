@@ -10,6 +10,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+//go:generate mockgen -source=service.go -destination=mocks/mock.go
 type Service struct {
 	repo                           repository
 	privateKey                     *rsa.PrivateKey

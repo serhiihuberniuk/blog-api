@@ -41,7 +41,7 @@ func (s *Service) CreateUser(ctx context.Context, payload models.CreateUserPaylo
 func (s *Service) GetUser(ctx context.Context, userID string) (*models.User, error) {
 	user, err := s.repo.GetUser(ctx, userID)
 	if err != nil {
-		return nil, fmt.Errorf("cannot get user: %w", err)
+		return nil, fmt.Errorf("error occurred in repository layer: %w", err)
 	}
 
 	return user, nil
@@ -76,7 +76,7 @@ func (s *Service) UpdateUser(ctx context.Context, payload models.UpdateUserPaylo
 
 func (s *Service) DeleteUser(ctx context.Context) error {
 	if err := s.repo.DeleteUser(ctx, s.currentUserInformationProvider.GetCurrentUserID(ctx)); err != nil {
-		return fmt.Errorf("cannot delete user: %w", err)
+		return fmt.Errorf("error occurred in repository layer: %w", err)
 	}
 
 	return nil
