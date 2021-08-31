@@ -10,18 +10,19 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-//go:generate mockgen -source=service.go -destination=mocks/mock.go
 type Service struct {
-	repo                           repository
+	repo                           Repository
 	privateKey                     *rsa.PrivateKey
-	currentUserInformationProvider currentUserInformationProvider
+	currentUserInformationProvider СurrentUserInformationProvider
 }
 
-type currentUserInformationProvider interface {
+//go:generate mockgen -destination=provider_mock_test.go -package=service . CurrentUserInformationProvider
+type СurrentUserInformationProvider interface {
 	GetCurrentUserID(ctx context.Context) string
 }
 
-type repository interface {
+//go:generate mockgen -destination=repo_mock_test.go -package=service . Repository
+type Repository interface {
 	Login(ctx context.Context, email string) (*models.User, error)
 
 	CreateUser(ctx context.Context, user *models.User) error
@@ -44,7 +45,7 @@ type repository interface {
 		filter models.FilterComments, sort models.SortComments) ([]*models.Comment, error)
 }
 
-func NewService(r repository, privateKey []byte, p currentUserInformationProvider) (*Service, error) {
+func NewService(r Repository, privateKey []byte, p СurrentUserInformationProvider) (*Service, error) {
 	privateRSA, err := jwt.ParseRSAPrivateKeyFromPEM(privateKey)
 	if err != nil {
 		return nil, fmt.Errorf("error occurred while parsing private key: %w", err)

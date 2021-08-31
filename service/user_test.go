@@ -8,14 +8,13 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/serhiihuberniuk/blog-api/models"
-	mock_service "github.com/serhiihuberniuk/blog-api/service/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestService_GetUser(t *testing.T) {
 	t.Parallel()
 
-	type mockBehavior func(r *mock_service.Mockrepository, ctx context.Context, userID string)
+	type mockBehavior func(r *MockRepository, ctx context.Context, userID string, user *models.User)
 
 	user := &models.User{
 		ID:        "315b6c09-36ff-4519-8579-492f3ae2a3be",
@@ -38,8 +37,8 @@ func TestService_GetUser(t *testing.T) {
 			name:     "User is gotten",
 			inUserId: user.ID,
 			inCtx:    context.Background(),
-			mockBehavior: func(r *mock_service.Mockrepository, ctx context.Context, userID string) {
-				r.EXPECT().GetUser(context.Background(), gomock.Eq(user.ID)).
+			mockBehavior: func(r *MockRepository, ctx context.Context, userID string, user *models.User) {
+				r.EXPECT().GetUser(gomock.Eq(ctx), gomock.Eq(userID)).
 					Return(user, nil)
 			},
 			expectedUser: user,
@@ -49,8 +48,8 @@ func TestService_GetUser(t *testing.T) {
 			name:     "Error in repository layer",
 			inUserId: user.ID,
 			inCtx:    context.Background(),
-			mockBehavior: func(r *mock_service.Mockrepository, ctx context.Context, userID string) {
-				r.EXPECT().GetUser(context.Background(), gomock.Eq(user.ID)).
+			mockBehavior: func(r *MockRepository, ctx context.Context, userID string, user *models.User) {
+				r.EXPECT().GetUser(gomock.Eq(ctx), gomock.Eq(userID)).
 					Return(nil, errors.New("cannot get user"))
 			},
 			expectedUser: nil,
@@ -60,8 +59,8 @@ func TestService_GetUser(t *testing.T) {
 			name:     "User is not found",
 			inUserId: "Invalid userID",
 			inCtx:    context.Background(),
-			mockBehavior: func(r *mock_service.Mockrepository, ctx context.Context, userID string) {
-				r.EXPECT().GetUser(context.Background(), gomock.Eq("Invalid userID")).
+			mockBehavior: func(r *MockRepository, ctx context.Context, userID string, user *models.User) {
+				r.EXPECT().GetUser(gomock.Eq(ctx), gomock.Eq(userID)).
 					Return(nil, models.ErrNotFound)
 			},
 			expectedUser: nil,
@@ -76,23 +75,23 @@ func TestService_GetUser(t *testing.T) {
 			t.Parallel()
 
 			ctrl := gomock.NewController(t)
-			mockRepo := mock_service.NewMockrepository(ctrl)
+			mockRepo := NewMockRepository(ctrl)
 			service := Service{
 				repo: mockRepo,
 			}
 
-			tc.mockBehavior(mockRepo, tc.inCtx, tc.inUserId)
+			tc.mockBehavior(mockRepo, tc.inCtx, tc.inUserId, tc.expectedUser)
 
-			gottenUser, err := service.GetUser(tc.inCtx, tc.inUserId)
+			gotUser, err := service.GetUser(tc.inCtx, tc.inUserId)
 			if tc.errMessage == "" {
 				assert.NoError(t, err)
-				assert.Equal(t, tc.expectedUser, gottenUser)
+				assert.Equal(t, tc.expectedUser, gotUser)
 
 				return
 			}
 
 			assert.Contains(t, err.Error(), tc.errMessage)
-			assert.Nil(t, gottenUser)
+			assert.Nil(t, gotUser)
 		})
 	}
 }
@@ -100,53 +99,69 @@ func TestService_GetUser(t *testing.T) {
 func TestService_DeleteUser(t *testing.T) {
 	t.Parallel()
 
-	type repoMockBehavior func(r *mock_service.Mockrepository, ctx context.Context, userId string)
+	validUserId := "40d2f213-8e41-4abf-ad54-410997b19401"
+	ctxWithUserId := context.WithValue(context.Background(), "userID", validUserId)
 
-	type providerMockBehavior func(p *mock_service.MockcurrentUserInformationProvider, ctx context.Context) string
+	type repoMockBehavior func(r *MockRepository, ctx context.Context, userId string)
 
-	userID := "40d2f213-8e41-4abf-ad54-410997b19401"
-	ctxWithUserId := context.WithValue(context.Background(), "userID", userID)
+	type providerMockBehavior func(p *MockCurrentUserInformationProvider, ctx context.Context, userId string)
 
 	testCases := []struct {
-		name                 string
-		inCtx                context.Context
-		repoMockBehavior     repoMockBehavior
-		providerMockBehavior providerMockBehavior
-		errMessage           string
+		name                       string
+		inCtx                      context.Context
+		repoMockBehavior           repoMockBehavior
+		providerMockBehavior       providerMockBehavior
+		expectedUserIdFromProvider string
+		errMessage                 string
 	}{
 		{
 			name:  "User is deleted",
 			inCtx: ctxWithUserId,
-			repoMockBehavior: func(r *mock_service.Mockrepository, ctx context.Context, userId string) {
-				r.EXPECT().DeleteUser(gomock.Eq(ctxWithUserId), gomock.Eq(userID)).Return(nil)
+			repoMockBehavior: func(r *MockRepository, ctx context.Context, userId string) {
+				r.EXPECT().DeleteUser(gomock.Eq(ctx), gomock.Eq(userId)).Return(nil)
 			},
-			providerMockBehavior: func(p *mock_service.MockcurrentUserInformationProvider, ctx context.Context) string {
-				return p.EXPECT().GetCurrentUserID(gomock.Eq(ctxWithUserId)).Return(userID).String()
+			providerMockBehavior: func(p *MockCurrentUserInformationProvider, ctx context.Context, userId string) {
+				p.EXPECT().GetCurrentUserID(gomock.Eq(ctxWithUserId)).Return(userId).AnyTimes()
 			},
-			errMessage: "",
+			expectedUserIdFromProvider: validUserId,
+			errMessage:                 "",
 		},
 		{
 			name:  "Error in repository layer",
 			inCtx: ctxWithUserId,
-			repoMockBehavior: func(r *mock_service.Mockrepository, ctx context.Context, userId string) {
-				r.EXPECT().DeleteUser(gomock.Eq(ctxWithUserId), gomock.Eq(userID)).
+			repoMockBehavior: func(r *MockRepository, ctx context.Context, userId string) {
+				r.EXPECT().DeleteUser(gomock.Eq(ctx), gomock.Eq(userId)).
 					Return(errors.New("cannot delete user"))
 			},
-			providerMockBehavior: func(p *mock_service.MockcurrentUserInformationProvider, ctx context.Context) string {
-				return p.EXPECT().GetCurrentUserID(gomock.Eq(ctxWithUserId)).Return(userID).String()
+			providerMockBehavior: func(p *MockCurrentUserInformationProvider, ctx context.Context, userId string) {
+				p.EXPECT().GetCurrentUserID(gomock.Eq(ctx)).Return(userId).AnyTimes()
 			},
-			errMessage: "cannot delete user",
+			expectedUserIdFromProvider: validUserId,
+			errMessage:                 "cannot delete user",
 		},
 		{
 			name:  "User is not found",
 			inCtx: ctxWithUserId,
-			repoMockBehavior: func(r *mock_service.Mockrepository, ctx context.Context, userId string) {
-				r.EXPECT().DeleteUser(gomock.Eq(ctxWithUserId), gomock.Eq("Invalid userID")).Return(models.ErrNotFound)
+			repoMockBehavior: func(r *MockRepository, ctx context.Context, userId string) {
+				r.EXPECT().DeleteUser(gomock.Eq(ctx), gomock.Eq(userId)).Return(models.ErrNotFound)
 			},
-			providerMockBehavior: func(p *mock_service.MockcurrentUserInformationProvider, ctx context.Context) string {
-				return p.EXPECT().GetCurrentUserID(gomock.Eq(ctxWithUserId)).Return("Invalid userID").String()
+			providerMockBehavior: func(p *MockCurrentUserInformationProvider, ctx context.Context, userId string) {
+				p.EXPECT().GetCurrentUserID(gomock.Eq(ctx)).Return(userId).AnyTimes()
 			},
-			errMessage: models.ErrNotFound.Error(),
+			expectedUserIdFromProvider: "Invalid userID",
+			errMessage:                 models.ErrNotFound.Error(),
+		},
+		{
+			name:  "Context is empty",
+			inCtx: nil,
+			repoMockBehavior: func(r *MockRepository, ctx context.Context, userId string) {
+				r.EXPECT().DeleteUser(gomock.Eq(ctx), gomock.Eq(userId)).Return(models.ErrNotFound)
+			},
+			providerMockBehavior: func(p *MockCurrentUserInformationProvider, ctx context.Context, userId string) {
+				p.EXPECT().GetCurrentUserID(gomock.Eq(ctx)).Return(userId).AnyTimes()
+			},
+			expectedUserIdFromProvider: "",
+			errMessage:                 models.ErrNotFound.Error(),
 		},
 	}
 
@@ -157,14 +172,14 @@ func TestService_DeleteUser(t *testing.T) {
 			t.Parallel()
 
 			ctrl := gomock.NewController(t)
-			repoMock := mock_service.NewMockrepository(ctrl)
-			providerMock := mock_service.NewMockcurrentUserInformationProvider(ctrl)
+			repoMock := NewMockRepository(ctrl)
+			providerMock := NewMockCurrentUserInformationProvider(ctrl)
 			service := Service{
 				repo:                           repoMock,
 				currentUserInformationProvider: providerMock,
 			}
-
-			tc.repoMockBehavior(repoMock, tc.inCtx, tc.providerMockBehavior(providerMock, tc.inCtx))
+			tc.providerMockBehavior(providerMock, tc.inCtx, tc.expectedUserIdFromProvider)
+			tc.repoMockBehavior(repoMock, tc.inCtx, providerMock.GetCurrentUserID(tc.inCtx))
 
 			err := service.DeleteUser(tc.inCtx)
 			if tc.errMessage == "" {
