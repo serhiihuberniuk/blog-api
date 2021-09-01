@@ -9,6 +9,8 @@ import (
 )
 
 const (
+	minLengthOfName     = 2
+	minLengthOfEmail    = 8
 	maxLength           = 30
 	minLengthOfPassword = 8
 )
@@ -37,8 +39,8 @@ type UpdateUserPayload struct {
 
 func (u *User) Validate() error {
 	err := validation.ValidateStruct(u,
-		validation.Field(&u.Name, validation.Required, validation.Length(1, maxLength)),
-		validation.Field(&u.Email, validation.Required, validation.Length(1, maxLength), is.Email),
+		validation.Field(&u.Name, validation.Required, validation.Length(minLengthOfName, maxLength)),
+		validation.Field(&u.Email, validation.Required, validation.Length(minLengthOfEmail, maxLength), is.Email),
 		validation.Field(&u.Password, validation.Required, validation.Length(minLengthOfPassword, maxLength)),
 	)
 	if err != nil {

@@ -9,6 +9,7 @@ require (
 	github.com/georgysavva/scany v0.2.9
 	github.com/go-ozzo/ozzo-validation v3.6.0+incompatible
 	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.8.0
@@ -16,6 +17,8 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rs/cors v1.8.0
 	github.com/spf13/viper v1.8.1
+	github.com/stretchr/testify v1.7.0 // indirect
+	github.com/testcontainers/testcontainers-go v0.11.1 // indirect
 	github.com/vektah/gqlparser/v2 v2.1.0
 	go.mongodb.org/mongo-driver v1.5.4
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2

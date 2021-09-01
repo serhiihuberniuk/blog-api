@@ -1,11 +1,12 @@
 package service
 
+//go:generate mockgen -destination=service_mock_test.go -package=service_test -source=service.go
+
 import (
 	"context"
 	"crypto/rsa"
 	"fmt"
 
-	"github.com/golang-jwt/jwt"
 	"github.com/serhiihuberniuk/blog-api/models"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -43,15 +44,10 @@ type repository interface {
 		filter models.FilterComments, sort models.SortComments) ([]*models.Comment, error)
 }
 
-func NewService(r repository, privateKey []byte, p currentUserInformationProvider) (*Service, error) {
-	privateRSA, err := jwt.ParseRSAPrivateKeyFromPEM(privateKey)
-	if err != nil {
-		return nil, fmt.Errorf("error occurred while parsing private key: %w", err)
-	}
-
+func NewService(r repository, privateKey *rsa.PrivateKey, p currentUserInformationProvider) (*Service, error) {
 	return &Service{
 		repo:                           r,
-		privateKey:                     privateRSA,
+		privateKey:                     privateKey,
 		currentUserInformationProvider: p,
 	}, nil
 }

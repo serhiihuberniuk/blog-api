@@ -32,7 +32,7 @@ func (s *Service) CreateUser(ctx context.Context, payload models.CreateUserPaylo
 	user.Password = hashedPassword
 
 	if err := s.repo.CreateUser(ctx, user); err != nil {
-		return "", fmt.Errorf("cannot create user: %w", err)
+		return "", fmt.Errorf("error occured in repository layer: %w", err)
 	}
 
 	return user.ID, nil
@@ -41,7 +41,7 @@ func (s *Service) CreateUser(ctx context.Context, payload models.CreateUserPaylo
 func (s *Service) GetUser(ctx context.Context, userID string) (*models.User, error) {
 	user, err := s.repo.GetUser(ctx, userID)
 	if err != nil {
-		return nil, fmt.Errorf("cannot get user: %w", err)
+		return nil, fmt.Errorf("error occurred in repository layer: %w", err)
 	}
 
 	return user, nil
@@ -50,7 +50,7 @@ func (s *Service) GetUser(ctx context.Context, userID string) (*models.User, err
 func (s *Service) UpdateUser(ctx context.Context, payload models.UpdateUserPayload) error {
 	user, err := s.GetUser(ctx, s.currentUserInformationProvider.GetCurrentUserID(ctx))
 	if err != nil {
-		return fmt.Errorf("cannot update user, %w", err)
+		return fmt.Errorf("error occured whole getting user with such id, %w", err)
 	}
 
 	user.Name = payload.Name
@@ -59,7 +59,7 @@ func (s *Service) UpdateUser(ctx context.Context, payload models.UpdateUserPaylo
 	user.Password = payload.Password
 
 	if err = user.Validate(); err != nil {
-		return fmt.Errorf("cannot update user: %w", err)
+		return fmt.Errorf("error occured while validation: %w", err)
 	}
 
 	user.Password, err = generateHashPassword(payload.Password)
@@ -68,7 +68,7 @@ func (s *Service) UpdateUser(ctx context.Context, payload models.UpdateUserPaylo
 	}
 
 	if err = s.repo.UpdateUser(ctx, user); err != nil {
-		return fmt.Errorf("cannot update user: %w", err)
+		return fmt.Errorf("error occured in repository layer: %w", err)
 	}
 
 	return nil
@@ -76,7 +76,7 @@ func (s *Service) UpdateUser(ctx context.Context, payload models.UpdateUserPaylo
 
 func (s *Service) DeleteUser(ctx context.Context) error {
 	if err := s.repo.DeleteUser(ctx, s.currentUserInformationProvider.GetCurrentUserID(ctx)); err != nil {
-		return fmt.Errorf("cannot delete user: %w", err)
+		return fmt.Errorf("error occurred in repository layer: %w", err)
 	}
 
 	return nil
