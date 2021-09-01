@@ -1,28 +1,27 @@
 package service
 
+//go:generate mockgen -destination=service_mock_test.go -package=service_test -source=service.go
+
 import (
 	"context"
 	"crypto/rsa"
 	"fmt"
 
-	"github.com/golang-jwt/jwt"
 	"github.com/serhiihuberniuk/blog-api/models"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type Service struct {
-	repo                           Repository
+	repo                           repository
 	privateKey                     *rsa.PrivateKey
-	currentUserInformationProvider СurrentUserInformationProvider
+	currentUserInformationProvider currentUserInformationProvider
 }
 
-//go:generate mockgen -destination=provider_mock_test.go -package=service . CurrentUserInformationProvider
-type СurrentUserInformationProvider interface {
+type currentUserInformationProvider interface {
 	GetCurrentUserID(ctx context.Context) string
 }
 
-//go:generate mockgen -destination=repo_mock_test.go -package=service . Repository
-type Repository interface {
+type repository interface {
 	Login(ctx context.Context, email string) (*models.User, error)
 
 	CreateUser(ctx context.Context, user *models.User) error
@@ -45,15 +44,18 @@ type Repository interface {
 		filter models.FilterComments, sort models.SortComments) ([]*models.Comment, error)
 }
 
-func NewService(r Repository, privateKey []byte, p СurrentUserInformationProvider) (*Service, error) {
-	privateRSA, err := jwt.ParseRSAPrivateKeyFromPEM(privateKey)
-	if err != nil {
-		return nil, fmt.Errorf("error occurred while parsing private key: %w", err)
+func NewService(r repository, privateKey *rsa.PrivateKey, p currentUserInformationProvider) (*Service, error) {
+	if privateKey == nil {
+		return &Service{
+			repo:                           r,
+			privateKey:                     nil,
+			currentUserInformationProvider: p,
+		}, nil
 	}
 
 	return &Service{
 		repo:                           r,
-		privateKey:                     privateRSA,
+		privateKey:                     privateKey,
 		currentUserInformationProvider: p,
 	}, nil
 }

@@ -67,9 +67,5 @@ func (s *Service) ParseToken(tokenString string) (string, error) {
 }
 
 func (s *Service) checkCurrentUserIsOwner(ctx context.Context, id string) bool {
-	if id == s.currentUserInformationProvider.GetCurrentUserID(ctx) {
-		return true
-	}
-
-	return false
+	return id == s.currentUserInformationProvider.GetCurrentUserID(ctx)
 }

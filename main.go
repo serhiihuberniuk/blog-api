@@ -12,6 +12,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/golang-jwt/jwt"
 	"github.com/rs/cors"
 	"github.com/serhiihuberniuk/blog-api/configs"
 	"github.com/serhiihuberniuk/blog-api/health"
@@ -51,9 +52,14 @@ func main() {
 		log.Fatalf("cannot read Private Key from file: %v", err)
 	}
 
+	privateRSA, err := jwt.ParseRSAPrivateKeyFromPEM(privateKey)
+	if err != nil {
+		log.Fatalf("error occurred whole parsing privat key: %v", err)
+	}
+
 	userInfoProvider := providers.NewCurrentUserInformationProvider()
 
-	serv, err := service.NewService(repo, privateKey, userInfoProvider)
+	serv, err := service.NewService(repo, privateRSA, userInfoProvider)
 	if err != nil {
 		log.Fatalf("error occurred while creating service: %v", err)
 	}
