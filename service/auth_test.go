@@ -40,6 +40,15 @@ func TestService_Login(t *testing.T) {
 		UpdatedAt: time.Now(),
 		Password:  string(hashedPassword),
 	}
+
+	privatKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Log(fmt.Errorf("error occurred while generating privat key: %w", err))
+		t.Fail()
+
+		return
+	}
+
 	testCases := []struct {
 		name         string
 		inCtx        context.Context
@@ -110,14 +119,6 @@ func TestService_Login(t *testing.T) {
 
 			repoMock := NewMockrepository(ctrl)
 			providerMock := NewMockcurrentUserInformationProvider(ctrl)
-
-			privatKey, err := rsa.GenerateKey(rand.Reader, 2048)
-			if err != nil {
-				t.Log(fmt.Errorf("error occurred while generating privat key: %w", err))
-				t.Fail()
-
-				return
-			}
 
 			serv, err := service.NewService(repoMock, privatKey, providerMock)
 			if err != nil {

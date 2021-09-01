@@ -18,6 +18,7 @@ require (
 	github.com/rs/cors v1.8.0
 	github.com/spf13/viper v1.8.1
 	github.com/stretchr/testify v1.7.0 // indirect
+	github.com/testcontainers/testcontainers-go v0.11.1 // indirect
 	github.com/vektah/gqlparser/v2 v2.1.0
 	go.mongodb.org/mongo-driver v1.5.4
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2

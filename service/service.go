@@ -45,14 +45,6 @@ type repository interface {
 }
 
 func NewService(r repository, privateKey *rsa.PrivateKey, p currentUserInformationProvider) (*Service, error) {
-	if privateKey == nil {
-		return &Service{
-			repo:                           r,
-			privateKey:                     nil,
-			currentUserInformationProvider: p,
-		}, nil
-	}
-
 	return &Service{
 		repo:                           r,
 		privateKey:                     privateKey,
