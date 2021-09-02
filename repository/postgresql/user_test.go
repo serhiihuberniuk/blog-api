@@ -15,7 +15,7 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-func createPostgresTestContainer(ctx context.Context) (testcontainers.Container, *pgxpool.Pool, error) {
+func createPostgresTestContainer(ctx context.Context) (func(), *repository.Repository, error) {
 	dbName := "test_postgres_db"
 	port := "5432/tcp"
 	env := map[string]string{
@@ -39,19 +39,30 @@ func createPostgresTestContainer(ctx context.Context) (testcontainers.Container,
 		return nil, nil, fmt.Errorf("error occurred while creating container: %w", err)
 	}
 
+	terminateContainer := func() {
+		err = container.Terminate(ctx)
+		if err != nil {
+			panic(err)
+		}
+	}
+
 	mappedPort, err := container.MappedPort(ctx, nat.Port(port))
 	if err != nil {
-		return container, nil, fmt.Errorf("error occurred while getting port: %w", err)
+		return terminateContainer, nil, fmt.Errorf("error occurred while getting port: %w", err)
 	}
 
 	dbUrl := fmt.Sprintf("postgres://postgres:password@localhost:%s/%s?sslmode=disable", mappedPort.Port(), dbName)
 
 	pool, err := repository.NewPostgresDb(ctx, dbUrl, "../../init.sql")
 	if err != nil {
-		return container, nil, fmt.Errorf("cannot create conn pool: %w", err)
+		return terminateContainer, nil, fmt.Errorf("cannot create conn pool: %w", err)
 	}
 
-	return container, pool, nil
+	repo := &repository.Repository{
+		Db: pool,
+	}
+
+	return terminateContainer, repo, nil
 }
 
 func cleanUserTable(t *testing.T, pool *pgxpool.Pool, ctx context.Context) {
@@ -66,7 +77,7 @@ func cleanUserTable(t *testing.T, pool *pgxpool.Pool, ctx context.Context) {
 func TestRepository_User(t *testing.T) {
 	ctx := context.Background()
 
-	container, pool, err := createPostgresTestContainer(ctx)
+	terminateContainer, repo, err := createPostgresTestContainer(ctx)
 	if err != nil {
 		t.Log(fmt.Errorf("error occurred while creating Postgres test container: %w", err))
 		t.Fail()
@@ -74,22 +85,8 @@ func TestRepository_User(t *testing.T) {
 		return
 	}
 
-	terminateContainer := func() {
-		err = container.Terminate(ctx)
-		if err != nil {
-			t.Log(fmt.Errorf("error while terminating container: %w", err))
-			t.Fail()
-
-			return
-		}
-	}
-
 	defer terminateContainer()
-	defer pool.Close()
-
-	repo := &repository.Repository{
-		Db: pool,
-	}
+	defer repo.Db.Close()
 
 	creationTime := time.Now()
 	updatingTime := time.Now().Add(time.Minute)
