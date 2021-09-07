@@ -1,5 +1,7 @@
 package handlers
 
+//go:generate mockgen -source=handlers.go -destination=handlers_mock_test.go -package=handlers_test service
+
 import (
 	"context"
 	"encoding/json"
