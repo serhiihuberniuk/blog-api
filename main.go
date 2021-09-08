@@ -12,11 +12,14 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/go-redis/cache/v8"
+	"github.com/go-redis/redis/v8"
 	"github.com/golang-jwt/jwt"
 	"github.com/rs/cors"
 	"github.com/serhiihuberniuk/blog-api/configs"
 	"github.com/serhiihuberniuk/blog-api/health"
 	"github.com/serhiihuberniuk/blog-api/providers"
+	"github.com/serhiihuberniuk/blog-api/repository/decorator"
 	repository "github.com/serhiihuberniuk/blog-api/repository/postgresql"
 	"github.com/serhiihuberniuk/blog-api/service"
 	"github.com/serhiihuberniuk/blog-api/view/graphql/graph"
@@ -47,6 +50,18 @@ func main() {
 		Db: pool,
 	}
 
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     config.RedisAddress,
+		DB:       0,
+		Password: "",
+	})
+
+	myCache := cache.New(&cache.Options{
+		Redis: redisClient,
+	})
+
+	repoWithCache := decorator.NewRepositoryDecorator(repo, myCache)
+
 	privateKey, err := ioutil.ReadFile(config.PrivateKeyFile)
 	if err != nil {
 		log.Fatalf("cannot read Private Key from file: %v", err)
@@ -59,7 +74,7 @@ func main() {
 
 	userInfoProvider := providers.NewCurrentUserInformationProvider()
 
-	serv, err := service.NewService(repo, privateRSA, userInfoProvider)
+	serv, err := service.NewService(repoWithCache, privateRSA, userInfoProvider)
 	if err != nil {
 		log.Fatalf("error occurred while creating service: %v", err)
 	}
