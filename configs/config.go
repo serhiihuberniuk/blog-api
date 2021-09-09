@@ -16,6 +16,7 @@ type Config struct {
 	HealthcheckPort  string `mapstructure:"HEALTHCHECK_PORT"`
 	PostgresInitFile string `mapstructure:"POSTGRES_INIT"`
 	PrivateKeyFile   string `mapstructure:"PRIVATE_KEY_FILE"`
+	RedisAddress     string `mapstructure:"REDIS_ADDRESS"`
 }
 
 func (c *Config) validate() error {
@@ -27,6 +28,7 @@ func (c *Config) validate() error {
 		validation.Field(&c.HealthcheckPort, validation.Required, is.Port, validation.NotIn(c.HttpPort, c.GrpcPort, c.GraphqlPort)),
 		validation.Field(&c.PostgresInitFile, validation.Required),
 		validation.Field(&c.PrivateKeyFile, validation.Required),
+		validation.Field(&c.RedisAddress, validation.Required),
 	)
 	if err != nil {
 		return fmt.Errorf("validation failed: %w", err)
@@ -47,6 +49,7 @@ func LoadConfig() (*Config, error) {
 		HealthcheckPort:  viper.GetString("HEALTHCHECK_PORT"),
 		PostgresInitFile: viper.GetString("POSTGRES_INIT_FILE"),
 		PrivateKeyFile:   viper.GetString("PRIVATE_KEY_FILE"),
+		RedisAddress:     viper.GetString("REDIS_ADDRESS"),
 	}
 
 	if err := config.validate(); err != nil {
