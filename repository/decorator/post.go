@@ -22,8 +22,12 @@ func (d *RepositoryCacheDecorator) CreatePost(ctx context.Context, post *models.
 }
 func (d *RepositoryCacheDecorator) GetPost(ctx context.Context, postID string) (*models.Post, error) {
 	var postFromCache models.Post
-	inCache, err := d.getItemFromCache(ctx, postID, &postFromCache)
-	if inCache {
+	if d.redisCache.Exists(ctx, postID) {
+		err := d.getItemFromCache(ctx, postID, &postFromCache)
+		if err != nil {
+			return nil, fmt.Errorf("error occured getting from cache: %w", err)
+		}
+
 		return &postFromCache, nil
 	}
 

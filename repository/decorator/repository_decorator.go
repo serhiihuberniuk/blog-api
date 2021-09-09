@@ -3,20 +3,34 @@ package decorator
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-redis/cache/v8"
+	"github.com/go-redis/redis/v8"
 	"github.com/serhiihuberniuk/blog-api/models"
 )
 
 type RepositoryCacheDecorator struct {
 	repository  repository
-	redisClient *cache.Cache
+	redisClient *redis.Client
+	redisCache  *cache.Cache
 }
 
-func NewRepositoryDecorator(r repository, c *cache.Cache) *RepositoryCacheDecorator {
+func NewRepositoryCacheDecorator(r repository, redisAddress string) *RepositoryCacheDecorator {
+	client := redis.NewClient(&redis.Options{
+		Addr:     redisAddress,
+		DB:       0,
+		Password: "",
+	})
+
+	newCache := cache.New(&cache.Options{
+		Redis: client,
+	})
+
 	return &RepositoryCacheDecorator{
 		repository:  r,
-		redisClient: c,
+		redisClient: client,
+		redisCache:  newCache,
 	}
 }
 
@@ -43,10 +57,10 @@ type repository interface {
 		filter models.FilterComments, sort models.SortComments) ([]*models.Comment, error)
 }
 
-func (d *RepositoryCacheDecorator) setItemToCache(ctx context.Context, itemId string, value interface{}) error {
-	err := d.redisClient.Set(&cache.Item{
+func (d *RepositoryCacheDecorator) setItemToCache(ctx context.Context, itemID string, value interface{}) error {
+	err := d.redisCache.Set(&cache.Item{
 		Ctx:   ctx,
-		Key:   itemId,
+		Key:   itemID,
 		Value: value,
 	})
 	if err != nil {
@@ -56,28 +70,34 @@ func (d *RepositoryCacheDecorator) setItemToCache(ctx context.Context, itemId st
 	return nil
 }
 
-func (d *RepositoryCacheDecorator) getItemFromCache(ctx context.Context, itemId string,
-	destination interface{}) (bool, error) {
-	if d.redisClient.Exists(ctx, itemId) {
-		err := d.redisClient.Get(ctx, itemId, destination)
-		if err != nil {
-			return true, fmt.Errorf("error occured while getting from cache: %w", err)
-		}
-
-		return true, nil
+func (d *RepositoryCacheDecorator) getItemFromCache(ctx context.Context, itemID string, destination interface{}) error {
+	if err := d.redisCache.Get(ctx, itemID, destination); err != nil {
+		return fmt.Errorf("error occured while getting from cache: %w", err)
 	}
 
-	return false, nil
+	return nil
 }
 
-func (d *RepositoryCacheDecorator) deleteItemFromCache(ctx context.Context, itemId string) error {
-	if d.redisClient.Exists(ctx, itemId) {
-		err := d.redisClient.Delete(ctx, itemId)
+func (d *RepositoryCacheDecorator) deleteItemFromCache(ctx context.Context, itemID string) error {
+	if d.redisCache.Exists(ctx, itemID) {
+		err := d.redisCache.Delete(ctx, itemID)
 		if err != nil {
 			return fmt.Errorf("error occurred while deleting from cache: %w", err)
 		}
 
 		return nil
+	}
+
+	return nil
+}
+
+func (d *RepositoryCacheDecorator) HealthCheck(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
+
+	err := d.redisClient.Ping(ctx).Err()
+	if err != nil {
+		return fmt.Errorf("connection to redis db failed: %w", err)
 	}
 
 	return nil

@@ -17,10 +17,12 @@ services:
       API_POSTGRESQL_URL: postgres://serhii:serhii@postgres:5432/blog-api_postgresdb
       API_POSTGRES_INIT_FILE: init.sql
       API_PRIVATE_KEY_FILE: /run/secrets/private_key
+      API_REDIS_ADDRESS: redisCache:6379
     secrets:
       - private_key
     depends_on:
       - postgres
+      - redis
   postgres:
     restart: always
     container_name: postgresDb
@@ -31,6 +33,12 @@ services:
       POSTGRES_DB: blog-api_postgresdb
     ports:
       - "5432:5432"
+  redis:
+    restart: always
+    container_name: redisCache
+    image: redis
+    ports:
+      - "6379:6379"
 secrets:
   private_key:
     file: ./app.rsa

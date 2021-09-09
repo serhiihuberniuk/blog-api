@@ -22,8 +22,12 @@ func (d *RepositoryCacheDecorator) CreateComment(ctx context.Context, comment *m
 }
 func (d *RepositoryCacheDecorator) GetComment(ctx context.Context, commentID string) (*models.Comment, error) {
 	var commentFromCache models.Comment
-	inCache, err := d.getItemFromCache(ctx, commentID, &commentFromCache)
-	if inCache {
+	if d.redisCache.Exists(ctx, commentID) {
+		err := d.getItemFromCache(ctx, commentID, &commentFromCache)
+		if err != nil {
+			return nil, fmt.Errorf("error occured getting from cache: %w", err)
+		}
+
 		return &commentFromCache, nil
 	}
 

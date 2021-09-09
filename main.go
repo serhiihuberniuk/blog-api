@@ -12,8 +12,6 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/go-redis/cache/v8"
-	"github.com/go-redis/redis/v8"
 	"github.com/golang-jwt/jwt"
 	"github.com/rs/cors"
 	"github.com/serhiihuberniuk/blog-api/configs"
@@ -50,17 +48,7 @@ func main() {
 		Db: pool,
 	}
 
-	redisClient := redis.NewClient(&redis.Options{
-		Addr:     config.RedisAddress,
-		DB:       0,
-		Password: "",
-	})
-
-	myCache := cache.New(&cache.Options{
-		Redis: redisClient,
-	})
-
-	repoWithCache := decorator.NewRepositoryDecorator(repo, myCache)
+	repoWithCache := decorator.NewRepositoryCacheDecorator(repo, config.RedisAddress)
 
 	privateKey, err := ioutil.ReadFile(config.PrivateKeyFile)
 	if err != nil {
@@ -85,7 +73,7 @@ func main() {
 
 	// Health check server
 
-	healthHandler := health.NewHandlerHealth(repo.HealthCheck)
+	healthHandler := health.NewHandlerHealth(repo.HealthCheck, repoWithCache.HealthCheck)
 
 	healthServer := http.Server{
 		Addr:    ":" + config.HealthcheckPort,

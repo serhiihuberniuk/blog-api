@@ -24,8 +24,12 @@ func (d *RepositoryCacheDecorator) CreateUser(ctx context.Context, user *models.
 
 func (d *RepositoryCacheDecorator) GetUser(ctx context.Context, userID string) (*models.User, error) {
 	var userFromCache models.User
-	inCache, err := d.getItemFromCache(ctx, userID, &userFromCache)
-	if inCache {
+	if d.redisCache.Exists(ctx, userID) {
+		err := d.getItemFromCache(ctx, userID, &userFromCache)
+		if err != nil {
+			return nil, err
+		}
+
 		return &userFromCache, nil
 	}
 
