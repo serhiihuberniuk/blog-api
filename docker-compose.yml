@@ -16,9 +16,9 @@ services:
       API_HEALTHCHECK_PORT: 8083
       API_POSTGRESQL_URL: postgres://serhii:serhii@postgres:5432/blog-api_postgresdb?sslmode=disable
       API_POSTGRES_MIGRATIONS_PATH: file://migrations
+      API_POSTGRES_MIGRATIONS_VERSION: 3
       API_PRIVATE_KEY_FILE: /run/secrets/private_key
       API_REDIS_ADDRESS: redisCache:6379
-      API_POSTGRES_DATABASE_VERSION: 3
     secrets:
       - private_key
     depends_on:
