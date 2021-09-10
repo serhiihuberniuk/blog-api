@@ -21,7 +21,6 @@ type authMiddlewareProvider interface {
 
 func (m *AuthMiddleware) Auth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		ctx, err := m.authMiddlewareProvider.BearerAuthMiddleware(r)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)

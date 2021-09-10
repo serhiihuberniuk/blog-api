@@ -72,7 +72,7 @@ func (d *RepositoryCacheDecorator) setItemToCache(ctx context.Context, itemID st
 
 func (d *RepositoryCacheDecorator) getItemFromCache(ctx context.Context, itemID string, destination interface{}) error {
 	if err := d.redisCache.Get(ctx, itemID, destination); err != nil {
-		return fmt.Errorf("error occured while getting from cache: %w", err)
+		return fmt.Errorf("error occurred while getting from cache: %w", err)
 	}
 
 	return nil

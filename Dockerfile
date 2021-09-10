@@ -10,7 +10,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o blog-api
 FROM busybox
 
 COPY --from=build /app/blog-api /
-COPY --from=build /app/init.sql /
+COPY --from=build /app/migrations / migrations/
 
 HEALTHCHECK --interval=5s --timeout=5s --retries=3 \
     CMD wget -nv -t1 --spider 'http://localhost:8083/health' || exit 1

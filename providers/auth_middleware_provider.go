@@ -51,11 +51,10 @@ func (p *AuthMiddlewareProvider) BearerAuthMiddleware(r *http.Request) (context.
 
 	userID, err := p.service.ParseToken(headerSplit[1])
 	if err != nil {
-		return r.Context(), fmt.Errorf("error occured while parsing token: %w", err)
+		return r.Context(), fmt.Errorf("error occurred while parsing token: %w", err)
 	}
 
 	ctx := p.currentUserInformationProvider.SetCurrentUserID(r.Context(), userID)
 
 	return ctx, nil
-
 }

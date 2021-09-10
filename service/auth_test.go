@@ -122,7 +122,7 @@ func TestService_Login(t *testing.T) {
 
 			serv, err := service.NewService(repoMock, privatKey, providerMock)
 			if err != nil {
-				t.Log(fmt.Errorf("error occured while init service: %w", err))
+				t.Log(fmt.Errorf("error occurred while init service: %w", err))
 				t.Fail()
 
 				return
@@ -140,7 +140,6 @@ func TestService_Login(t *testing.T) {
 
 			assert.Empty(t, token)
 			assert.Contains(t, err.Error(), tc.errMessage)
-
 		})
 	}
 }

@@ -186,7 +186,7 @@ func TestService_DeleteUser(t *testing.T) {
 			providerMock := NewMockcurrentUserInformationProvider(ctrl)
 			serv, err := service.NewService(repoMock, nil, providerMock)
 			if err != nil {
-				t.Log(fmt.Errorf("error occured while initialization of service: %w", err))
+				t.Log(fmt.Errorf("error occurred while initialization of service: %w", err))
 				t.Fail()
 
 				return
@@ -279,7 +279,7 @@ func TestService_CreateUser(t *testing.T) {
 
 			serv, err := service.NewService(repoMock, nil, providerMock)
 			if err != nil {
-				t.Log(fmt.Errorf("error occured while initialization of service: %w", err))
+				t.Log(fmt.Errorf("error occurred while initialization of service: %w", err))
 				t.Fail()
 
 				return
@@ -430,7 +430,7 @@ func TestService_UpdateUser(t *testing.T) {
 
 			serv, err := service.NewService(repoMock, nil, providerMock)
 			if err != nil {
-				t.Log(fmt.Errorf("error occured while initialization of service: %w", err))
+				t.Log(fmt.Errorf("error occurred while initialization of service: %w", err))
 				t.Fail()
 
 				return

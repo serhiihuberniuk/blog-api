@@ -3,9 +3,11 @@ package repository
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
@@ -13,20 +15,19 @@ type Repository struct {
 	Db *pgxpool.Pool
 }
 
-func NewPostgresDb(ctx context.Context, dbUrl, init string) (*pgxpool.Pool, error) {
+func NewPostgresDb(ctx context.Context, dbUrl, migrations string, version uint) (*pgxpool.Pool, error) {
 	pool, err := pgxpool.Connect(ctx, dbUrl)
 	if err != nil {
 		return nil, fmt.Errorf("connection to database failed: %w", err)
 	}
 
-	sql, err := os.ReadFile(init)
+	m, err := migrate.New(migrations, dbUrl)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read postgres db initialisation file: %w", err)
+		return nil, fmt.Errorf("error occurred while creating migrate instances:%w", err)
 	}
 
-	_, err = pool.Exec(ctx, string(sql))
-	if err != nil {
-		return nil, fmt.Errorf("cannot initiate postgres db: %w", err)
+	if err = m.Migrate(version); err != nil && err != migrate.ErrNoChange {
+		return nil, fmt.Errorf("error occurred while migrating: %w", err)
 	}
 
 	return pool, nil
