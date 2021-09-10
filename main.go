@@ -39,7 +39,7 @@ func main() {
 		log.Fatalf("error occurred while initialisation configs: %v", err)
 	}
 
-	pool, err := repository.NewPostgresDb(ctx, config.PostgresUrl, config.PostgresMigrations, 3)
+	pool, err := repository.NewPostgresDb(ctx, config.PostgresUrl, config.PostgresMigrationsPath, config.PostgresDatabaseVersion)
 	if err != nil {
 		log.Fatalf("cannot connect to DB: %v", err)
 	}

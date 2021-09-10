@@ -16,7 +16,7 @@ echo "export HEALTHCHECK_PORT executed"
 export API_POSTGRESQL_URL=postgres://serhii:serhii@localhost:5432/api?sslmode=disable
 echo "export POSTGRESQL_URL executed"
 
-export API_POSTGRES_MIGRATIONS=file://migrations
+export API_POSTGRES_MIGRATIONS_PATH=file://migrations
 echo "export POSTGRES_INIT_FILE executed"
 
 export API_PRIVATE_KEY_FILE=app.rsa
@@ -25,6 +25,9 @@ echo "export API_PRIVATE_KEY_PATH executed"
 export API_REDIS_ADDRESS=localhost:6379
 echo "export API_REDIS_ADDRESS executed"
 
-#API_HTTP_PORT=8080;API_GRPC_PORT=8081;API_GRAPHQL_PORT=8082;API_HEALTHCHECK_PORT=8083;API_POSTGRESQL_URL=postgres://serhii:serhii@localhost:5432/api?sslmode=disable;API_POSTGRES_MIGRATIONS=file://migrations;API_PRIVATE_KEY_FILE=app.rsa;API_REDIS_ADDRESS=localhost:6379;
+export API_POSTGRES_DATABASE_VERSION=3
+echo "export API_POSTGRES_DATABASE_VERSION executed"
+
+#API_HTTP_PORT=8080;API_GRPC_PORT=8081;API_GRAPHQL_PORT=8082;API_HEALTHCHECK_PORT=8083;API_POSTGRESQL_URL=postgres://serhii:serhii@localhost:5432/api?sslmode=disable;API_POSTGRES_MIGRATIONS_PATH=file://migrations;API_PRIVATE_KEY_FILE=app.rsa;API_REDIS_ADDRESS=localhost:6379;API_POSTGRES_DATABASE_VERSION=3;
 
 
