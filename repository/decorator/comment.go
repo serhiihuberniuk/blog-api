@@ -20,12 +20,13 @@ func (d *RepositoryCacheDecorator) CreateComment(ctx context.Context, comment *m
 
 	return nil
 }
+
 func (d *RepositoryCacheDecorator) GetComment(ctx context.Context, commentID string) (*models.Comment, error) {
 	var commentFromCache models.Comment
 	if d.redisCache.Exists(ctx, commentID) {
 		err := d.getItemFromCache(ctx, commentID, &commentFromCache)
 		if err != nil {
-			return nil, fmt.Errorf("error occured getting from cache: %w", err)
+			return nil, fmt.Errorf("error occurred getting from cache: %w", err)
 		}
 
 		return &commentFromCache, nil
@@ -33,7 +34,7 @@ func (d *RepositoryCacheDecorator) GetComment(ctx context.Context, commentID str
 
 	comment, err := d.repository.GetComment(ctx, commentID)
 	if err != nil {
-		return nil, fmt.Errorf("error occured while getting user from repository: %w", err)
+		return nil, fmt.Errorf("error occurred while getting user from repository: %w", err)
 	}
 
 	err = d.setItemToCache(ctx, commentID, comment)
@@ -43,6 +44,7 @@ func (d *RepositoryCacheDecorator) GetComment(ctx context.Context, commentID str
 
 	return comment, err
 }
+
 func (d *RepositoryCacheDecorator) UpdateComment(ctx context.Context, comment *models.Comment) error {
 	err := d.repository.UpdateComment(ctx, comment)
 	if err != nil {
@@ -51,11 +53,12 @@ func (d *RepositoryCacheDecorator) UpdateComment(ctx context.Context, comment *m
 
 	err = d.setItemToCache(ctx, comment.ID, comment)
 	if err != nil {
-		return fmt.Errorf("error occured while setting to cache: %w", err)
+		return fmt.Errorf("error occurred while setting to cache: %w", err)
 	}
 
 	return nil
 }
+
 func (d *RepositoryCacheDecorator) DeleteComment(ctx context.Context, commentID string) error {
 	err := d.repository.DeleteComment(ctx, commentID)
 	if err != nil {
@@ -64,7 +67,7 @@ func (d *RepositoryCacheDecorator) DeleteComment(ctx context.Context, commentID 
 
 	err = d.deleteItemFromCache(ctx, commentID)
 	if err != nil {
-		return fmt.Errorf("error occured while deleting client from cache: %w", err)
+		return fmt.Errorf("error occurred while deleting client from cache: %w", err)
 	}
 
 	return nil
@@ -72,5 +75,5 @@ func (d *RepositoryCacheDecorator) DeleteComment(ctx context.Context, commentID 
 
 func (d *RepositoryCacheDecorator) ListComments(ctx context.Context, pagination models.Pagination,
 	filter models.FilterComments, sort models.SortComments) ([]*models.Comment, error) {
-	return d.ListComments(ctx, pagination, filter, sort)
+	return d.repository.ListComments(ctx, pagination, filter, sort)
 }

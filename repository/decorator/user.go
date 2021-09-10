@@ -8,7 +8,6 @@ import (
 )
 
 func (d *RepositoryCacheDecorator) CreateUser(ctx context.Context, user *models.User) error {
-
 	err := d.repository.CreateUser(ctx, user)
 	if err != nil {
 		return fmt.Errorf("error occurred in reposutory layer: %w", err)
@@ -35,7 +34,7 @@ func (d *RepositoryCacheDecorator) GetUser(ctx context.Context, userID string) (
 
 	user, err := d.repository.GetUser(ctx, userID)
 	if err != nil {
-		return nil, fmt.Errorf("error occured while getting user from repository: %w", err)
+		return nil, fmt.Errorf("error occurred while getting user from repository: %w", err)
 	}
 
 	err = d.setItemToCache(ctx, userID, user)
@@ -44,7 +43,6 @@ func (d *RepositoryCacheDecorator) GetUser(ctx context.Context, userID string) (
 	}
 
 	return user, err
-
 }
 
 func (d *RepositoryCacheDecorator) UpdateUser(ctx context.Context, user *models.User) error {
@@ -55,7 +53,7 @@ func (d *RepositoryCacheDecorator) UpdateUser(ctx context.Context, user *models.
 
 	err = d.setItemToCache(ctx, user.ID, user)
 	if err != nil {
-		return fmt.Errorf("error occured while setting to cache: %w", err)
+		return fmt.Errorf("error occurred while setting to cache: %w", err)
 	}
 
 	return nil
@@ -69,7 +67,7 @@ func (d *RepositoryCacheDecorator) DeleteUser(ctx context.Context, userID string
 
 	err = d.deleteItemFromCache(ctx, userID)
 	if err != nil {
-		return fmt.Errorf("error occured while deleting client from cache: %w", err)
+		return fmt.Errorf("error occurred while deleting client from cache: %w", err)
 	}
 
 	return nil
