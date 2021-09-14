@@ -13,7 +13,7 @@ func (d *RepositoryCacheDecorator) CreateComment(ctx context.Context, comment *m
 		return fmt.Errorf("error occurred in reposutory layer: %w", err)
 	}
 
-	err = d.setItemToCache(ctx, comment.ID, commentObjectType, comment)
+	err = d.setItemToCache(ctx, comment.ID, objectTypeComment, comment)
 	if err != nil {
 		return fmt.Errorf("error occuers while setting to cache: %w", err)
 	}
@@ -23,8 +23,8 @@ func (d *RepositoryCacheDecorator) CreateComment(ctx context.Context, comment *m
 
 func (d *RepositoryCacheDecorator) GetComment(ctx context.Context, commentID string) (*models.Comment, error) {
 	var commentFromCache models.Comment
-	if d.redisCache.Exists(ctx, commentObjectType+commentID) {
-		err := d.getItemFromCache(ctx, commentID, commentObjectType, &commentFromCache)
+	if d.redisCache.Exists(ctx, objectTypeComment+commentID) {
+		err := d.getItemFromCache(ctx, commentID, objectTypeComment, &commentFromCache)
 		if err != nil {
 			return nil, fmt.Errorf("error occurred getting from cache: %w", err)
 		}
@@ -37,7 +37,7 @@ func (d *RepositoryCacheDecorator) GetComment(ctx context.Context, commentID str
 		return nil, fmt.Errorf("error occurred while getting user from repository: %w", err)
 	}
 
-	err = d.setItemToCache(ctx, commentID, commentObjectType, comment)
+	err = d.setItemToCache(ctx, commentID, objectTypeComment, comment)
 	if err != nil {
 		return nil, fmt.Errorf("error occuers while setting to cache: %w", err)
 	}
@@ -51,7 +51,7 @@ func (d *RepositoryCacheDecorator) UpdateComment(ctx context.Context, comment *m
 		return fmt.Errorf("error occurred in repository layer: %w", err)
 	}
 
-	err = d.setItemToCache(ctx, comment.ID, commentObjectType, comment)
+	err = d.setItemToCache(ctx, comment.ID, objectTypeComment, comment)
 	if err != nil {
 		return fmt.Errorf("error occurred while setting to cache: %w", err)
 	}
@@ -65,7 +65,7 @@ func (d *RepositoryCacheDecorator) DeleteComment(ctx context.Context, commentID 
 		return fmt.Errorf("error occurred in repository layer: %w", err)
 	}
 
-	err = d.deleteItemFromCache(ctx, commentID, commentObjectType)
+	err = d.deleteItemFromCache(ctx, commentID, objectTypeComment)
 	if err != nil {
 		return fmt.Errorf("error occurred while deleting client from cache: %w", err)
 	}

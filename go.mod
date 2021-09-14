@@ -11,6 +11,7 @@ require (
 	github.com/georgysavva/scany v0.2.9
 	github.com/go-ozzo/ozzo-validation v3.6.0+incompatible
 	github.com/go-redis/cache/v8 v8.4.2
+	github.com/go-redis/redis v6.15.9+incompatible // indirect
 	github.com/go-redis/redis/v8 v8.11.3
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/golang-migrate/migrate/v4 v4.14.1

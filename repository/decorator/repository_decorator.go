@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	userObjectType    = "user:*"
-	postObjectType    = "post:*"
-	commentObjectType = "comment:*"
+	objectTypeUser    = "user:"
+	objectTypePost    = "post:"
+	objectTypeComment = "comment:"
 )
 
 type RepositoryCacheDecorator struct {

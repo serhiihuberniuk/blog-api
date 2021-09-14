@@ -1,6 +1,6 @@
 package main
 
-import "cli/cmd"
+import "github.com/serhiihuberniuk/blog-api/cli/cmd"
 
 func main() {
 	cmd.Execute()
