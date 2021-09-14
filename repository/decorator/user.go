@@ -13,7 +13,7 @@ func (d *RepositoryCacheDecorator) CreateUser(ctx context.Context, user *models.
 		return fmt.Errorf("error occurred in reposutory layer: %w", err)
 	}
 
-	err = d.setItemToCache(ctx, user.ID, user)
+	err = d.setItemToCache(ctx, user.ID, objectTypeUser, user)
 	if err != nil {
 		return fmt.Errorf("error occurres while setting to cache: %w", err)
 	}
@@ -23,8 +23,8 @@ func (d *RepositoryCacheDecorator) CreateUser(ctx context.Context, user *models.
 
 func (d *RepositoryCacheDecorator) GetUser(ctx context.Context, userID string) (*models.User, error) {
 	var userFromCache models.User
-	if d.redisCache.Exists(ctx, userID) {
-		err := d.getItemFromCache(ctx, userID, &userFromCache)
+	if d.redisCache.Exists(ctx, objectTypeUser+userID) {
+		err := d.getItemFromCache(ctx, userID, objectTypeUser, &userFromCache)
 		if err != nil {
 			return nil, err
 		}
@@ -37,7 +37,7 @@ func (d *RepositoryCacheDecorator) GetUser(ctx context.Context, userID string) (
 		return nil, fmt.Errorf("error occurred while getting user from repository: %w", err)
 	}
 
-	err = d.setItemToCache(ctx, userID, user)
+	err = d.setItemToCache(ctx, userID, objectTypeUser, user)
 	if err != nil {
 		return nil, fmt.Errorf("error occuers while setting to cache: %w", err)
 	}
@@ -51,7 +51,7 @@ func (d *RepositoryCacheDecorator) UpdateUser(ctx context.Context, user *models.
 		return fmt.Errorf("error occurred in repository layer: %w", err)
 	}
 
-	err = d.setItemToCache(ctx, user.ID, user)
+	err = d.setItemToCache(ctx, user.ID, objectTypeUser, user)
 	if err != nil {
 		return fmt.Errorf("error occurred while setting to cache: %w", err)
 	}
@@ -65,7 +65,7 @@ func (d *RepositoryCacheDecorator) DeleteUser(ctx context.Context, userID string
 		return fmt.Errorf("error occurred in repository layer: %w", err)
 	}
 
-	err = d.deleteItemFromCache(ctx, userID)
+	err = d.deleteItemFromCache(ctx, userID, objectTypeUser)
 	if err != nil {
 		return fmt.Errorf("error occurred while deleting client from cache: %w", err)
 	}
