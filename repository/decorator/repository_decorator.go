@@ -10,6 +10,12 @@ import (
 	"github.com/serhiihuberniuk/blog-api/models"
 )
 
+const (
+	userObjectType    = "user:*"
+	postObjectType    = "post:*"
+	commentObjectType = "comment:*"
+)
+
 type RepositoryCacheDecorator struct {
 	repository  repository
 	redisClient *redis.Client
@@ -57,10 +63,10 @@ type repository interface {
 		filter models.FilterComments, sort models.SortComments) ([]*models.Comment, error)
 }
 
-func (d *RepositoryCacheDecorator) setItemToCache(ctx context.Context, itemID string, value interface{}) error {
+func (d *RepositoryCacheDecorator) setItemToCache(ctx context.Context, itemID, objectType string, value interface{}) error {
 	err := d.redisCache.Set(&cache.Item{
 		Ctx:   ctx,
-		Key:   itemID,
+		Key:   objectType + itemID,
 		Value: value,
 	})
 	if err != nil {
@@ -70,17 +76,17 @@ func (d *RepositoryCacheDecorator) setItemToCache(ctx context.Context, itemID st
 	return nil
 }
 
-func (d *RepositoryCacheDecorator) getItemFromCache(ctx context.Context, itemID string, destination interface{}) error {
-	if err := d.redisCache.Get(ctx, itemID, destination); err != nil {
+func (d *RepositoryCacheDecorator) getItemFromCache(ctx context.Context, itemID, objectType string, destination interface{}) error {
+	if err := d.redisCache.Get(ctx, objectType+itemID, destination); err != nil {
 		return fmt.Errorf("error occurred while getting from cache: %w", err)
 	}
 
 	return nil
 }
 
-func (d *RepositoryCacheDecorator) deleteItemFromCache(ctx context.Context, itemID string) error {
-	if d.redisCache.Exists(ctx, itemID) {
-		err := d.redisCache.Delete(ctx, itemID)
+func (d *RepositoryCacheDecorator) deleteItemFromCache(ctx context.Context, itemID, objectType string) error {
+	if d.redisCache.Exists(ctx, objectType+itemID) {
+		err := d.redisCache.Delete(ctx, objectType+itemID)
 		if err != nil {
 			return fmt.Errorf("error occurred while deleting from cache: %w", err)
 		}
