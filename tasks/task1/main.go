@@ -15,14 +15,16 @@ type nodeOfTree struct {
 }
 
 func (n *nodeOfTree) buildTreeString() string {
-	if n.nodes != nil {
-		var child string
-		for _, v := range n.nodes {
-			child += v.buildTreeString()
-		}
-
-		n.value = fmt.Sprintf("%s(%s)", n.value, child)
+	if len(n.nodes) == 0 {
+		return n.value
 	}
+
+	var child string
+	for _, v := range n.nodes {
+		child += v.buildTreeString()
+	}
+
+	n.value = fmt.Sprintf("%s(%s)", n.value, child)
 
 	return n.value
 }
