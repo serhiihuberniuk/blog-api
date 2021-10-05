@@ -1,29 +1,40 @@
 package buffer
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
-type Buffer struct {
-	bufferMutex   *sync.Mutex
-	bufferStorage map[string]*categoryBuffer
-	duration      time.Duration
-	size          int
+type storage interface {
+	Save(ctx context.Context, category string, values []int) error
 }
 
-func NewBuffer(d time.Duration, size int) (*Buffer, error) {
+type Buffer struct {
+	storage         storage
+	lock            *sync.RWMutex
+	numberOfBuffers int32
+	buffers         map[string]chan int
+
+	duration time.Duration
+	size     int
+}
+
+func NewBuffer(storage storage, d time.Duration, size int) (*Buffer, error) {
 	err := validateBufferParams(d, size)
 	if err != nil {
 		return nil, fmt.Errorf("error occured while creating buffer : %w", err)
 	}
+
 	return &Buffer{
-		bufferMutex:   &sync.Mutex{},
-		bufferStorage: make(map[string]*categoryBuffer),
-		duration:      d,
-		size:          size,
+		storage:  storage,
+		lock:     &sync.RWMutex{},
+		buffers:  make(map[string]chan int),
+		duration: d,
+		size:     size,
 	}, nil
 }
 
@@ -39,90 +50,71 @@ func validateBufferParams(d time.Duration, size int) error {
 	return nil
 }
 
-func (b *Buffer) BufferByCategory(category string, value int) []int {
-	b.bufferMutex.Lock()
+func (b *Buffer) BufferByCategory(_ context.Context, category string, value int) error {
 
-	cb, ok := b.bufferStorage[category]
-	if ok {
-		if b.put(cb, value) {
-			b.bufferMutex.Unlock()
+	b.lock.Lock()
+	defer b.lock.Unlock()
 
-			return nil
+	ch, ok := b.buffers[category]
+	if !ok {
+		ch = make(chan int)
+		b.buffers[category] = ch
+		b.newCategory(category, value, ch)
+
+		return nil
+	}
+
+	ch <- value
+
+	return nil
+
+}
+
+func (b *Buffer) Wait() {
+	for {
+		if atomic.LoadInt32(&b.numberOfBuffers) == 0 {
+			return
+		}
+	}
+}
+
+func (b *Buffer) newCategory(category string, value int, ch chan int) {
+
+	go func(ch chan int) {
+		values := make([]int, 0, b.size)
+		values = append(values, value)
+		atomic.AddInt32(&b.numberOfBuffers, 1)
+
+		flush := func() {
+			if len(values) == 0 {
+				return
+			}
+
+			if err := b.storage.Save(context.Background(), category, values); err != nil {
+				fmt.Println("Error during saving buffer: ", err.Error())
+			}
+			atomic.AddInt32(&b.numberOfBuffers, -1*int32(len(values)))
+
+			values = values[0:0]
+
 		}
 
-		b.bufferMutex.Unlock()
-		return b.BufferByCategory(category, value)
-	}
+		for {
+			select {
+			case v := <-ch:
+				values = append(values, v)
+				atomic.AddInt32(&b.numberOfBuffers, 1)
+				if len(values) == b.size {
+					flush()
+					fmt.Println("full")
 
-	cb = b.newCategoryBuffer(category)
-	b.put(cb, value)
+				}
+			case <-time.After(b.duration):
+				flush()
+				fmt.Println("timer")
 
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
+			}
+		}
+	}(ch)
 
-	go cb.waitForFlush(wg)
-
-	b.bufferMutex.Unlock()
-	wg.Wait()
-
-	return b.flushBuffer(category, cb)
-}
-
-type categoryBuffer struct {
-	values []int
-	timer  *time.Timer
-	flush  chan struct{}
-}
-
-func (b *Buffer) put(cb *categoryBuffer, value int) bool {
-	if len(cb.values) > (b.size - 1) {
-		return false
-	}
-
-	cb.values = append(cb.values, value)
-
-	if len(cb.values) == b.size {
-		close(cb.flush)
-
-		return true
-	}
-
-	if !cb.timer.Stop() {
-		<-cb.timer.C
-	}
-
-	cb.timer.Reset(b.duration)
-
-	return true
-}
-
-func (b *Buffer) newCategoryBuffer(category string) *categoryBuffer {
-	b.bufferStorage[category] = &categoryBuffer{
-		values: make([]int, 0, b.size),
-		timer:  time.NewTimer(b.duration),
-		flush:  make(chan struct{}),
-	}
-
-	return b.bufferStorage[category]
-}
-
-func (b *Buffer) flushBuffer(key string, cb *categoryBuffer) []int {
-	values := cb.values
-
-	b.bufferMutex.Lock()
-	delete(b.bufferStorage, key)
-	b.bufferMutex.Unlock()
-
-	return values
-}
-
-func (cb *categoryBuffer) waitForFlush(wg *sync.WaitGroup) {
-	select {
-	case <-cb.timer.C:
-		fmt.Println("time out")
-	case <-cb.flush:
-		fmt.Println("buffer full")
-	}
-
-	wg.Done()
 }

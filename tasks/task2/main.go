@@ -1,24 +1,10 @@
-//Припустимо в тебе є сервіс для зберігання якихось даних, він має один метод:
-//- Save(ctx context.Context, category string, value int) error
-//    - category = A, B, C ...всі великі літери
-//    - value    = any int value
-//
-//Треба написати:
-//    - Клієнт сервісу: клієнт паралельно запускає N паралельних процесів збереження даних в сервіс
-//    - Сам сервіс: сервіс приймає дані методом Save і відправляєш їх в сторедж, але з наступною логікою:
-//        - не просто відправляє, а робить буферезацію по категорії
-//        - максимальний розмір буфера = 5 елементів
-//        - максимальний час буфера = 3 секунди
-//    - Сторедж: просто поки можна писати в консоль дані які сторедж має зберегти
-//
-//Створи окрему папку в проекті і напиши в ній дане рішення, використовуючи усі правила SOLID you know.
 package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"math/rand"
-	"sync"
 	"time"
 
 	"github.com/serhiihuberniuk/blog-api/tasks/task2/buffer"
@@ -28,40 +14,37 @@ import (
 
 const (
 	bufferDuration = time.Second * 3
-	bufferSize     = 10
-)
+	bufferSize     = 5
 
-var category = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	category = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	n        = 1000
+)
 
 func main() {
 	ctx := context.Background()
 
 	st := storage.NewStorage()
-	b, err := buffer.NewBuffer(bufferDuration, bufferSize)
+	b, err := buffer.NewBuffer(st, bufferDuration, bufferSize)
 	if err != nil {
 		log.Fatal(err)
 	}
-	s := service.NewService(st, b)
+	s := service.NewService(b)
 
-	var wg sync.WaitGroup
+	errs := make(chan error, 1)
+	go func() {
+		for err := range errs {
+			fmt.Println(err)
+		}
+	}()
 
-	for i := 0; i < 1001; i++ {
-		randomIndex := rand.Intn(len(category))
-		randomValue := rand.Intn(1000)
-
-		wg.Add(1)
-
+	for i := 0; i < n; i++ {
 		go func() {
-			err := s.Save(ctx, string(category[randomIndex]), randomValue)
-			if err != nil {
-				wg.Done()
-				log.Fatal(err)
+			if err := s.Save(ctx, string(category[rand.Intn(len(category))]), rand.Intn(n)); err != nil {
+				errs <- err
 			}
-
-			wg.Done()
 		}()
-
 	}
 
-	wg.Wait()
+	b.Wait()
+	fmt.Println(st.Count())
 }
