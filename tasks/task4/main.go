@@ -1,66 +1,43 @@
 package main
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 
-	"github.com/PuerkitoBio/goquery"
+	"github.com/serhiihuberniuk/blog-api/tasks/task4/service"
+	"github.com/serhiihuberniuk/blog-api/tasks/task4/storage"
 )
 
 func main() {
-	err := getDailyNews()
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func getDailyNews() error {
 	client := http.Client{}
+	st := storage.NewStorage()
+	s := service.NewService(st)
 
-	resp, err := client.Get("https://football.ua/")
+	resp, err := getResponse(client, "https://football.ua/")
 	if err != nil {
-		return fmt.Errorf("error while getting response: %w", err)
+		log.Fatal("cannot get response")
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return errors.New("response code is not 200 OK")
-	}
-
-	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	err = s.GetDailyNews(resp.Body)
 	if err != nil {
-		return fmt.Errorf("error while creating document from response: %w", err)
+		log.Fatalf("cannot get news: %v", err)
 	}
 
-	doc.Find(".news-feed.main-news").Find("ul").
-		Find("li").Each(func(i int, selection *goquery.Selection) {
-		link, _ := selection.Find("a").Attr("href")
-		text := selection.Find("a").Text()
-		text = formatText(text)
-		fmt.Printf("Title: %s\nLink: %s\n\n", text, link)
-	})
-
-	return nil
+	s.PrintDailyNews()
 }
 
-func formatText(text string) string {
-	var previousLetter bool
-	var byteBuffer bytes.Buffer
-	for _, letter := range text {
-		currentLetter := letter == ' '
-		if currentLetter {
-			if !previousLetter {
-				byteBuffer.WriteRune(letter)
-			}
-		} else {
-			byteBuffer.WriteRune(letter)
-		}
-		previousLetter = currentLetter
+func getResponse(client http.Client, url string) (*http.Response, error) {
+	resp, err := client.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("error while getting response: %w", err)
 	}
 
-	return strings.Trim(byteBuffer.String(), " \n")
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.New("response code is not 200 OK")
+	}
+
+	return resp, nil
 }
