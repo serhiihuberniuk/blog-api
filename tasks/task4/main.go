@@ -13,17 +13,27 @@ import (
 func main() {
 	ctx := context.Background()
 	client := http.Client{}
-	p := parser.NewParser(client)
+	p := parser.NewParser()
 	pr := printer.NewPrinter()
 
-	if err := printDailyNewsFromFootballSite(ctx, "https://football.ua/", p, pr); err != nil {
+	if err := printDailyNewsFromFootballSite(ctx, client, "https://football.ua/", p, pr); err != nil {
 		log.Fatalf("cannot print news: %v", err)
 	}
 
 }
 
-func printDailyNewsFromFootballSite(ctx context.Context, url string, parser *parser.Parser, printer *printer.Printer) error {
-	news, err := parser.GetDailyNewsFromSite(ctx, url)
+func printDailyNewsFromFootballSite(ctx context.Context, client http.Client, url string,
+	parser *parser.Parser, printer *printer.Printer) error {
+	resp, err := client.Get(url)
+	if err != nil {
+		return fmt.Errorf("error while getting response: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("response code is not 200 OK")
+	}
+	news, err := parser.GetDailyNewsFromSite(ctx, resp.Body)
 	if err != nil {
 		return fmt.Errorf("cannot get news from web site: %v", err)
 	}

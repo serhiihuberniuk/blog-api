@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"net/http"
+	"io"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -12,29 +12,16 @@ import (
 )
 
 type Parser struct {
-	client http.Client
 }
 
-func NewParser(c http.Client) *Parser {
-	return &Parser{
-		client: c,
-	}
+func NewParser() *Parser {
+	return &Parser{}
 }
 
-func (p *Parser) GetDailyNewsFromSite(_ context.Context, url string) ([]models.FootballNews, error) {
-
-	resp, err := p.client.Get(url)
-	if err != nil {
-		return nil, fmt.Errorf("error while getting response: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("response code is not 200 OK")
-	}
+func (p *Parser) GetDailyNewsFromSite(_ context.Context, r io.Reader) ([]models.FootballNews, error) {
 	var footballNews models.FootballNews
 
-	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	doc, err := goquery.NewDocumentFromReader(r)
 	if err != nil {
 		return nil, fmt.Errorf("error occurred while creating document: %w", err)
 	}
