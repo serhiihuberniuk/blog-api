@@ -21,15 +21,15 @@ func NewParser(s source) *Parser {
 }
 
 type source interface {
-	GetDOMContent(url string) ([]byte, error)
+	GetDOMContent(ctx context.Context, url string) ([]byte, error)
 }
 
-func (p *Parser) ParseDailyNews(_ context.Context, url string) ([]models.FootballNews, error) {
+func (p *Parser) ParseDailyNews(ctx context.Context, url string) ([]models.FootballNews, error) {
 	var footballNews models.FootballNews
 
-	content, err := p.source.GetDOMContent(url)
+	content, err := p.source.GetDOMContent(ctx, url)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error while getting content from DOM: %w", err)
 	}
 
 	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(content))

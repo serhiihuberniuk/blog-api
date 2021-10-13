@@ -1,23 +1,26 @@
 package fetcher
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
+
+	"golang.org/x/net/context/ctxhttp"
 )
 
 type Fetcher struct {
-	client http.Client
+	client *http.Client
 }
 
-func NewFetcher(c http.Client) *Fetcher {
+func NewFetcher(c *http.Client) *Fetcher {
 	return &Fetcher{
 		client: c,
 	}
 }
 
-func (f *Fetcher) GetDOMContent(url string) ([]byte, error) {
-	resp, err := f.client.Get(url)
+func (f *Fetcher) GetDOMContent(ctx context.Context, url string) ([]byte, error) {
+	resp, err := ctxhttp.Get(ctx, f.client, url)
 	if err != nil {
 		return nil, fmt.Errorf("error while getting response: %v", err)
 	}

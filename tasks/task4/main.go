@@ -14,7 +14,7 @@ import (
 func main() {
 	ctx := context.Background()
 	client := http.Client{}
-	f := fetcher.NewFetcher(client)
+	f := fetcher.NewFetcher(&client)
 	p := parser.NewParser(f)
 	pr := printer.NewPrinter()
 
