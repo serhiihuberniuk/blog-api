@@ -1,40 +1,45 @@
-package service
+package parser
 
 import (
 	"bytes"
 	"context"
 	"fmt"
-	"io"
-	"log"
+	"net/http"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/serhiihuberniuk/blog-api/tasks/task4/models"
 )
 
-type Service struct {
-	storage storage
+type Parser struct {
+	client http.Client
 }
 
-func NewService(s storage) *Service {
-	return &Service{
-		storage: s,
+func NewParser(c http.Client) *Parser {
+	return &Parser{
+		client: c,
 	}
 }
 
-type storage interface {
-	SaveNew(ctx context.Context, footballNews models.FootballNews) error
-	GetAllNews(ctx context.Context) ([]models.FootballNews, error)
-}
+func (p *Parser) GetDailyNewsFromSite(_ context.Context, url string) ([]models.FootballNews, error) {
 
-func (s *Service) SaveDailyNews(ctx context.Context, r io.Reader) error {
+	resp, err := p.client.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("error while getting response: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("response code is not 200 OK")
+	}
 	var footballNews models.FootballNews
 
-	doc, err := goquery.NewDocumentFromReader(r)
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
-		return fmt.Errorf("error occurred while creating document: %w", err)
+		return nil, fmt.Errorf("error occurred while creating document: %w", err)
 	}
 
+	var allNews []models.FootballNews
 	doc.Find(".news-feed.main-news").Find("ul").
 		Find("li").Each(func(i int, selection *goquery.Selection) {
 		link, ok := selection.Find("a").Attr("href")
@@ -45,17 +50,10 @@ func (s *Service) SaveDailyNews(ctx context.Context, r io.Reader) error {
 		title := selection.Find("a").Text()
 		footballNews.Title = formatTitle(title)
 
-		err = s.storage.SaveNew(ctx, footballNews)
-		if err != nil {
-			log.Println("error occurred while saving news:", err)
-		}
+		allNews = append(allNews, footballNews)
 	})
 
-	return nil
-}
-
-func (s *Service) PrintNews(news models.FootballNews) {
-	fmt.Printf("Title: %s\nLink: %s\n\n", news.Title, news.Link)
+	return allNews, nil
 }
 
 func formatTitle(title string) string {

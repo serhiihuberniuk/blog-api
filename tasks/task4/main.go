@@ -6,46 +6,30 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/serhiihuberniuk/blog-api/tasks/task4/service"
-	"github.com/serhiihuberniuk/blog-api/tasks/task4/storage"
+	"github.com/serhiihuberniuk/blog-api/tasks/task4/service/parser"
+	"github.com/serhiihuberniuk/blog-api/tasks/task4/service/printer"
 )
 
 func main() {
 	ctx := context.Background()
 	client := http.Client{}
-	st := storage.NewStorage()
-	s := service.NewService(st)
+	p := parser.NewParser(client)
+	pr := printer.NewPrinter()
 
-	if err := printDailyNewsFromFootballSite(ctx, "https://football.ua/", client, s, st); err != nil {
+	if err := printDailyNewsFromFootballSite(ctx, "https://football.ua/", p, pr); err != nil {
 		log.Fatalf("cannot print news: %v", err)
 	}
 
 }
 
-func printDailyNewsFromFootballSite(ctx context.Context, url string, client http.Client,
-	service *service.Service, storage *storage.Storage) error {
-	resp, err := client.Get(url)
+func printDailyNewsFromFootballSite(ctx context.Context, url string, parser *parser.Parser, printer *printer.Printer) error {
+	news, err := parser.GetDailyNewsFromSite(ctx, url)
 	if err != nil {
-		return fmt.Errorf("error while getting response: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("response code is not 200 OK")
-	}
-
-	err = service.SaveDailyNews(ctx, resp.Body)
-	if err != nil {
-		return fmt.Errorf("cannot get news: %v", err)
-	}
-
-	news, err := storage.GetAllNews(ctx)
-	if err != nil {
-		return fmt.Errorf("cannot get news from storage: %v", err)
+		return fmt.Errorf("cannot get news from web site: %v", err)
 	}
 
 	for _, v := range news {
-		service.PrintNews(v)
+		printer.PrintNews(ctx, v)
 	}
 
 	return nil
