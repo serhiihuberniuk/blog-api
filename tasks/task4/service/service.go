@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -46,32 +47,15 @@ func (s *Service) SaveDailyNews(ctx context.Context, r io.Reader) error {
 
 		err = s.storage.SaveNew(ctx, footballNews)
 		if err != nil {
-			return
+			log.Println("error occurred while saving news:", err)
 		}
 	})
 
-	if err != nil {
-		return fmt.Errorf("error occured while saving news to storage: %w", err)
-	}
-
 	return nil
 }
 
-func (s *Service) GetDailyNewsFromStorage(ctx context.Context) ([]models.FootballNews, error) {
-	news, err := s.storage.GetAllNews(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("error occures while get news from storage: %w", err)
-	}
-
-	return news, nil
-}
-
-func (s *Service) PrintDailyNews(_ context.Context, news []models.FootballNews) error {
-	for _, footballNews := range news {
-		fmt.Printf("Title: %s\nLink: %s\n\n", footballNews.Title, footballNews.Link)
-	}
-
-	return nil
+func (s *Service) PrintNews(news models.FootballNews) {
+	fmt.Printf("Title: %s\nLink: %s\n\n", news.Title, news.Link)
 }
 
 func formatTitle(title string) string {

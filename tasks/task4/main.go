@@ -16,13 +16,14 @@ func main() {
 	st := storage.NewStorage()
 	s := service.NewService(st)
 
-	if err := printDailyNewsFromFootballSite(ctx, "https://football.ua/", client, s); err != nil {
+	if err := printDailyNewsFromFootballSite(ctx, "https://football.ua/", client, s, st); err != nil {
 		log.Fatalf("cannot print news: %v", err)
 	}
 
 }
 
-func printDailyNewsFromFootballSite(ctx context.Context, url string, client http.Client, service *service.Service) error {
+func printDailyNewsFromFootballSite(ctx context.Context, url string, client http.Client,
+	service *service.Service, storage *storage.Storage) error {
 	resp, err := client.Get(url)
 	if err != nil {
 		return fmt.Errorf("error while getting response: %v", err)
@@ -38,14 +39,13 @@ func printDailyNewsFromFootballSite(ctx context.Context, url string, client http
 		return fmt.Errorf("cannot get news: %v", err)
 	}
 
-	news, err := service.GetDailyNewsFromStorage(ctx)
+	news, err := storage.GetAllNews(ctx)
 	if err != nil {
 		return fmt.Errorf("cannot get news from storage: %v", err)
 	}
 
-	err = service.PrintDailyNews(ctx, news)
-	if err != nil {
-		return fmt.Errorf("error while printing news: %v", err)
+	for _, v := range news {
+		service.PrintNews(v)
 	}
 
 	return nil
