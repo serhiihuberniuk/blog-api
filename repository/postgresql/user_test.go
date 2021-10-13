@@ -54,7 +54,7 @@ func createPostgresTestContainer(t *testing.T, ctx context.Context) (*repository
 
 	dbUrl := fmt.Sprintf("postgres://postgres:password@localhost:%s/%s?sslmode=disable", mappedPort.Port(), dbName)
 
-	pool, err := repository.NewPostgresDb(ctx, dbUrl, "../../init.sql", 3)
+	pool, err := repository.NewPostgresDb(ctx, dbUrl, "file://../../migrations", 3)
 	if err != nil {
 		t.Log(fmt.Errorf("cannot create conn pool: %w", err))
 		t.Fail()
