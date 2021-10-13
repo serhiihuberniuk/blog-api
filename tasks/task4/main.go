@@ -1,7 +1,7 @@
 package main
 
 import (
-	"errors"
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,33 +11,42 @@ import (
 )
 
 func main() {
+	ctx := context.Background()
 	client := http.Client{}
 	st := storage.NewStorage()
 	s := service.NewService(st)
 
-	resp, err := getResponse(client, "https://football.ua/")
+	if err := printDailyNewsFromFootballSite(ctx, "https://football.ua/", client, s); err != nil {
+		log.Fatalf("cannot print news: %v", err)
+	}
+
+}
+
+func printDailyNewsFromFootballSite(ctx context.Context, url string, client http.Client, service *service.Service) error {
+	resp, err := client.Get(url)
 	if err != nil {
-		log.Fatal("cannot get response")
+		return fmt.Errorf("error while getting response: %v", err)
 	}
 	defer resp.Body.Close()
 
-	err = s.GetDailyNews(resp.Body)
-	if err != nil {
-		log.Fatalf("cannot get news: %v", err)
-	}
-
-	s.PrintDailyNews()
-}
-
-func getResponse(client http.Client, url string) (*http.Response, error) {
-	resp, err := client.Get(url)
-	if err != nil {
-		return nil, fmt.Errorf("error while getting response: %w", err)
-	}
-
 	if resp.StatusCode != http.StatusOK {
-		return nil, errors.New("response code is not 200 OK")
+		return fmt.Errorf("response code is not 200 OK")
 	}
 
-	return resp, nil
+	err = service.SaveDailyNews(ctx, resp.Body)
+	if err != nil {
+		return fmt.Errorf("cannot get news: %v", err)
+	}
+
+	news, err := service.GetDailyNewsFromStorage(ctx)
+	if err != nil {
+		return fmt.Errorf("cannot get news from storage: %v", err)
+	}
+
+	err = service.PrintDailyNews(ctx, news)
+	if err != nil {
+		return fmt.Errorf("error while printing news: %v", err)
+	}
+
+	return nil
 }

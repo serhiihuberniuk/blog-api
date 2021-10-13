@@ -1,23 +1,27 @@
 package storage
 
-import "github.com/serhiihuberniuk/blog-api/tasks/task4/models"
+import (
+	"context"
+
+	"github.com/serhiihuberniuk/blog-api/tasks/task4/models"
+)
 
 type Storage struct {
-	newsStorage []models.FootballNew
+	newsStorage []models.FootballNews
 }
 
 func NewStorage() *Storage {
-	newsStorage := make([]models.FootballNew, 0, 11)
-
 	return &Storage{
-		newsStorage: newsStorage,
+		newsStorage: []models.FootballNews{},
 	}
 }
 
-func (s *Storage) SaveNew(footballNew models.FootballNew) {
-	s.newsStorage = append(s.newsStorage, footballNew)
+func (s *Storage) SaveNew(_ context.Context, footballNews models.FootballNews) error {
+	s.newsStorage = append(s.newsStorage, footballNews)
+
+	return nil
 }
 
-func (s *Storage) GetAllNews() []models.FootballNew {
-	return s.newsStorage
+func (s *Storage) GetAllNews(_ context.Context) ([]models.FootballNews, error) {
+	return s.newsStorage, nil
 }

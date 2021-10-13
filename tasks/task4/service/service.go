@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"strings"
@@ -21,12 +22,12 @@ func NewService(s storage) *Service {
 }
 
 type storage interface {
-	SaveNew(footballNew models.FootballNew)
-	GetAllNews() []models.FootballNew
+	SaveNew(ctx context.Context, footballNews models.FootballNews) error
+	GetAllNews(ctx context.Context) ([]models.FootballNews, error)
 }
 
-func (s *Service) GetDailyNews(r io.Reader) error {
-	var footballNew models.FootballNew
+func (s *Service) SaveDailyNews(ctx context.Context, r io.Reader) error {
+	var footballNews models.FootballNews
 
 	doc, err := goquery.NewDocumentFromReader(r)
 	if err != nil {
@@ -39,37 +40,55 @@ func (s *Service) GetDailyNews(r io.Reader) error {
 		if !ok {
 			return
 		}
-		footballNew.Link = link
+		footballNews.Link = link
 		title := selection.Find("a").Text()
-		footballNew.Title = formatTitle(title)
-		s.storage.SaveNew(footballNew)
+		footballNews.Title = formatTitle(title)
+
+		err = s.storage.SaveNew(ctx, footballNews)
+		if err != nil {
+			return
+		}
 	})
+
+	if err != nil {
+		return fmt.Errorf("error occured while saving news to storage: %w", err)
+	}
 
 	return nil
 }
 
-func (s *Service) PrintDailyNews() {
-
-	for _, footballNew := range s.storage.GetAllNews() {
-		fmt.Printf("Title: %s\nLink: %s\n\n", footballNew.Title, footballNew.Link)
+func (s *Service) GetDailyNewsFromStorage(ctx context.Context) ([]models.FootballNews, error) {
+	news, err := s.storage.GetAllNews(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("error occures while get news from storage: %w", err)
 	}
+
+	return news, nil
+}
+
+func (s *Service) PrintDailyNews(_ context.Context, news []models.FootballNews) error {
+	for _, footballNews := range news {
+		fmt.Printf("Title: %s\nLink: %s\n\n", footballNews.Title, footballNews.Link)
+	}
+
+	return nil
 }
 
 func formatTitle(title string) string {
-	var previousLetter bool
+	var isPreviousLetterGap bool
 	var byteBuffer bytes.Buffer
 
 	for _, letter := range title {
-		currentLetter := letter == ' '
-		if currentLetter {
-			if !previousLetter {
+		isCurrentLetterGap := letter == ' '
+		if isCurrentLetterGap {
+			if !isPreviousLetterGap {
 				byteBuffer.WriteRune(letter)
 			}
 		} else {
 			byteBuffer.WriteRune(letter)
 		}
 
-		previousLetter = currentLetter
+		isPreviousLetterGap = isCurrentLetterGap
 	}
 
 	return strings.Trim(byteBuffer.String(), " \n")

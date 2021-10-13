@@ -1,6 +1,6 @@
 package models
 
-type FootballNew struct {
+type FootballNews struct {
 	Title string
 	Link  string
 }
