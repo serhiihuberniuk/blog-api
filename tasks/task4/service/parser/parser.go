@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -12,16 +11,28 @@ import (
 )
 
 type Parser struct {
+	source source
 }
 
-func NewParser() *Parser {
-	return &Parser{}
+func NewParser(s source) *Parser {
+	return &Parser{
+		source: s,
+	}
 }
 
-func (p *Parser) GetDailyNewsFromSite(_ context.Context, r io.Reader) ([]models.FootballNews, error) {
+type source interface {
+	GetDOMContent(url string) ([]byte, error)
+}
+
+func (p *Parser) ParseDailyNews(_ context.Context, url string) ([]models.FootballNews, error) {
 	var footballNews models.FootballNews
 
-	doc, err := goquery.NewDocumentFromReader(r)
+	content, err := p.source.GetDOMContent(url)
+	if err != nil {
+		return nil, err
+	}
+
+	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(content))
 	if err != nil {
 		return nil, fmt.Errorf("error occurred while creating document: %w", err)
 	}
